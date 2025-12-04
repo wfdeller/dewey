@@ -142,6 +142,10 @@ This starts:
 | `SECRET_KEY`            | JWT signing + tenant key encryption | Yes (min 32 chars)      |
 | `ANTHROPIC_API_KEY`     | Claude API key (platform/Free tier) | For Free tier w/ Claude |
 | `OPENAI_API_KEY`        | OpenAI API key (platform/Free tier) | For Free tier w/ OpenAI |
+| `AZURE_CLIENT_ID`       | Azure AD app client ID              | For Azure AD SSO        |
+| `AZURE_CLIENT_SECRET`   | Azure AD app client secret          | For Azure AD SSO        |
+| `AZURE_TENANT_ID`       | Azure AD tenant ID (or "common")    | For Azure AD SSO        |
+| `AZURE_REDIRECT_URI`    | OAuth callback URL                  | For Azure AD SSO        |
 | `AWS_REGION`            | AWS region for SQS                  | For production          |
 | `AWS_ACCESS_KEY_ID`     | AWS credentials                     | For production          |
 | `AWS_SECRET_ACCESS_KEY` | AWS credentials                     | For production          |
@@ -300,12 +304,18 @@ API documentation is auto-generated from OpenAPI spec:
 
 ### Key Endpoints
 
-| Endpoint                         | Description                |
-| -------------------------------- | -------------------------- |
-| `POST /api/v1/messages`          | Submit message via API     |
-| `GET /api/v1/messages`           | List messages with filters |
-| `GET /api/v1/analytics/*`        | Analytics data             |
-| `POST /api/v1/forms/{id}/submit` | Form submission            |
+| Endpoint                         | Description                   |
+| -------------------------------- | ----------------------------- |
+| `POST /api/v1/auth/register`     | Register new user and tenant  |
+| `POST /api/v1/auth/login`        | Login with email/password     |
+| `POST /api/v1/auth/refresh`      | Refresh access token          |
+| `GET /api/v1/auth/me`            | Get current user info         |
+| `GET /api/v1/auth/azure/login`   | Get Azure AD authorization URL|
+| `GET /api/v1/auth/azure/callback`| Azure AD OAuth callback       |
+| `POST /api/v1/messages`          | Submit message via API        |
+| `GET /api/v1/messages`           | List messages with filters    |
+| `GET /api/v1/analytics/*`        | Analytics data                |
+| `POST /api/v1/forms/{id}/submit` | Form submission               |
 
 ## Cloud Marketplace
 
@@ -313,6 +323,44 @@ Dewey is available on:
 
 -   **Azure Marketplace** (Primary) - [Link TBD]
 -   **AWS Marketplace** - [Link TBD]
+
+## Authentication
+
+Dewey supports two authentication methods:
+
+### Password Authentication
+Standard email/password authentication with JWT tokens.
+
+```bash
+# Register a new tenant and user
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "securepass123", "name": "Admin User", "tenant_name": "My Company", "tenant_slug": "my-company"}'
+
+# Login
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@example.com", "password": "securepass123"}'
+
+# Use the access token
+curl http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Azure AD SSO (OpenID Connect)
+Enterprise SSO via Microsoft Azure Active Directory. See [.env.example](./backend/.env.example) for Azure AD configuration.
+
+1. Register an app in Azure Portal > App registrations
+2. Configure redirect URI: `http://localhost:8000/api/v1/auth/azure/callback`
+3. Add API permissions: `openid`, `profile`, `email`, `User.Read`
+4. Set environment variables: `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `AZURE_TENANT_ID`
+
+```bash
+# Get Azure AD login URL
+curl http://localhost:8000/api/v1/auth/azure/login
+
+# Frontend redirects user to auth_url, then handles callback
+```
 
 ## Microsoft 365 Integration
 

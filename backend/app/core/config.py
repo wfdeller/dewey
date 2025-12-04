@@ -52,10 +52,11 @@ class Settings(BaseSettings):
     azure_openai_endpoint: str | None = None
     ollama_base_url: str = "http://localhost:11434"
 
-    # Microsoft Graph API (for O365 integration)
+    # Microsoft Azure AD / Graph API (for SSO and O365 integration)
     azure_client_id: str | None = None
     azure_client_secret: str | None = None
-    azure_tenant_id: str | None = None
+    azure_tenant_id: str | None = None  # "common" for multi-tenant, or specific tenant ID
+    azure_redirect_uri: str = "http://localhost:8000/api/v1/auth/azure/callback"
 
     # Rate Limiting
     rate_limit_requests: int = 100

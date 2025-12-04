@@ -62,7 +62,10 @@ class User(UserBase, TenantBaseModel, table=True):
 
     # Relationships
     tenant: "Tenant" = Relationship(back_populates="users")
-    user_roles: list["UserRole"] = Relationship(back_populates="user")
+    user_roles: list["UserRole"] = Relationship(
+        back_populates="user",
+        sa_relationship_kwargs={"foreign_keys": "UserRole.user_id"},
+    )
 
     @property
     def roles(self) -> list[Role]:

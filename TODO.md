@@ -50,9 +50,18 @@
 - [x] Implement JWT token generation and validation
 - [x] Implement password hashing (argon2)
 - [x] Add tenant context to JWT claims
-- [ ] Create user registration endpoint (implementation)
-- [ ] Create login endpoint (implementation)
-- [ ] Create authentication middleware/dependency
+- [x] Create user registration endpoint
+- [x] Create login endpoint
+- [x] Create token refresh endpoint
+- [x] Create /me endpoint (current user info)
+- [x] Create authentication middleware/dependency
+- [x] Implement Azure AD SSO (OIDC)
+  - [x] MSAL integration for token exchange
+  - [x] Azure AD authorization URL generation
+  - [x] OAuth callback handling (GET and POST variants)
+  - [x] User provisioning from Azure AD claims
+  - [x] Tenant matching (Azure tenant → Dewey tenant)
+  - [x] Account linking (Azure AD to existing password account)
 
 ### 1.4 Role-Based Access Control (RBAC)
 - [x] Create Role model (SQLModel)
@@ -69,7 +78,7 @@
   - [x] api_keys:manage, integrations:manage, billing:manage
 - [x] Create default system roles (owner, admin, manager, agent, viewer)
 - [x] Implement `user.has_permission()` method
-- [ ] Implement permission checking decorator (`@require_permission`)
+- [x] Implement permission checking class (`PermissionChecker` dependency)
 - [ ] Row-level filtering (agents see assigned messages only)
 - [ ] Role management API endpoints
   - [ ] GET /api/v1/roles (list roles)
@@ -134,7 +143,7 @@
 
 #### Microsoft 365 / Graph API Integration (Primary)
 - [ ] Register Azure AD application
-  - [ ] Configure redirect URIs
+  - [x] Configure redirect URIs (in azure_redirect_uri setting)
   - [ ] Set API permissions (Mail.Read, User.Read)
   - [ ] Generate client secret or certificate
 - [ ] Implement Microsoft Graph client service
@@ -148,10 +157,11 @@
   - [ ] Subscription creation endpoint
   - [ ] Webhook receiver for new mail notifications
   - [ ] Subscription renewal (before 3-day expiry)
-- [ ] Azure AD SSO integration
-  - [ ] OIDC authentication flow
-  - [ ] User provisioning from Azure AD
-  - [ ] Tenant mapping (Azure tenant → Dewey tenant)
+- [x] Azure AD SSO integration
+  - [x] OIDC authentication flow (MSAL integration)
+  - [x] User provisioning from Azure AD (auto-create user/tenant)
+  - [x] Tenant mapping (Azure tenant → Dewey tenant)
+  - [x] Account linking (Azure AD to existing password account)
 - [ ] O365 connection setup UI (Ant Design)
   - [ ] Admin consent flow trigger
   - [ ] Mailbox selection/configuration
@@ -334,7 +344,11 @@
 - [ ] Test subscription lifecycle (subscribe, unsubscribe)
 
 ### 3.3 SSO Integration
-- [ ] Azure AD SSO (primary, via OIDC)
+- [x] Azure AD SSO (primary, via OIDC)
+  - [x] GET /azure/login - authorization URL generation
+  - [x] GET /azure/callback - OAuth redirect handler
+  - [x] POST /azure/callback - SPA token exchange
+  - [x] POST /azure/link - link Azure to existing account
 - [ ] Implement SAML authentication (for non-Azure customers)
 - [ ] Support Okta
 - [ ] Support Google Workspace
@@ -625,7 +639,7 @@ Use this section to track overall progress:
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Foundation | In Progress | ~45% |
+| Phase 1: Foundation | In Progress | ~55% |
 | Phase 2: Core Features | Not Started | 0% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
@@ -635,11 +649,11 @@ Use this section to track overall progress:
 |---------|--------|
 | 1.1 Project Setup | ✅ Complete |
 | 1.2 Database & ORM | ✅ Models Complete, migrations pending |
-| 1.3 Authentication | 🔶 Partial (JWT/security done, endpoints pending) |
-| 1.4 RBAC | 🔶 Partial (models done, middleware pending) |
+| 1.3 Authentication | ✅ Complete (JWT, password auth, Azure AD SSO) |
+| 1.4 RBAC | 🔶 Partial (models done, permission checker done, API endpoints pending) |
 | 1.5 API Keys | 🔶 Partial (model done, middleware pending) |
 | 1.6 Core API Endpoints | 🔶 Scaffolded, implementation pending |
-| 1.7 Message Intake | ⬜ Not Started |
+| 1.7 Message Intake | 🔶 Partial (Azure AD SSO done, Graph API pending) |
 | 1.8 AI Pipeline | ⬜ Not Started |
 | 1.9 Basic Frontend | ✅ Structure complete, API integration pending |
 

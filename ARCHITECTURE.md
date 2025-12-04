@@ -214,12 +214,57 @@ Primary email integration for enterprise customers using O365/Exchange Online:
 
 ```
 App Registration Settings:
-├── Redirect URIs: https://app.dewey.app/auth/callback
-├── API Permissions: Mail.Read, User.Read
+├── Redirect URIs: https://app.dewey.app/api/v1/auth/azure/callback
+├── API Permissions: openid, profile, email, User.Read (for SSO)
+│                    Mail.Read (for email intake - later)
 ├── Certificates & Secrets: Client secret or certificate
 ├── Token Configuration: Optional claims (tenant_id, email)
 └── Enterprise App: Enable for SSO
 ```
+
+**Azure AD SSO Flow (Implemented):**
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Frontend   │     │    Dewey     │     │   Azure AD   │
+│              │     │   Backend    │     │              │
+└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
+       │                    │                    │
+       │ GET /azure/login   │                    │
+       │───────────────────>│                    │
+       │                    │                    │
+       │ {auth_url, state}  │                    │
+       │<───────────────────│                    │
+       │                    │                    │
+       │ Redirect to auth_url                    │
+       │────────────────────────────────────────>│
+       │                    │                    │
+       │                    │    User signs in   │
+       │                    │<───────────────────│
+       │                    │                    │
+       │ Redirect with code │                    │
+       │<───────────────────────────────────────│
+       │                    │                    │
+       │ POST /azure/callback {code, state}     │
+       │───────────────────>│                    │
+       │                    │ Exchange code      │
+       │                    │───────────────────>│
+       │                    │                    │
+       │                    │ {id_token, claims} │
+       │                    │<───────────────────│
+       │                    │                    │
+       │                    │ Find/create user   │
+       │                    │ Generate JWT       │
+       │                    │                    │
+       │ {access_token, refresh_token}          │
+       │<───────────────────│                    │
+```
+
+**User Provisioning Logic:**
+1. Find user by Azure AD OID → return existing user
+2. Find user by email → link Azure AD to existing account
+3. Match Azure tenant ID → add user to existing Dewey tenant
+4. No match → create new Dewey tenant + user as owner
 
 ### 2. Processing Pipeline
 
@@ -363,9 +408,34 @@ For government customers, separate deployment in AWS GovCloud:
 
 ### Authentication
 
--   JWT tokens with tenant context (web UI)
+Dewey implements two authentication methods:
+
+**Password Authentication:**
+-   JWT access tokens (15-minute expiry) + refresh tokens (7-day expiry)
+-   Argon2id password hashing via passlib
+-   Tenant context embedded in JWT claims (`sub`, `tenant_id`)
+
+**Azure AD SSO (OIDC):**
+-   Microsoft Authentication Library (MSAL) for Python
+-   OpenID Connect flow with authorization code exchange
+-   User auto-provisioning from Azure AD claims (OID, email, name)
+-   Tenant mapping: Azure AD tenant → Dewey tenant
+-   Account linking for existing password users
+
+**API Keys:**
 -   API keys with scoped permissions (programmatic access)
--   SAML/OIDC SSO for enterprise
+-   SHA-256 key hashing, prefix-based identification
+
+**Authentication Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/register` | POST | Register new user and tenant |
+| `/api/v1/auth/login` | POST | Login with email/password |
+| `/api/v1/auth/refresh` | POST | Refresh access token |
+| `/api/v1/auth/me` | GET | Get current user with roles |
+| `/api/v1/auth/azure/login` | GET | Get Azure AD auth URL |
+| `/api/v1/auth/azure/callback` | GET/POST | Handle OAuth callback |
+| `/api/v1/auth/azure/link` | POST | Link Azure AD to existing account |
 
 ### API Keys & Service Credentials
 
@@ -700,9 +770,21 @@ Permission required: GroupMember.Read.All or Directory.Read.All
 **Permission Checking:**
 
 ```python
-# In API endpoint
-@require_permission("messages:write")
-async def create_message(request: Request, data: MessageCreate):
+# Using PermissionChecker dependency
+from app.api.v1.deps import PermissionChecker
+
+@router.post("/messages")
+async def create_message(
+    data: MessageCreate,
+    current_user: User = Depends(PermissionChecker("messages:write"))
+):
+    ...
+
+# Multiple permissions (require all)
+@router.delete("/messages/{id}")
+async def delete_message(
+    current_user: User = Depends(PermissionChecker(["messages:read", "messages:delete"]))
+):
     ...
 
 # Or check programmatically

@@ -12,6 +12,27 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
+class AzureAuthUrlResponse(BaseModel):
+    """Response containing Azure AD authorization URL."""
+
+    auth_url: str
+    state: str  # CSRF protection state
+
+
+class AzureCallbackRequest(BaseModel):
+    """Request from Azure AD callback."""
+
+    code: str
+    state: str
+
+
+class AzureLinkRequest(BaseModel):
+    """Request to link Azure AD account to existing user."""
+
+    code: str
+    state: str
+
+
 class RegisterRequest(BaseModel):
     """Registration request schema."""
 

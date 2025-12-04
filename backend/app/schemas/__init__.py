@@ -6,6 +6,9 @@ from app.schemas.auth import (
     TokenResponse,
     RefreshRequest,
     UserResponse,
+    AzureAuthUrlResponse,
+    AzureCallbackRequest,
+    AzureLinkRequest,
 )
 
 __all__ = [
@@ -14,4 +17,7 @@ __all__ = [
     "TokenResponse",
     "RefreshRequest",
     "UserResponse",
+    "AzureAuthUrlResponse",
+    "AzureCallbackRequest",
+    "AzureLinkRequest",
 ]
