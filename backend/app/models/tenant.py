@@ -1,6 +1,7 @@
 """Tenant (organization) model."""
 
 from typing import TYPE_CHECKING, Literal
+from uuid import UUID
 
 from pydantic import model_validator
 from sqlalchemy import Column
@@ -30,7 +31,7 @@ class TenantBase(SQLModel):
 
     name: str = Field(index=True)
     slug: str = Field(unique=True, index=True, max_length=63)
-    subscription_tier: SubscriptionTier = Field(default="free")
+    subscription_tier: str = Field(default="free")  # free, pro, enterprise
 
 
 class Tenant(TenantBase, BaseModel, table=True):
@@ -46,8 +47,8 @@ class Tenant(TenantBase, BaseModel, table=True):
     # - ai_provider: which provider to use
     # - ai_key_source: "platform" (Dewey's shared key) or "tenant" (customer's own key)
     # - ai_provider_config: encrypted keys and provider-specific settings
-    ai_provider: AIProvider = Field(default="claude")
-    ai_key_source: AIKeySource = Field(default="platform")
+    ai_provider: str = Field(default="claude")  # claude, openai, azure_openai, ollama
+    ai_key_source: str = Field(default="platform")  # platform, tenant
     ai_provider_config: dict = Field(default_factory=dict, sa_column=Column(JSONB))
     # Structure when ai_key_source="tenant":
     # {
@@ -114,17 +115,15 @@ class TenantCreate(TenantBase):
 class TenantRead(TenantBase):
     """Schema for reading a tenant."""
 
-    from uuid import UUID
-
     id: UUID
     marketplace_provider: str | None = None
-    ai_provider: AIProvider
+    ai_provider: str
 
 
 class TenantUpdate(SQLModel):
     """Schema for updating a tenant."""
 
     name: str | None = None
-    subscription_tier: SubscriptionTier | None = None
-    ai_provider: AIProvider | None = None
+    subscription_tier: str | None = None
+    ai_provider: str | None = None
     settings: dict | None = None

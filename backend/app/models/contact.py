@@ -64,7 +64,7 @@ class CustomFieldDefinition(TenantBaseModel, table=True):
 
     name: str = Field(index=True)  # Display name, e.g., "Party Affiliation"
     field_key: str  # Slug for API, e.g., "party_affiliation"
-    field_type: FieldType = Field(default="text")
+    field_type: str = Field(default="text")  # text, select, multi_select, number, date, boolean
 
     # Options for select/multi_select fields
     options: list[dict] = Field(default_factory=list, sa_column=Column(JSONB))

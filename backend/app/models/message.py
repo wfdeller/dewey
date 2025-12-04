@@ -31,7 +31,7 @@ class MessageBase(SQLModel):
     body_html: str | None = Field(default=None, sa_column=Column(Text))
     sender_email: str = Field(index=True)
     sender_name: str | None = None
-    source: MessageSource = Field(default="api")
+    source: str = Field(default="api")  # email, form, api, upload
 
 
 class Message(MessageBase, TenantBaseModel, table=True):
@@ -47,7 +47,7 @@ class Message(MessageBase, TenantBaseModel, table=True):
     external_id: str | None = Field(default=None, index=True)  # Original message ID
 
     # Processing status
-    processing_status: ProcessingStatus = Field(default="pending", index=True)
+    processing_status: str = Field(default="pending", index=True)  # pending, processing, completed, failed
     received_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     processed_at: datetime | None = Field(default=None)
 

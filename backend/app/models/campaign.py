@@ -22,8 +22,8 @@ class CampaignBase(SQLModel):
     """Campaign base schema."""
 
     name: str = Field(index=True)
-    status: CampaignStatus = Field(default="detected")
-    detection_type: DetectionType = Field(default="template")
+    status: str = Field(default="detected")  # detected, confirmed, dismissed
+    detection_type: str = Field(default="template")  # template, coordinated, manual
 
 
 class Campaign(CampaignBase, TenantBaseModel, table=True):

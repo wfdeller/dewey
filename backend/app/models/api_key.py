@@ -4,6 +4,7 @@ from datetime import datetime
 from hashlib import sha256
 from secrets import token_urlsafe
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -129,8 +130,6 @@ class APIKeyCreate(APIKeyBase):
 
 class APIKeyRead(APIKeyBase):
     """Schema for reading an API key."""
-
-    from uuid import UUID
 
     id: UUID
     tenant_id: UUID

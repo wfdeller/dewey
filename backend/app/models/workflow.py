@@ -70,7 +70,7 @@ class WorkflowExecution(BaseModel, table=True):
     # Execution tracking
     triggered_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     completed_at: datetime | None = None
-    status: ExecutionStatus = Field(default="running")
+    status: str = Field(default="running")  # running, completed, failed
 
     # Details of what happened
     actions_executed: list[dict] = Field(default_factory=list, sa_column=Column(JSONB))

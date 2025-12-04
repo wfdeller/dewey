@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_USER: dewey
       POSTGRES_PASSWORD: dewey
-      POSTGRES_DB: dewey
+      POSTGRES_DB: dewey-dev
     ports:
       - "5432:5432"
     volumes:

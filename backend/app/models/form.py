@@ -42,7 +42,7 @@ class FormBase(SQLModel):
     name: str = Field(index=True)
     description: str | None = Field(default=None, sa_column=Column(Text))
     slug: str = Field(index=True)  # URL-safe identifier
-    status: FormStatus = Field(default="draft")
+    status: str = Field(default="draft")  # draft, published, archived
 
 
 class Form(FormBase, TenantBaseModel, table=True):
@@ -82,7 +82,7 @@ class FormField(BaseModel, table=True):
     form_id: UUID = Field(foreign_key="form.id", index=True)
 
     # Field configuration
-    field_type: FieldType
+    field_type: str  # text, textarea, email, phone, select, multi_select, radio, checkbox, date, number, rating, nps, file_upload, hidden
     label: str
     placeholder: str | None = None
     help_text: str | None = None
@@ -133,7 +133,7 @@ class FormSubmission(BaseModel, table=True):
     utm_params: dict = Field(default_factory=dict, sa_column=Column(JSONB))
 
     # Processing
-    status: SubmissionStatus = Field(default="pending")
+    status: str = Field(default="pending")  # pending, processed, spam
     spam_score: float | None = None
 
     # Relationships

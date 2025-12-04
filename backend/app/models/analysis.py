@@ -21,7 +21,7 @@ class AnalysisBase(SQLModel):
 
     # Sentiment analysis
     sentiment_score: float = Field(ge=-1, le=1)  # -1 (negative) to 1 (positive)
-    sentiment_label: SentimentLabel
+    sentiment_label: str  # positive, neutral, negative
     sentiment_confidence: float = Field(ge=0, le=1)
 
     # AI-generated summary

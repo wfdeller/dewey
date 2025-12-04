@@ -62,6 +62,9 @@ cd dewey
 
 ```bash
 # Copy example environment file
+cd backend
+cp .env.example .env
+cd ../frontend
 cp .env.example .env
 
 # Edit .env with your configuration
@@ -81,11 +84,11 @@ docker-compose up -d postgres redis
 cd backend
 
 # Create virtual environment
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
-pip install -e ".[dev]"
+pip3 install -e ".[dev]"
 
 # Run database migrations
 alembic upgrade head
@@ -132,26 +135,28 @@ This starts:
 
 ### Environment Variables
 
-| Variable                | Description                           | Required                 |
-| ----------------------- | ------------------------------------- | ------------------------ |
-| `DATABASE_URL`          | PostgreSQL connection string          | Yes                      |
-| `REDIS_URL`             | Redis connection string               | Yes                      |
-| `SECRET_KEY`            | JWT signing + tenant key encryption   | Yes (min 32 chars)       |
-| `ANTHROPIC_API_KEY`     | Claude API key (platform/Free tier)   | For Free tier w/ Claude  |
-| `OPENAI_API_KEY`        | OpenAI API key (platform/Free tier)   | For Free tier w/ OpenAI  |
-| `AWS_REGION`            | AWS region for SQS                    | For production           |
-| `AWS_ACCESS_KEY_ID`     | AWS credentials                       | For production           |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials                       | For production           |
+| Variable                | Description                         | Required                |
+| ----------------------- | ----------------------------------- | ----------------------- |
+| `DATABASE_URL`          | PostgreSQL connection string        | Yes                     |
+| `REDIS_URL`             | Redis connection string             | Yes                     |
+| `SECRET_KEY`            | JWT signing + tenant key encryption | Yes (min 32 chars)      |
+| `ANTHROPIC_API_KEY`     | Claude API key (platform/Free tier) | For Free tier w/ Claude |
+| `OPENAI_API_KEY`        | OpenAI API key (platform/Free tier) | For Free tier w/ OpenAI |
+| `AWS_REGION`            | AWS region for SQS                  | For production          |
+| `AWS_ACCESS_KEY_ID`     | AWS credentials                     | For production          |
+| `AWS_SECRET_ACCESS_KEY` | AWS credentials                     | For production          |
 
 ### AI Provider Configuration
 
 Dewey supports multiple AI providers with a tiered key management model:
 
 **Key Sources:**
-- **Platform Keys** (Free/Trial tiers): Uses shared API keys from environment variables
-- **Tenant Keys** (Pro/Enterprise tiers): Customers provide their own API keys, stored encrypted per-tenant
+
+-   **Platform Keys** (Free/Trial tiers): Uses shared API keys from environment variables
+-   **Tenant Keys** (Pro/Enterprise tiers): Customers provide their own API keys, stored encrypted per-tenant
 
 **Environment Variables** (Platform Keys Only):
+
 ```env
 # Default AI provider (claude, openai, azure_openai, ollama)
 DEFAULT_AI_PROVIDER=claude
@@ -168,9 +173,10 @@ OLLAMA_BASE_URL=http://localhost:11434
 Customers configure their own API keys in the admin console. Keys are encrypted at rest using Fernet symmetric encryption derived from `SECRET_KEY`.
 
 This separation ensures:
-- Data isolation (AI provider logs are tenant-specific)
-- Usage attribution (customers see their own usage in provider dashboards)
-- Compliance (no cross-tenant data exposure via AI APIs)
+
+-   Data isolation (AI provider logs are tenant-specific)
+-   Usage attribution (customers see their own usage in provider dashboards)
+-   Compliance (no cross-tenant data exposure via AI APIs)
 
 ## Project Structure
 
