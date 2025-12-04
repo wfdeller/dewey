@@ -250,11 +250,54 @@ class OpenAIProvider(AIProvider): ...
 class OllamaProvider(AIProvider): ...
 ```
 
+#### Tenant AI Key Security Model
+
+AI provider API keys are isolated per tenant to prevent data leakage and ensure proper usage attribution:
+
+| Tier | AI Key Model | Token Limits |
+|------|--------------|--------------|
+| **Free/Trial** | Dewey's platform key (pooled) | 10K tokens/month |
+| **Pro** | Tenant provides their own key | Unlimited (their key) |
+| **Enterprise** | Tenant's key required | Unlimited |
+
+**Security considerations:**
+- **Data isolation**: AI provider API logs are tied to API keys. Shared keys would expose all tenant data in one log stream
+- **Usage attribution**: Accurate per-tenant billing for AI token consumption
+- **Rate limit isolation**: One tenant's heavy usage cannot exhaust limits for others
+- **Key rotation**: Tenants can rotate their own keys without affecting others
+- **Compliance**: Enterprise/government customers require their own keys for audit trails
+
+**Key storage:**
+- Tenant API keys are encrypted at rest using Fernet symmetric encryption
+- Encryption key derived from application SECRET_KEY via PBKDF2
+- Keys stored in `ai_provider_config` JSON field, never logged or exposed in API responses
+- Masked display in UI (e.g., `sk-abc1...xyz9`)
+
+```python
+# Tenant model fields for AI configuration
+ai_provider: AIProvider = Field(default="claude")
+ai_key_source: AIKeySource = Field(default="platform")  # "platform" or "tenant"
+ai_provider_config: dict = Field(...)  # Encrypted keys and settings
+ai_monthly_token_limit: int | None  # For platform key users
+ai_tokens_used_this_month: int
+
+# Provider config structure (keys encrypted):
+{
+    "claude": {"api_key_encrypted": "...", "model": "claude-3-sonnet-20240229"},
+    "openai": {"api_key_encrypted": "...", "model": "gpt-4-turbo"},
+    "azure_openai": {
+        "api_key_encrypted": "...",
+        "endpoint": "https://xxx.openai.azure.com",
+        "deployment": "gpt-4"
+    }
+}
+```
+
 ### 4. Multi-Tenancy
 
 -   Row-level security (tenant_id on all tables)
 -   Per-tenant encryption keys (AWS KMS)
--   Tenant-specific AI provider configuration
+-   Tenant-specific AI provider configuration with isolated API keys
 -   Custom fields and categories per tenant
 
 ## Data Model Overview

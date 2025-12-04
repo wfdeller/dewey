@@ -132,28 +132,45 @@ This starts:
 
 ### Environment Variables
 
-| Variable                | Description                  | Required            |
-| ----------------------- | ---------------------------- | ------------------- |
-| `DATABASE_URL`          | PostgreSQL connection string | Yes                 |
-| `REDIS_URL`             | Redis connection string      | Yes                 |
-| `SECRET_KEY`            | JWT signing key              | Yes                 |
-| `ANTHROPIC_API_KEY`     | Claude API key               | For Claude provider |
-| `OPENAI_API_KEY`        | OpenAI API key               | For OpenAI provider |
-| `AWS_REGION`            | AWS region for SQS           | For production      |
-| `AWS_ACCESS_KEY_ID`     | AWS credentials              | For production      |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials              | For production      |
+| Variable                | Description                           | Required                 |
+| ----------------------- | ------------------------------------- | ------------------------ |
+| `DATABASE_URL`          | PostgreSQL connection string          | Yes                      |
+| `REDIS_URL`             | Redis connection string               | Yes                      |
+| `SECRET_KEY`            | JWT signing + tenant key encryption   | Yes (min 32 chars)       |
+| `ANTHROPIC_API_KEY`     | Claude API key (platform/Free tier)   | For Free tier w/ Claude  |
+| `OPENAI_API_KEY`        | OpenAI API key (platform/Free tier)   | For Free tier w/ OpenAI  |
+| `AWS_REGION`            | AWS region for SQS                    | For production           |
+| `AWS_ACCESS_KEY_ID`     | AWS credentials                       | For production           |
+| `AWS_SECRET_ACCESS_KEY` | AWS credentials                       | For production           |
 
 ### AI Provider Configuration
 
-Dewey supports multiple AI providers. Configure per-tenant in the admin console or set defaults:
+Dewey supports multiple AI providers with a tiered key management model:
 
+**Key Sources:**
+- **Platform Keys** (Free/Trial tiers): Uses shared API keys from environment variables
+- **Tenant Keys** (Pro/Enterprise tiers): Customers provide their own API keys, stored encrypted per-tenant
+
+**Environment Variables** (Platform Keys Only):
 ```env
-# Default AI provider (claude, openai, ollama)
+# Default AI provider (claude, openai, azure_openai, ollama)
 DEFAULT_AI_PROVIDER=claude
 
-# For Ollama (self-hosted)
+# Platform keys - used ONLY for Free/Trial tenants
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+
+# For Ollama (self-hosted, no API key needed)
 OLLAMA_BASE_URL=http://localhost:11434
 ```
+
+**For Pro/Enterprise Tenants:**
+Customers configure their own API keys in the admin console. Keys are encrypted at rest using Fernet symmetric encryption derived from `SECRET_KEY`.
+
+This separation ensures:
+- Data isolation (AI provider logs are tenant-specific)
+- Usage attribution (customers see their own usage in provider dashboards)
+- Compliance (no cross-tenant data exposure via AI APIs)
 
 ## Project Structure
 

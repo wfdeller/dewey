@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 SubscriptionTier = Literal["free", "pro", "enterprise"]
 AIProvider = Literal["claude", "openai", "azure_openai", "ollama"]
+AIKeySource = Literal["platform", "tenant"]  # platform = Dewey's key, tenant = customer's key
 
 
 class TenantBase(SQLModel):
@@ -41,9 +42,29 @@ class Tenant(TenantBase, BaseModel, table=True):
     marketplace_subscription_id: str | None = Field(default=None, index=True)
     marketplace_provider: str | None = Field(default=None)  # azure, aws
 
-    # AI configuration (stored encrypted)
+    # AI Provider Configuration
+    # - ai_provider: which provider to use
+    # - ai_key_source: "platform" (Dewey's shared key) or "tenant" (customer's own key)
+    # - ai_provider_config: encrypted keys and provider-specific settings
     ai_provider: AIProvider = Field(default="claude")
+    ai_key_source: AIKeySource = Field(default="platform")
     ai_provider_config: dict = Field(default_factory=dict, sa_column=Column(JSONB))
+    # Structure when ai_key_source="tenant":
+    # {
+    #   "claude": {"api_key_encrypted": "...", "model": "claude-3-sonnet-20240229"},
+    #   "openai": {"api_key_encrypted": "...", "model": "gpt-4-turbo"},
+    #   "azure_openai": {
+    #       "api_key_encrypted": "...",
+    #       "endpoint": "https://xxx.openai.azure.com",
+    #       "deployment": "gpt-4",
+    #       "api_version": "2024-02-15-preview"
+    #   },
+    #   "ollama": {"base_url": "http://localhost:11434", "model": "llama2"}
+    # }
+
+    # AI usage limits (for platform key users)
+    ai_monthly_token_limit: int | None = Field(default=None)  # None = unlimited (enterprise)
+    ai_tokens_used_this_month: int = Field(default=0)
 
     # Tenant settings
     settings: dict = Field(default_factory=dict, sa_column=Column(JSONB))
@@ -70,6 +91,18 @@ class Tenant(TenantBase, BaseModel, table=True):
         if "slug" in values and values["slug"]:
             values["slug"] = values["slug"].lower().replace(" ", "-")
         return values
+
+    def uses_platform_key(self) -> bool:
+        """Check if tenant uses Dewey's platform AI key."""
+        return self.ai_key_source == "platform"
+
+    def has_ai_budget_remaining(self) -> bool:
+        """Check if tenant has remaining AI token budget (for platform key users)."""
+        if self.ai_key_source == "tenant":
+            return True  # Tenant's own key, no platform limits
+        if self.ai_monthly_token_limit is None:
+            return True  # Unlimited (enterprise)
+        return self.ai_tokens_used_this_month < self.ai_monthly_token_limit
 
 
 class TenantCreate(TenantBase):

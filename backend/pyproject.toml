@@ -30,10 +30,11 @@ dependencies = [
     # Redis
     "redis>=5.0.0",
 
-    # Authentication
+    # Authentication & Encryption
     "python-jose[cryptography]>=3.3.0",
     "passlib[argon2]>=1.7.4",
     "argon2-cffi>=23.1.0",
+    "cryptography>=42.0.0",
 
     # AI Providers
     "anthropic>=0.18.0",
