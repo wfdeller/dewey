@@ -11,9 +11,6 @@ interface LoginFormValues {
   password: string;
 }
 
-// Key for storing Azure AD state in sessionStorage
-const AZURE_STATE_KEY = 'dewey-azure-state';
-
 export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -61,12 +58,10 @@ export default function Login() {
 
     try {
       // Get Azure AD authorization URL
-      const { auth_url, state } = await authService.getAzureAuthUrl();
-
-      // Store state for CSRF verification on callback
-      sessionStorage.setItem(AZURE_STATE_KEY, state);
+      const { auth_url } = await authService.getAzureAuthUrl();
 
       // Redirect to Azure AD
+      // The backend will handle the callback and redirect back with tokens
       window.location.href = auth_url;
     } catch (err) {
       const errorMessage = getErrorMessage(err);

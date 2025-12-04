@@ -80,14 +80,23 @@
 - [x] Implement `user.has_permission()` method
 - [x] Implement permission checking class (`PermissionChecker` dependency)
 - [ ] Row-level filtering (agents see assigned messages only)
-- [ ] Role management API endpoints
-  - [ ] GET /api/v1/roles (list roles)
-  - [ ] POST /api/v1/roles (create custom role)
-  - [ ] PATCH /api/v1/roles/:id (update permissions)
-  - [ ] DELETE /api/v1/roles/:id (delete custom role)
-- [ ] User role assignment endpoints
-  - [ ] POST /api/v1/users/:id/roles (assign role)
-  - [ ] DELETE /api/v1/users/:id/roles/:role_id (remove role)
+- [x] Role management API endpoints
+  - [x] GET /api/v1/roles (list roles)
+  - [x] GET /api/v1/roles/permissions (list available permissions with metadata)
+  - [x] GET /api/v1/roles/:id (get specific role)
+  - [x] POST /api/v1/roles (create custom role)
+  - [x] PATCH /api/v1/roles/:id (update permissions)
+  - [x] DELETE /api/v1/roles/:id (delete custom role)
+  - [x] POST /api/v1/roles/:id/reset (reset system role to defaults)
+- [x] User management API endpoints
+  - [x] GET /api/v1/users (list users with search/filter)
+  - [x] GET /api/v1/users/:id (get user details with roles)
+  - [x] PATCH /api/v1/users/:id (update user profile)
+- [x] User role assignment endpoints
+  - [x] GET /api/v1/users/:id/roles (get user's roles)
+  - [x] POST /api/v1/users/:id/roles (assign role)
+  - [x] DELETE /api/v1/users/:id/roles/:role_id (remove role)
+  - [x] PUT /api/v1/users/:id/roles (replace all roles)
 - [ ] Azure AD group sync
   - [ ] Link role to Azure AD group ID
   - [ ] On SSO login, fetch group memberships (Graph API /me/memberOf)
@@ -639,7 +648,7 @@ Use this section to track overall progress:
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Foundation | In Progress | ~55% |
+| Phase 1: Foundation | In Progress | ~65% |
 | Phase 2: Core Features | Not Started | 0% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
@@ -647,15 +656,15 @@ Use this section to track overall progress:
 ### Phase 1 Breakdown
 | Section | Status |
 |---------|--------|
-| 1.1 Project Setup | ✅ Complete |
-| 1.2 Database & ORM | ✅ Models Complete, migrations pending |
-| 1.3 Authentication | ✅ Complete (JWT, password auth, Azure AD SSO) |
-| 1.4 RBAC | 🔶 Partial (models done, permission checker done, API endpoints pending) |
-| 1.5 API Keys | 🔶 Partial (model done, middleware pending) |
-| 1.6 Core API Endpoints | 🔶 Scaffolded, implementation pending |
-| 1.7 Message Intake | 🔶 Partial (Azure AD SSO done, Graph API pending) |
-| 1.8 AI Pipeline | ⬜ Not Started |
-| 1.9 Basic Frontend | ✅ Structure complete, API integration pending |
+| 1.1 Project Setup | Complete |
+| 1.2 Database & ORM | Models Complete, migrations pending |
+| 1.3 Authentication | Complete (JWT, password auth, Azure AD SSO) |
+| 1.4 RBAC | Complete (roles API, users API, permission checker) |
+| 1.5 API Keys | Partial (model done, middleware pending) |
+| 1.6 Core API Endpoints | Scaffolded, implementation pending |
+| 1.7 Message Intake | Partial (Azure AD SSO done, Graph API pending) |
+| 1.8 AI Pipeline | Not Started |
+| 1.9 Basic Frontend | Structure complete, auth integration done |
 
 ---
 

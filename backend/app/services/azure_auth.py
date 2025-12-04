@@ -71,8 +71,9 @@ class AzureAuthService:
         if state is None:
             state = secrets.token_urlsafe(32)
 
-        # Scopes for OpenID Connect + basic profile
-        scopes = ["openid", "profile", "email", "User.Read"]
+        # Scopes for Microsoft Graph API
+        # Note: MSAL automatically handles reserved OIDC scopes (openid, profile, offline_access)
+        scopes = ["User.Read"]
 
         auth_url = self.msal_app.get_authorization_request_url(
             scopes=scopes,
@@ -96,7 +97,8 @@ class AzureAuthService:
             Tuple of (user, tenant, tokens)
         """
         # Exchange authorization code for tokens
-        scopes = ["openid", "profile", "email", "User.Read"]
+        # Note: MSAL automatically handles reserved OIDC scopes (openid, profile, offline_access)
+        scopes = ["User.Read"]
 
         result = self.msal_app.acquire_token_by_authorization_code(
             code=code,
@@ -307,7 +309,8 @@ class AzureAuthService:
             Updated user with Azure AD linked
         """
         # Exchange code for tokens
-        scopes = ["openid", "profile", "email", "User.Read"]
+        # Note: MSAL automatically handles reserved OIDC scopes (openid, profile, offline_access)
+        scopes = ["User.Read"]
 
         result = self.msal_app.acquire_token_by_authorization_code(
             code=code,

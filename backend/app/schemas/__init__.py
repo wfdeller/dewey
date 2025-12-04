@@ -10,8 +10,24 @@ from app.schemas.auth import (
     AzureCallbackRequest,
     AzureLinkRequest,
 )
+from app.schemas.roles import (
+    RoleCreate,
+    RoleUpdate,
+    RoleResponse,
+    RoleListResponse,
+    UserRoleAssignment,
+    UserRoleResponse,
+    UserListItem,
+    UserListResponse,
+    UserDetailResponse,
+    UserUpdateRequest,
+    InviteUserRequest,
+    PermissionInfo,
+    PermissionListResponse,
+)
 
 __all__ = [
+    # Auth
     "LoginRequest",
     "RegisterRequest",
     "TokenResponse",
@@ -20,4 +36,18 @@ __all__ = [
     "AzureAuthUrlResponse",
     "AzureCallbackRequest",
     "AzureLinkRequest",
+    # Roles
+    "RoleCreate",
+    "RoleUpdate",
+    "RoleResponse",
+    "RoleListResponse",
+    "UserRoleAssignment",
+    "UserRoleResponse",
+    "UserListItem",
+    "UserListResponse",
+    "UserDetailResponse",
+    "UserUpdateRequest",
+    "InviteUserRequest",
+    "PermissionInfo",
+    "PermissionListResponse",
 ]
