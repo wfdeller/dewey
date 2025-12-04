@@ -1,9 +1,12 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../stores/authStore';
 
+// Base URL from environment or default
+const baseURL = import.meta.env.VITE_API_URL || '/api/v1';
+
 // Create axios instance
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -36,7 +39,8 @@ api.interceptors.response.use(
       const refreshToken = useAuthStore.getState().refreshToken;
       if (refreshToken) {
         try {
-          const response = await axios.post('/api/v1/auth/refresh', {
+          // Use a new axios instance to avoid interceptor loops
+          const response = await axios.post(`${baseURL}/auth/refresh`, {
             refresh_token: refreshToken,
           });
 
@@ -46,11 +50,11 @@ api.interceptors.response.use(
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
           return api(originalRequest);
-        } catch (refreshError) {
+        } catch {
           // Refresh failed, logout
           useAuthStore.getState().logout();
           window.location.href = '/login';
-          return Promise.reject(refreshError);
+          return Promise.reject(error);
         }
       } else {
         // No refresh token, logout
@@ -72,6 +76,17 @@ export interface ApiError {
 // Helper to extract error message
 export const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
+    // Handle validation errors (422)
+    if (error.response?.status === 422 && error.response?.data?.detail) {
+      const detail = error.response.data.detail;
+      if (Array.isArray(detail)) {
+        // Pydantic validation errors are arrays
+        return detail.map((err: { msg: string; loc: string[] }) =>
+          `${err.loc.join('.')}: ${err.msg}`
+        ).join(', ');
+      }
+      return detail;
+    }
     return error.response?.data?.detail || error.message;
   }
   if (error instanceof Error) {

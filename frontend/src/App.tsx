@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Spin } from 'antd';
 import MainLayout from './layouts/MainLayout';
 import AuthLayout from './layouts/AuthLayout';
+import { useAuthStore } from './stores/authStore';
 
 // Lazy load pages for code splitting
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -16,6 +17,8 @@ const Forms = lazy(() => import('./pages/Forms'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const AzureCallback = lazy(() => import('./pages/AzureCallback'));
 
 // Loading component
 const PageLoader = () => (
@@ -30,17 +33,44 @@ const PageLoader = () => (
   </div>
 );
 
+// Full page loader for auth initialization
+const FullPageLoader = () => (
+  <div style={{
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+  }}>
+    <Spin size="large" />
+  </div>
+);
+
 function App() {
-  // TODO: Implement actual auth check
-  const isAuthenticated = true;
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
+  const initialize = useAuthStore((state) => state.initialize);
+
+  // Initialize auth state on app load
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // Show loading while auth state is being initialized
+  if (!isInitialized) {
+    return <FullPageLoader />;
+  }
 
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Auth routes */}
+        {/* Auth routes (public) */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Route>
+
+        {/* Azure AD callback (public, no layout) */}
+        <Route path="/auth/callback" element={<AzureCallback />} />
 
         {/* Protected routes */}
         <Route

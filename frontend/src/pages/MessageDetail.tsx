@@ -9,14 +9,12 @@ import {
   Row,
   Col,
   Divider,
-  Timeline,
   Typography,
   Space,
 } from 'antd';
 import {
   ArrowLeftOutlined,
   UserOutlined,
-  MailOutlined,
   ClockCircleOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';

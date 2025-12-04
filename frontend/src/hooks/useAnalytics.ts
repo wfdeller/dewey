@@ -12,6 +12,7 @@ interface AnalyticsParams {
   dateFrom?: string;
   dateTo?: string;
   categoryId?: string;
+  [key: string]: string | undefined;
 }
 
 // Dashboard summary stats

@@ -10,15 +10,24 @@ interface MessageFilters extends PaginationParams {
   search?: string;
   dateFrom?: string;
   dateTo?: string;
+  dateRange?: [string, string];
 }
 
 // Fetch messages list
 export function useMessages(filters: MessageFilters = {}) {
+  // Build query params, handling dateRange specially
+  const queryParams: Record<string, unknown> = { ...filters };
+  if (filters.dateRange) {
+    queryParams.dateFrom = filters.dateRange[0];
+    queryParams.dateTo = filters.dateRange[1];
+    delete queryParams.dateRange;
+  }
+
   return useQuery({
-    queryKey: queryKeys.messages.list(filters),
+    queryKey: queryKeys.messages.list(queryParams),
     queryFn: async () => {
       const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
+      Object.entries(queryParams).forEach(([key, value]) => {
         if (value !== undefined && value !== '') {
           params.append(key, String(value));
         }

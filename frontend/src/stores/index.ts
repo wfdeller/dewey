@@ -1,2 +1,3 @@
-export { useAuthStore } from './authStore';
+export { useAuthStore, mapUserResponse } from './authStore';
+export type { User } from './authStore';
 export { useUIStore } from './uiStore';
