@@ -1,0 +1,97 @@
+"""Tenant (organization) model."""
+
+from typing import TYPE_CHECKING, Literal
+
+from pydantic import model_validator
+from sqlalchemy import Column
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlmodel import Field, Relationship, SQLModel
+
+from app.models.base import BaseModel
+
+if TYPE_CHECKING:
+    from app.models.user import User
+    from app.models.category import Category
+    from app.models.message import Message
+    from app.models.workflow import Workflow
+    from app.models.contact import Contact, CustomFieldDefinition
+    from app.models.form import Form
+    from app.models.campaign import Campaign
+    from app.models.api_key import APIKey
+
+
+SubscriptionTier = Literal["free", "pro", "enterprise"]
+AIProvider = Literal["claude", "openai", "azure_openai", "ollama"]
+
+
+class TenantBase(SQLModel):
+    """Tenant base schema."""
+
+    name: str = Field(index=True)
+    slug: str = Field(unique=True, index=True, max_length=63)
+    subscription_tier: SubscriptionTier = Field(default="free")
+
+
+class Tenant(TenantBase, BaseModel, table=True):
+    """Tenant (organization) database model."""
+
+    __tablename__ = "tenant"
+
+    # Marketplace integration
+    marketplace_subscription_id: str | None = Field(default=None, index=True)
+    marketplace_provider: str | None = Field(default=None)  # azure, aws
+
+    # AI configuration (stored encrypted)
+    ai_provider: AIProvider = Field(default="claude")
+    ai_provider_config: dict = Field(default_factory=dict, sa_column=Column(JSONB))
+
+    # Tenant settings
+    settings: dict = Field(default_factory=dict, sa_column=Column(JSONB))
+
+    # Microsoft 365 integration
+    azure_tenant_id: str | None = Field(default=None, index=True)
+    graph_subscription_id: str | None = Field(default=None)  # For webhook notifications
+
+    # Relationships
+    users: list["User"] = Relationship(back_populates="tenant")
+    categories: list["Category"] = Relationship(back_populates="tenant")
+    messages: list["Message"] = Relationship(back_populates="tenant")
+    workflows: list["Workflow"] = Relationship(back_populates="tenant")
+    contacts: list["Contact"] = Relationship(back_populates="tenant")
+    custom_field_definitions: list["CustomFieldDefinition"] = Relationship(back_populates="tenant")
+    forms: list["Form"] = Relationship(back_populates="tenant")
+    campaigns: list["Campaign"] = Relationship(back_populates="tenant")
+    api_keys: list["APIKey"] = Relationship(back_populates="tenant")
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_slug(cls, values: dict) -> dict:
+        """Ensure slug is lowercase and URL-safe."""
+        if "slug" in values and values["slug"]:
+            values["slug"] = values["slug"].lower().replace(" ", "-")
+        return values
+
+
+class TenantCreate(TenantBase):
+    """Schema for creating a tenant."""
+
+    pass
+
+
+class TenantRead(TenantBase):
+    """Schema for reading a tenant."""
+
+    from uuid import UUID
+
+    id: UUID
+    marketplace_provider: str | None = None
+    ai_provider: AIProvider
+
+
+class TenantUpdate(SQLModel):
+    """Schema for updating a tenant."""
+
+    name: str | None = None
+    subscription_tier: SubscriptionTier | None = None
+    ai_provider: AIProvider | None = None
+    settings: dict | None = None

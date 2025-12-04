@@ -1,0 +1,108 @@
+# Dewey Development Docker Compose
+# Usage: docker-compose up -d
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: dewey-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dewey
+      POSTGRES_PASSWORD: dewey
+      POSTGRES_DB: dewey
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dewey -d dewey"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: dewey-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      target: development
+    container_name: dewey-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - /app/.venv  # Exclude venv from mount
+    environment:
+      - DATABASE_URL=postgresql://dewey:dewey@postgres:5432/dewey
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production-min32chars
+      - DEBUG=true
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Frontend (added in later phase)
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    container_name: dewey-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Exclude node_modules from mount
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    profiles:
+      - full  # Only start with --profile full
+
+  # Background Worker (added in later phase)
+  worker:
+    build:
+      context: ./backend
+      target: development
+    container_name: dewey-worker
+    restart: unless-stopped
+    command: ["python", "-m", "app.workers.processor"]
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://dewey:dewey@postgres:5432/dewey
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=dev-secret-key-change-in-production-min32chars
+      - DEBUG=true
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    profiles:
+      - full  # Only start with --profile full
+
+volumes:
+  postgres_data:
+  redis_data:
