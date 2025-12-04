@@ -6,48 +6,48 @@ Dewey is a SaaS platform for processing incoming communications (emails, forms, 
 
 ## Features
 
-- **Multi-Channel Intake** - Email, web forms, API, webhooks
-- **AI Analysis** - Sentiment scoring, entity extraction, classification suggestions
-- **Campaign Detection** - Identify coordinated/templated message campaigns
-- **Contact Management** - Track sender history with custom fields
-- **Workflow Automation** - Rule-based triggers and automated actions
-- **Analytics Dashboard** - Real-time insights, trends, and reports
-- **Form Builder** - Create embeddable forms and surveys
-- **Multi-Tenant** - Isolated data with per-tenant configuration
+-   **Multi-Channel Intake** - Email, web forms, API, webhooks
+-   **AI Analysis** - Sentiment scoring, entity extraction, classification suggestions
+-   **Campaign Detection** - Identify coordinated/templated message campaigns
+-   **Contact Management** - Track sender history with custom fields
+-   **Workflow Automation** - Rule-based triggers and automated actions
+-   **Analytics Dashboard** - Real-time insights, trends, and reports
+-   **Form Builder** - Create embeddable forms and surveys
+-   **Multi-Tenant** - Isolated data with per-tenant configuration
 
 ## Target Users
 
-- **Companies** - Customer feedback processing
-- **Elected Officials** - Constituent correspondence management
-- **Government Agencies** - Public inquiry handling
+-   **Companies** - Customer feedback processing
+-   **Elected Officials** - Constituent correspondence management
+-   **Government Agencies** - Public inquiry handling
 
 ## Documentation
 
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture overview
-- [TODO.md](./TODO.md) - Implementation checklist and progress tracking
-- [Design Document](./.claude/plans/sorted-riding-allen.md) - Detailed specifications
+-   [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture overview
+-   [TODO.md](./TODO.md) - Implementation checklist and progress tracking
+-   [Design Document](./.claude/plans/sorted-riding-allen.md) - Detailed specifications
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Backend | Python 3.11+ / FastAPI |
-| ORM | SQLModel + Alembic |
-| Frontend | TypeScript / React / Vite |
-| UI Library | Ant Design 5.x |
-| Database | PostgreSQL 15+ |
-| Cache | Redis 7+ |
-| Queue | AWS SQS / Redis Streams |
-| AI | Claude, OpenAI, Ollama (pluggable) |
-| Testing | pytest, Playwright, Locust |
+| Component  | Technology                         |
+| ---------- | ---------------------------------- |
+| Backend    | Python 3.11+ / FastAPI             |
+| ORM        | SQLModel + Alembic                 |
+| Frontend   | TypeScript / React / Vite          |
+| UI Library | Ant Design 5.x                     |
+| Database   | PostgreSQL 15+                     |
+| Cache      | Redis 7+                           |
+| Queue      | AWS SQS / Redis Streams            |
+| AI         | Claude, OpenAI, Ollama (pluggable) |
+| Testing    | pytest, Playwright, Locust         |
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 20+
-- Docker and Docker Compose
-- PostgreSQL 15+ (or use Docker)
-- Redis 7+ (or use Docker)
+-   Python 3.11+
+-   Node.js 20+
+-   Docker and Docker Compose
+-   PostgreSQL 15+ (or use Docker)
+-   Redis 7+ (or use Docker)
 
 ## Quick Start
 
@@ -108,9 +108,9 @@ npm run dev
 
 ### 6. Access the Application
 
-- **Frontend**: http://localhost:5173
-- **API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
+-   **Frontend**: http://localhost:5173
+-   **API**: http://localhost:8000
+-   **API Docs**: http://localhost:8000/docs
 
 ## Docker Compose (Full Stack)
 
@@ -121,26 +121,27 @@ docker-compose up -d
 ```
 
 This starts:
-- PostgreSQL (port 5432)
-- Redis (port 6379)
-- Backend API (port 8000)
-- Frontend (port 5173)
-- Worker (background processing)
+
+-   PostgreSQL (port 5432)
+-   Redis (port 6379)
+-   Backend API (port 8000)
+-   Frontend (port 5173)
+-   Worker (background processing)
 
 ## Configuration
 
 ### Environment Variables
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `REDIS_URL` | Redis connection string | Yes |
-| `SECRET_KEY` | JWT signing key | Yes |
-| `ANTHROPIC_API_KEY` | Claude API key | For Claude provider |
-| `OPENAI_API_KEY` | OpenAI API key | For OpenAI provider |
-| `AWS_REGION` | AWS region for SQS | For production |
-| `AWS_ACCESS_KEY_ID` | AWS credentials | For production |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials | For production |
+| Variable                | Description                  | Required            |
+| ----------------------- | ---------------------------- | ------------------- |
+| `DATABASE_URL`          | PostgreSQL connection string | Yes                 |
+| `REDIS_URL`             | Redis connection string      | Yes                 |
+| `SECRET_KEY`            | JWT signing key              | Yes                 |
+| `ANTHROPIC_API_KEY`     | Claude API key               | For Claude provider |
+| `OPENAI_API_KEY`        | OpenAI API key               | For OpenAI provider |
+| `AWS_REGION`            | AWS region for SQS           | For production      |
+| `AWS_ACCESS_KEY_ID`     | AWS credentials              | For production      |
+| `AWS_SECRET_ACCESS_KEY` | AWS credentials              | For production      |
 
 ### AI Provider Configuration
 
@@ -270,25 +271,25 @@ docker-compose -f docker-compose.prod.yml up -d
 
 API documentation is auto-generated from OpenAPI spec:
 
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **OpenAPI JSON**: http://localhost:8000/openapi.json
+-   **Swagger UI**: http://localhost:8000/docs
+-   **ReDoc**: http://localhost:8000/redoc
+-   **OpenAPI JSON**: http://localhost:8000/openapi.json
 
 ### Key Endpoints
 
-| Endpoint | Description |
-|----------|-------------|
-| `POST /api/v1/messages` | Submit message via API |
-| `GET /api/v1/messages` | List messages with filters |
-| `GET /api/v1/analytics/*` | Analytics data |
-| `POST /api/v1/forms/{id}/submit` | Form submission |
+| Endpoint                         | Description                |
+| -------------------------------- | -------------------------- |
+| `POST /api/v1/messages`          | Submit message via API     |
+| `GET /api/v1/messages`           | List messages with filters |
+| `GET /api/v1/analytics/*`        | Analytics data             |
+| `POST /api/v1/forms/{id}/submit` | Form submission            |
 
 ## Cloud Marketplace
 
 Dewey is available on:
 
-- **Azure Marketplace** (Primary) - [Link TBD]
-- **AWS Marketplace** - [Link TBD]
+-   **Azure Marketplace** (Primary) - [Link TBD]
+-   **AWS Marketplace** - [Link TBD]
 
 ## Microsoft 365 Integration
 
@@ -315,6 +316,6 @@ Required Graph API permissions: `Mail.Read`, `User.Read`
 
 ## Support
 
-- **Documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TODO.md](./TODO.md)
-- **Issues**: [GitHub Issues](https://github.com/your-org/dewey/issues)
-- **Email**: support@dewey.app
+-   **Documentation**: See [ARCHITECTURE.md](./ARCHITECTURE.md) and [TODO.md](./TODO.md)
+-   **Issues**: [GitHub Issues](https://github.com/your-org/dewey/issues)
+-   **Email**: support@dewey.app
