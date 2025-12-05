@@ -147,9 +147,53 @@ Handles multiple input channels:
 
 -   **Email (Microsoft 365)**: Primary - Microsoft Graph API integration
 -   **Email (Generic)**: IMAP polling + SMTP webhooks for non-O365 customers
--   **Forms**: Built-in form builder with embeddable widgets
+-   **Forms**: Built-in form builder with embeddable widgets and pre-identified user links
 -   **API**: REST endpoints for programmatic submission
 -   **Webhooks**: Integration with Zapier, Power Automate, custom systems
+
+### Pre-Identified Form Links
+
+Form links can include tokens that pre-identify the respondent, allowing submissions to be automatically linked to known contacts without requiring email entry.
+
+**URL Format:**
+```
+https://app.dewey.io/f/{tenant_slug}/{form_slug}?t={token}
+```
+
+**Data Model (form_link table):**
+```python
+class FormLink(BaseModel, table=True):
+    form_id: UUID              # Which form
+    contact_id: UUID           # Pre-identified contact
+    token: str                 # URL-safe random token (unique, indexed)
+
+    # Configuration
+    is_single_use: bool        # Invalidate after first submission
+    expires_at: datetime | None
+
+    # Tracking
+    used_at: datetime | None   # First use timestamp
+    use_count: int             # Total submissions via this link
+```
+
+**Use Cases:**
+- Email campaigns with personalized feedback links
+- Admin-generated links for specific contacts
+- Survey distribution with pre-linked respondents
+
+**API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/forms/{id}/links` | POST | Generate link for a contact |
+| `/forms/{id}/links/bulk` | POST | Bulk generate for multiple contacts |
+| `/forms/{id}/links` | GET | List links with usage stats |
+| `/forms/{id}/links/{token}` | DELETE | Revoke a link |
+
+**Security:**
+- Tokens are cryptographically random (128-bit entropy via `secrets.token_urlsafe(16)`)
+- Invalid/expired tokens show generic "form expired" message (no identity info leaked)
+- Single-use tokens prevent link sharing
+- Revocation available for compromised links
 
 ### Microsoft 365 / Graph API Integration
 
