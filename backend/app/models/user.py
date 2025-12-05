@@ -12,6 +12,7 @@ from app.models.base import BaseModel, TenantBaseModel
 
 if TYPE_CHECKING:
     from app.models.tenant import Tenant
+    from app.models.job import Job
 
 
 class RoleBase(SQLModel):
@@ -66,6 +67,7 @@ class User(UserBase, TenantBaseModel, table=True):
         back_populates="user",
         sa_relationship_kwargs={"foreign_keys": "UserRole.user_id"},
     )
+    jobs: list["Job"] = Relationship(back_populates="created_by")
 
     @property
     def roles(self) -> list[Role]:

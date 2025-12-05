@@ -24,6 +24,7 @@ const EmailTemplateEditor = lazy(() => import('./pages/EmailTemplateEditor'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
+const VoterImport = lazy(() => import('./pages/VoterImport'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const AzureCallback = lazy(() => import('./pages/AzureCallback'));
@@ -105,6 +106,7 @@ function App() {
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/voter-import" element={<VoterImport />} />
         </Route>
 
         {/* 404 */}

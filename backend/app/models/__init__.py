@@ -11,6 +11,8 @@ from app.models.workflow import Workflow, WorkflowExecution
 from app.models.form import Form, FormField, FormSubmission
 from app.models.api_key import APIKey
 from app.models.lov import ListOfValues
+from app.models.vote_history import VoteHistory
+from app.models.job import Job
 
 __all__ = [
     "Tenant",
@@ -32,4 +34,6 @@ __all__ = [
     "FormSubmission",
     "APIKey",
     "ListOfValues",
+    "VoteHistory",
+    "Job",
 ]

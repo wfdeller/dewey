@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from app.models.campaign import Campaign
     from app.models.api_key import APIKey
     from app.models.lov import ListOfValues
+    from app.models.vote_history import VoteHistory
+    from app.models.job import Job
 
 
 SubscriptionTier = Literal["free", "pro", "enterprise"]
@@ -86,6 +88,8 @@ class Tenant(TenantBase, BaseModel, table=True):
     campaigns: list["Campaign"] = Relationship(back_populates="tenant")
     api_keys: list["APIKey"] = Relationship(back_populates="tenant")
     list_of_values: list["ListOfValues"] = Relationship(back_populates="tenant")
+    vote_histories: list["VoteHistory"] = Relationship(back_populates="tenant")
+    jobs: list["Job"] = Relationship(back_populates="tenant")
 
     @model_validator(mode="before")
     @classmethod

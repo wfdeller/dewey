@@ -17,6 +17,7 @@ import {
     UserOutlined,
     LogoutOutlined,
     BulbOutlined,
+    UploadOutlined,
 } from '@ant-design/icons';
 import { useUIStore, useAuthStore } from '../stores';
 
@@ -37,6 +38,11 @@ const menuItems = [
         key: '/contacts',
         icon: <TeamOutlined />,
         label: 'Contacts',
+    },
+    {
+        key: '/voter-import',
+        icon: <UploadOutlined />,
+        label: 'Voter Import',
     },
     {
         key: '/categories',

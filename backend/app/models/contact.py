@@ -81,6 +81,7 @@ def clean_prefix_field(value: str | None) -> str | None:
 if TYPE_CHECKING:
     from app.models.tenant import Tenant
     from app.models.message import Message
+    from app.models.vote_history import VoteHistory
 
 
 FieldType = Literal["text", "select", "multi_select", "number", "date", "boolean"]
@@ -122,6 +123,7 @@ class ContactBase(SQLModel):
     voter_status: str | None = Field(default=None)  # "active", "inactive", "unregistered"
     party_affiliation: str | None = Field(default=None)  # "democrat", "republican", "independent", etc.
     voter_registration_date: date | None = Field(default=None)
+    modeled_party: str | None = Field(default=None)  # For non-party-registration states
 
     # Socioeconomic indicators (inferred or from public data)
     income_bracket: str | None = Field(default=None)  # "under_25k", "25k_50k", "50k_75k", "75k_100k", "100k_150k", "over_150k"
@@ -164,6 +166,12 @@ class Contact(ContactBase, TenantBaseModel, table=True):
     congressional_district: str | None = Field(default=None, index=True)  # e.g., "CA-12"
     state_legislative_district: str | None = Field(default=None, index=True)  # State senate/assembly
 
+    # Voter file fields (indexed for matching)
+    state_voter_id: str | None = Field(default=None, index=True)  # State-assigned voter ID
+    precinct: str | None = Field(default=None, index=True)  # Voting precinct
+    school_district: str | None = Field(default=None, index=True)  # School district
+    municipal_district: str | None = Field(default=None, index=True)  # Municipal/city council district
+
     # Geolocation (for mapping and radius searches)
     latitude: float | None = Field(default=None)
     longitude: float | None = Field(default=None)
@@ -190,6 +198,7 @@ class Contact(ContactBase, TenantBaseModel, table=True):
     tenant: "Tenant" = Relationship(back_populates="contacts")
     messages: list["Message"] = Relationship(back_populates="contact")
     field_values: list["ContactFieldValue"] = Relationship(back_populates="contact")
+    vote_histories: list["VoteHistory"] = Relationship(back_populates="contact")
 
 
 class CustomFieldDefinition(TenantBaseModel, table=True):
@@ -303,6 +312,13 @@ class ContactRead(ContactBase):
     county: str | None
     congressional_district: str | None
     state_legislative_district: str | None
+
+    # Voter file fields
+    state_voter_id: str | None
+    precinct: str | None
+    school_district: str | None
+    municipal_district: str | None
+
     latitude: float | None
     longitude: float | None
 
@@ -354,6 +370,13 @@ class ContactUpdate(SQLModel):
     voter_status: str | None = None
     party_affiliation: str | None = None
     voter_registration_date: date | None = None
+    modeled_party: str | None = None
+
+    # Voter file fields
+    state_voter_id: str | None = None
+    precinct: str | None = None
+    school_district: str | None = None
+    municipal_district: str | None = None
 
     # Socioeconomic
     income_bracket: str | None = None

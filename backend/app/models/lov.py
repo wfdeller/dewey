@@ -25,6 +25,10 @@ LIST_TYPES = [
     "voter_status",
     "communication_pref",
     "inactive_reason",
+    # Vote history related
+    "election_type",
+    "voting_method",
+    "party_ballot",
 ]
 
 
@@ -162,6 +166,28 @@ DEFAULT_LOV_DATA = {
         {"value": "deceased", "label": "Deceased"},
         {"value": "opt_out", "label": "Opted Out"},
         {"value": "invalid_contact", "label": "Invalid Contact Info"},
+        {"value": "other", "label": "Other"},
+    ],
+    # Vote history related
+    "election_type": [
+        {"value": "general", "label": "General Election"},
+        {"value": "primary", "label": "Primary Election"},
+        {"value": "special", "label": "Special Election"},
+        {"value": "municipal", "label": "Municipal Election"},
+        {"value": "runoff", "label": "Runoff Election"},
+    ],
+    "voting_method": [
+        {"value": "election_day", "label": "Election Day"},
+        {"value": "early", "label": "Early Voting"},
+        {"value": "absentee", "label": "Absentee"},
+        {"value": "mail", "label": "Vote by Mail"},
+    ],
+    "party_ballot": [
+        {"value": "democratic", "label": "Democratic"},
+        {"value": "republican", "label": "Republican"},
+        {"value": "libertarian", "label": "Libertarian"},
+        {"value": "green", "label": "Green"},
+        {"value": "independent", "label": "Independent/Nonpartisan"},
         {"value": "other", "label": "Other"},
     ],
 }

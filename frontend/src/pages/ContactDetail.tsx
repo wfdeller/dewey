@@ -62,6 +62,12 @@ import {
     ContactMessageSummary,
 } from '../services/contactsService';
 import { useActiveLOVQuery, toSelectOptions } from '../services/lovService';
+import {
+    useVoteHistoryQuery,
+    useVoteSummaryQuery,
+    formatVotingMethod,
+    formatElectionType,
+} from '../services/voteHistoryService';
 import { getErrorMessage } from '../services/api';
 import { useAuthStore } from '../stores/authStore';
 import type { ToneScore } from '../types';
@@ -140,6 +146,8 @@ export default function ContactDetail() {
         messagesPageSize
     );
     const { data: timelineData } = useContactTimelineQuery(contactId || '', 90);
+    const { data: voteHistoryData, isLoading: voteHistoryLoading } = useVoteHistoryQuery(contactId || '');
+    const { data: voteSummaryData } = useVoteSummaryQuery(contactId || '');
     const { data: lovData } = useActiveLOVQuery();
 
     // Convert LOV data to Select options
@@ -1006,11 +1014,57 @@ export default function ContactDetail() {
                                                     </Descriptions.Item>
                                                 </Descriptions>
 
+                                                {voteSummaryData && voteSummaryData.total_elections > 0 && (
+                                                    <Card type='inner' title='Voting Summary' style={{ marginBottom: 16 }}>
+                                                        <Row gutter={16}>
+                                                            <Col span={6}>
+                                                                <Statistic
+                                                                    title='Vote Rate'
+                                                                    value={voteSummaryData.vote_rate}
+                                                                    suffix='%'
+                                                                    precision={1}
+                                                                    valueStyle={{
+                                                                        color: voteSummaryData.vote_rate >= 70 ? '#52c41a' : voteSummaryData.vote_rate >= 40 ? '#faad14' : '#ff4d4f',
+                                                                    }}
+                                                                />
+                                                            </Col>
+                                                            <Col span={6}>
+                                                                <Statistic
+                                                                    title='Elections Voted'
+                                                                    value={voteSummaryData.elections_voted}
+                                                                    suffix={`/ ${voteSummaryData.total_elections}`}
+                                                                />
+                                                            </Col>
+                                                            <Col span={6}>
+                                                                <Statistic
+                                                                    title='General Elections'
+                                                                    value={voteSummaryData.general_elections_voted}
+                                                                />
+                                                            </Col>
+                                                            <Col span={6}>
+                                                                <Statistic
+                                                                    title='Primary Elections'
+                                                                    value={voteSummaryData.primary_elections_voted}
+                                                                />
+                                                            </Col>
+                                                        </Row>
+                                                        {voteSummaryData.last_voted_date && (
+                                                            <Paragraph type='secondary' style={{ marginTop: 16, marginBottom: 0 }}>
+                                                                Last voted: {dayjs(voteSummaryData.last_voted_date).format('MMM D, YYYY')} ({voteSummaryData.last_voted_election})
+                                                                {voteSummaryData.most_common_method && (
+                                                                    <> | Preferred method: {formatVotingMethod(voteSummaryData.most_common_method)}</>
+                                                                )}
+                                                            </Paragraph>
+                                                        )}
+                                                    </Card>
+                                                )}
+
                                                 <Title level={5} style={{ marginBottom: 16 }}>
                                                     Election History
                                                 </Title>
                                                 <Table
-                                                    dataSource={[]}
+                                                    dataSource={voteHistoryData?.items || []}
+                                                    loading={voteHistoryLoading}
                                                     columns={[
                                                         {
                                                             title: 'Election',
@@ -1038,7 +1092,7 @@ export default function ContactDetail() {
                                                                             : 'default'
                                                                     }
                                                                 >
-                                                                    {formatLabel(type)}
+                                                                    {formatElectionType(type)}
                                                                 </Tag>
                                                             ),
                                                         },
@@ -1071,11 +1125,17 @@ export default function ContactDetail() {
                                                             dataIndex: 'voting_method',
                                                             key: 'voting_method',
                                                             render: (method: string) =>
-                                                                method ? formatLabel(method) : 'N/A',
+                                                                method ? formatVotingMethod(method) : 'N/A',
                                                         },
                                                     ]}
-                                                    rowKey='election_id'
-                                                    pagination={false}
+                                                    rowKey='id'
+                                                    pagination={{
+                                                        total: voteHistoryData?.total || 0,
+                                                        pageSize: voteHistoryData?.page_size || 20,
+                                                        current: voteHistoryData?.page || 1,
+                                                        showSizeChanger: false,
+                                                        showTotal: (total) => `${total} elections`,
+                                                    }}
                                                     locale={{
                                                         emptyText: (
                                                             <Empty
@@ -1085,8 +1145,8 @@ export default function ContactDetail() {
                                                                         No voting history records
                                                                         <br />
                                                                         <Text type='secondary'>
-                                                                            Voting history will appear here once
-                                                                            imported from voter files
+                                                                            Import voter files to populate election
+                                                                            participation history
                                                                         </Text>
                                                                     </span>
                                                                 }

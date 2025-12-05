@@ -22,6 +22,7 @@ from app.models.contact import (
 )
 from app.models.message import Message
 from app.models.analysis import Analysis
+from app.models.vote_history import VoteHistory, VoteHistoryRead, VoteHistorySummary
 
 router = APIRouter()
 
@@ -114,6 +115,16 @@ class BulkTagResponse(BaseModel):
 
     success_count: int
     failed_count: int
+
+
+class VoteHistoryListResponse(BaseModel):
+    """Paginated vote history response."""
+
+    items: list[VoteHistoryRead]
+    total: int
+    page: int
+    page_size: int
+    pages: int
 
 
 # =============================================================================
@@ -760,3 +771,135 @@ async def _save_custom_field_values(
             field_value.value_date = value if value else None
         elif field_def.field_type == "boolean":
             field_value.value_boolean = bool(value) if value is not None else None
+
+
+# =============================================================================
+# Vote History Endpoints
+# =============================================================================
+
+
+@router.get("/{contact_id}/vote-history", response_model=VoteHistoryListResponse)
+async def get_contact_vote_history(
+    contact_id: UUID,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(PermissionChecker(Permissions.CONTACTS_READ)),
+    session: AsyncSession = Depends(get_session),
+) -> VoteHistoryListResponse:
+    """
+    Get vote history for a specific contact.
+
+    Returns paginated list of election participation records.
+    """
+    # Verify contact exists and belongs to tenant
+    contact_result = await session.execute(
+        select(Contact).where(
+            Contact.id == contact_id,
+            Contact.tenant_id == current_user.tenant_id,
+        )
+    )
+    if not contact_result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact not found",
+        )
+
+    # Get total count
+    count_query = select(func.count()).select_from(
+        select(VoteHistory).where(VoteHistory.contact_id == contact_id).subquery()
+    )
+    total_result = await session.execute(count_query)
+    total = total_result.scalar() or 0
+
+    # Get vote history records
+    offset = (page - 1) * page_size
+    query = (
+        select(VoteHistory)
+        .where(VoteHistory.contact_id == contact_id)
+        .order_by(VoteHistory.election_date.desc())
+        .offset(offset)
+        .limit(page_size)
+    )
+
+    result = await session.execute(query)
+    records = result.scalars().all()
+
+    pages = (total + page_size - 1) // page_size
+
+    return VoteHistoryListResponse(
+        items=[VoteHistoryRead.model_validate(r) for r in records],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+    )
+
+
+@router.get("/{contact_id}/vote-history/summary", response_model=VoteHistorySummary)
+async def get_contact_vote_summary(
+    contact_id: UUID,
+    current_user: User = Depends(PermissionChecker(Permissions.CONTACTS_READ)),
+    session: AsyncSession = Depends(get_session),
+) -> VoteHistorySummary:
+    """
+    Get aggregated voting statistics for a contact.
+
+    Returns summary including vote rate, elections voted/missed, etc.
+    """
+    # Verify contact exists and belongs to tenant
+    contact_result = await session.execute(
+        select(Contact).where(
+            Contact.id == contact_id,
+            Contact.tenant_id == current_user.tenant_id,
+        )
+    )
+    if not contact_result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact not found",
+        )
+
+    # Get all vote history records
+    result = await session.execute(
+        select(VoteHistory)
+        .where(VoteHistory.contact_id == contact_id)
+        .order_by(VoteHistory.election_date.desc())
+    )
+    records = list(result.scalars().all())
+
+    # Calculate statistics
+    total_elections = len(records)
+    elections_voted = sum(1 for r in records if r.voted is True)
+    elections_missed = sum(1 for r in records if r.voted is False)
+    elections_unknown = sum(1 for r in records if r.voted is None)
+
+    general_voted = sum(1 for r in records if r.voted is True and r.election_type == "general")
+    primary_voted = sum(1 for r in records if r.voted is True and r.election_type == "primary")
+
+    vote_rate = (elections_voted / total_elections * 100) if total_elections > 0 else 0.0
+
+    # Find last voted
+    voted_records = [r for r in records if r.voted is True]
+    last_voted_date = voted_records[0].election_date if voted_records else None
+    last_voted_election = voted_records[0].election_name if voted_records else None
+
+    # Find most common voting method
+    methods = [r.voting_method for r in records if r.voting_method]
+    most_common_method = None
+    if methods:
+        from collections import Counter
+        method_counts = Counter(methods)
+        most_common_method = method_counts.most_common(1)[0][0]
+
+    return VoteHistorySummary(
+        total_elections=total_elections,
+        elections_voted=elections_voted,
+        elections_missed=elections_missed,
+        elections_unknown=elections_unknown,
+        vote_rate=vote_rate,
+        general_elections_voted=general_voted,
+        primary_elections_voted=primary_voted,
+        last_voted_date=last_voted_date,
+        last_voted_election=last_voted_election,
+        most_common_method=most_common_method,
+    )
