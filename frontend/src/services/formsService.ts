@@ -84,6 +84,47 @@ export interface FormAnalytics {
   avgCompletionTimeSeconds?: number;
 }
 
+// Form Link types (pre-identified user tokens)
+export interface FormLink {
+  id: string;
+  formId: string;
+  contactId: string;
+  token: string;
+  isSingleUse: boolean;
+  expiresAt?: string;
+  usedAt?: string;
+  useCount: number;
+  createdAt: string;
+}
+
+export interface CreateFormLinkRequest {
+  contactId: string;
+  isSingleUse?: boolean;
+  expiresAt?: string;
+}
+
+export interface CreateFormLinksBulkRequest {
+  contactIds: string[];
+  isSingleUse?: boolean;
+  expiresAt?: string;
+}
+
+export interface FormLinkListResponse {
+  items: FormLink[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface FormLinkBulkResponse {
+  links: FormLink[];
+  createdCount: number;
+}
+
+export interface PublicFormResponse extends FormDetailResponse {
+  contactId?: string;
+}
+
 // API functions
 export const formsService = {
   // Form CRUD
@@ -194,18 +235,55 @@ export const formsService = {
   },
 
   // Public form (for embedding)
-  async getPublicForm(tenantSlug: string, formSlug: string): Promise<FormDetailResponse> {
-    const response = await api.get<FormDetailResponse>(
-      `/forms/public/${tenantSlug}/${formSlug}`
+  async getPublicForm(tenantSlug: string, formSlug: string, token?: string): Promise<PublicFormResponse> {
+    const params = token ? { t: token } : {};
+    const response = await api.get<PublicFormResponse>(
+      `/forms/public/${tenantSlug}/${formSlug}`,
+      { params }
     );
     return response.data;
   },
 
-  async submitForm(formId: string, fieldValues: Record<string, unknown>): Promise<FormSubmission> {
-    const response = await api.post<FormSubmission>(`/forms/${formId}/submit`, {
-      field_values: fieldValues,
+  async submitForm(formId: string, fieldValues: Record<string, unknown>, token?: string): Promise<FormSubmission> {
+    const params = token ? { t: token } : {};
+    const response = await api.post<FormSubmission>(
+      `/forms/${formId}/submit`,
+      { field_values: fieldValues },
+      { params }
+    );
+    return response.data;
+  },
+
+  // Form Links (pre-identified user tokens)
+  async createFormLink(formId: string, data: CreateFormLinkRequest): Promise<FormLink> {
+    const payload = {
+      contact_id: data.contactId,
+      is_single_use: data.isSingleUse ?? false,
+      expires_at: data.expiresAt,
+    };
+    const response = await api.post<FormLink>(`/forms/${formId}/links`, payload);
+    return response.data;
+  },
+
+  async createFormLinksBulk(formId: string, data: CreateFormLinksBulkRequest): Promise<FormLinkBulkResponse> {
+    const payload = {
+      contact_ids: data.contactIds,
+      is_single_use: data.isSingleUse ?? false,
+      expires_at: data.expiresAt,
+    };
+    const response = await api.post<FormLinkBulkResponse>(`/forms/${formId}/links/bulk`, payload);
+    return response.data;
+  },
+
+  async listFormLinks(formId: string, page = 1, pageSize = 20): Promise<FormLinkListResponse> {
+    const response = await api.get<FormLinkListResponse>(`/forms/${formId}/links`, {
+      params: { page, page_size: pageSize },
     });
     return response.data;
+  },
+
+  async revokeFormLink(formId: string, token: string): Promise<void> {
+    await api.delete(`/forms/${formId}/links/${token}`);
   },
 };
 
@@ -331,6 +409,48 @@ export const useReorderFieldsMutation = () => {
       formsService.reorderFields(formId, fieldOrder),
     onSuccess: (_, { formId }) => {
       queryClient.invalidateQueries({ queryKey: ['forms', formId] });
+    },
+  });
+};
+
+// Form Links hooks
+export const useFormLinksQuery = (formId: string, page = 1, pageSize = 20) => {
+  return useQuery({
+    queryKey: ['forms', formId, 'links', page, pageSize],
+    queryFn: () => formsService.listFormLinks(formId, page, pageSize),
+    enabled: !!formId,
+  });
+};
+
+export const useCreateFormLinkMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ formId, data }: { formId: string; data: CreateFormLinkRequest }) =>
+      formsService.createFormLink(formId, data),
+    onSuccess: (_, { formId }) => {
+      queryClient.invalidateQueries({ queryKey: ['forms', formId, 'links'] });
+    },
+  });
+};
+
+export const useCreateFormLinksBulkMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ formId, data }: { formId: string; data: CreateFormLinksBulkRequest }) =>
+      formsService.createFormLinksBulk(formId, data),
+    onSuccess: (_, { formId }) => {
+      queryClient.invalidateQueries({ queryKey: ['forms', formId, 'links'] });
+    },
+  });
+};
+
+export const useRevokeFormLinkMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ formId, token }: { formId: string; token: string }) =>
+      formsService.revokeFormLink(formId, token),
+    onSuccess: (_, { formId }) => {
+      queryClient.invalidateQueries({ queryKey: ['forms', formId, 'links'] });
     },
   });
 };

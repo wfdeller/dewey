@@ -326,7 +326,31 @@
 - [x] Create embed code generator page (FormEmbed.tsx)
   - [x] Direct link, iFrame, and JavaScript widget options
   - [x] Configurable iFrame dimensions
-- [ ] Generate shareable links
+
+### 2.1.1 Pre-Identified Form Links
+- [x] Add `form_link` model and migration
+  - [x] Fields: form_id, contact_id, token, is_single_use, expires_at, used_at, use_count
+  - [x] Unique index on token
+- [x] Create token service (`backend/app/services/form_links.py`)
+  - [x] `generate_token()` - cryptographically random URL-safe token (128-bit)
+  - [x] `validate_token()` - check expiration, single-use status
+  - [x] `mark_token_used()` - update usage tracking
+- [x] Backend API endpoints
+  - [x] `POST /forms/{id}/links` - generate link for contact
+  - [x] `POST /forms/{id}/links/bulk` - bulk generate for campaign
+  - [x] `GET /forms/{id}/links` - list links with usage stats
+  - [x] `DELETE /forms/{id}/links/{token}` - revoke link
+- [x] Modify existing endpoints
+  - [x] `GET /forms/public/{tenant}/{slug}?t={token}` - validate token, return contact_id
+  - [x] `POST /forms/{id}/submit?t={token}` - link submission to token's contact
+- [x] Frontend: Form Links management page
+  - [x] Table with contact, created, expires, uses, status
+  - [x] Generate link modal (select contact, options)
+  - [x] Copy link button, revoke action
+- [x] Frontend: Handle token in public form
+  - [x] Extract `t` param from URL
+  - [x] Pass to submission API
+  - [x] Show "form expired" error for invalid tokens (410 Gone)
 
 ### 2.2 Contact Management (Ant Design)
 - [ ] Build contacts list page
@@ -723,7 +747,7 @@ Use this section to track overall progress:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Foundation | In Progress | ~85% |
-| Phase 2: Core Features | Not Started | 0% |
+| Phase 2: Core Features | In Progress | ~15% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
 
@@ -740,6 +764,17 @@ Use this section to track overall progress:
 | 1.8 AI Pipeline | Not Started |
 | 1.9 Basic Frontend | Complete (auth, users/roles/API keys UI, Settings page) |
 
+### Phase 2 Breakdown
+| Section | Status |
+|---------|--------|
+| 2.1 Form Builder | Complete (CRUD, drag-drop, preview, embed) |
+| 2.1.1 Pre-Identified Form Links | Complete |
+| 2.2 Contact Management | Not Started |
+| 2.3 Category Management | Not Started |
+| 2.4 Campaign Detection | Not Started |
+| 2.5 Workflow Engine | Not Started |
+| 2.6 Analytics Dashboard | Not Started |
+
 ### API Endpoints Summary
 | Router | Endpoints | Status |
 |--------|-----------|--------|
@@ -752,7 +787,7 @@ Use this section to track overall progress:
 | /custom-fields | 5 | Working (full CRUD) |
 | /campaigns | 8 | Working (full CRUD with merge/respond) |
 | /workflows | 9 | Working (full CRUD with trigger eval) |
-| /forms | 12 | Working (full CRUD with submissions) |
+| /forms | 16 | Working (full CRUD with submissions + form links) |
 | /analytics | 12 | Working (dashboard, trends, datasets) |
 | /roles | 6 | Working |
 | /users | 7 | Working |

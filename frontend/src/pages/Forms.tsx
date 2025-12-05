@@ -28,6 +28,7 @@ import {
   FileTextOutlined,
   BarChartOutlined,
   CodeOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { Form as FormType, FormStatus } from '../types';
@@ -231,6 +232,12 @@ export default function Forms() {
                   icon: <CodeOutlined />,
                   label: 'Embed Code',
                   onClick: () => navigate(`/forms/${record.id}/embed`),
+                },
+                {
+                  key: 'links',
+                  icon: <LinkOutlined />,
+                  label: 'Manage Links',
+                  onClick: () => navigate(`/forms/${record.id}/links`),
                 },
                 { type: 'divider' },
                 {

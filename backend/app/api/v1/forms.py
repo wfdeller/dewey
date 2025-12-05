@@ -24,7 +24,13 @@ from app.models.form import (
     FormSubmissionCreate,
     FormSubmissionRead,
     FormStatus,
+    FormLink,
+    FormLinkCreate,
+    FormLinkRead,
+    FormLinkBulkCreate,
+    FormLinkBulkResponse,
 )
+from app.services import form_links as form_links_service
 
 router = APIRouter()
 
@@ -569,13 +575,34 @@ async def submit_form(
     form_id: UUID,
     request: FormSubmissionCreate,
     http_request: Request,
+    t: str | None = Query(None, description="Pre-identification token"),
     session: AsyncSession = Depends(get_session),
 ) -> FormSubmissionRead:
     """
     Submit a form response.
 
     This is a public endpoint - no authentication required for published forms.
+
+    If a valid token is provided via the `t` query parameter, the submission
+    is automatically linked to the pre-identified contact. For single-use tokens,
+    the token is marked as used after submission.
     """
+    # Validate token if provided
+    validated_link = None
+    if t:
+        validated_link = await form_links_service.validate_token(session, t)
+        if not validated_link:
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="This form is no longer available",
+            )
+        # Verify token is for this form
+        if validated_link.form_id != form_id:
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="This form is no longer available",
+            )
+
     # Get form (must be published)
     result = await session.execute(
         select(Form).where(
@@ -616,9 +643,21 @@ async def submit_form(
             elif field.maps_to_contact_field == "name" and value:
                 sender_name = value
 
-    # Find or create contact if email was provided
+    # Determine contact: token-based or email-based
     contact = None
-    if sender_email:
+
+    if validated_link:
+        # Token provided - use pre-identified contact
+        contact_result = await session.execute(
+            select(Contact).where(Contact.id == validated_link.contact_id)
+        )
+        contact = contact_result.scalars().first()
+        # Get contact info for message
+        if contact:
+            sender_email = sender_email or contact.email
+            sender_name = sender_name or contact.name
+    elif sender_email:
+        # No token - find or create contact by email
         contact_result = await session.execute(
             select(Contact).where(
                 Contact.tenant_id == form.tenant_id,
@@ -685,6 +724,10 @@ async def submit_form(
     if contact:
         contact.last_contact_at = datetime.utcnow()
         contact.message_count = (contact.message_count or 0) + 1
+
+    # Mark token as used (for single-use tracking)
+    if validated_link:
+        await form_links_service.mark_token_used(session, validated_link)
 
     await session.commit()
     await session.refresh(submission)
@@ -755,20 +798,41 @@ async def get_form_analytics(
 # =============================================================================
 
 
-@router.get("/public/{tenant_slug}/{form_slug}", response_model=FormDetailResponse)
+class PublicFormResponse(FormDetailResponse):
+    """Public form response with optional pre-identified contact."""
+
+    contact_id: UUID | None = None
+
+
+@router.get("/public/{tenant_slug}/{form_slug}", response_model=PublicFormResponse)
 async def get_public_form(
     tenant_slug: str,
     form_slug: str,
+    t: str | None = Query(None, description="Pre-identification token"),
     session: AsyncSession = Depends(get_session),
-) -> FormDetailResponse:
+) -> PublicFormResponse:
     """
     Get a public form by tenant and form slug.
 
     Used by embedded forms and direct links.
     Only returns published forms.
+
+    If a valid token is provided via the `t` query parameter, the response
+    includes the pre-identified contact_id for automatic form submission linking.
     """
     # Import here to avoid circular imports
     from app.models.tenant import Tenant
+
+    # If token provided, validate it first
+    validated_link = None
+    if t:
+        validated_link = await form_links_service.validate_token(session, t)
+        if not validated_link:
+            # Token invalid or expired - return generic error
+            raise HTTPException(
+                status_code=status.HTTP_410_GONE,
+                detail="This form is no longer available",
+            )
 
     # Find tenant by slug
     tenant_result = await session.execute(
@@ -798,6 +862,13 @@ async def get_public_form(
             detail="Form not found",
         )
 
+    # If token was provided, verify it matches this form
+    if validated_link and validated_link.form_id != form.id:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="This form is no longer available",
+        )
+
     # Get fields
     fields_result = await session.execute(
         select(FormField)
@@ -806,7 +877,210 @@ async def get_public_form(
     )
     fields = fields_result.scalars().all()
 
-    return FormDetailResponse(
+    return PublicFormResponse(
         **FormRead.model_validate(form).model_dump(),
         fields=[FormFieldRead.model_validate(f) for f in fields],
+        contact_id=validated_link.contact_id if validated_link else None,
     )
+
+
+# =============================================================================
+# Form Link Endpoints (Pre-identified user tokens)
+# =============================================================================
+
+
+class FormLinkListResponse(BaseModel):
+    """Response for listing form links."""
+
+    items: list[FormLinkRead]
+    total: int
+    page: int
+    page_size: int
+
+
+@router.post("/{form_id}/links", response_model=FormLinkRead)
+async def create_form_link(
+    form_id: UUID,
+    request: FormLinkCreate,
+    current_user: User = Depends(PermissionChecker(Permissions.FORMS_WRITE)),
+    session: AsyncSession = Depends(get_session),
+) -> FormLinkRead:
+    """
+    Create a pre-identified form link for a contact.
+
+    The generated link URL includes a token that automatically identifies
+    the contact when they submit the form, without requiring email entry.
+    """
+    # Verify form exists and belongs to tenant
+    form_result = await session.execute(
+        select(Form).where(
+            Form.id == form_id,
+            Form.tenant_id == current_user.tenant_id,
+        )
+    )
+    form = form_result.scalars().first()
+    if not form:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Form not found",
+        )
+
+    # Verify contact exists and belongs to tenant
+    contact_result = await session.execute(
+        select(Contact).where(
+            Contact.id == request.contact_id,
+            Contact.tenant_id == current_user.tenant_id,
+        )
+    )
+    contact = contact_result.scalars().first()
+    if not contact:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contact not found",
+        )
+
+    # Create the link
+    link = await form_links_service.create_form_link(
+        session=session,
+        form_id=form_id,
+        contact_id=request.contact_id,
+        is_single_use=request.is_single_use,
+        expires_at=request.expires_at,
+    )
+
+    return FormLinkRead.model_validate(link)
+
+
+@router.post("/{form_id}/links/bulk", response_model=FormLinkBulkResponse)
+async def create_form_links_bulk(
+    form_id: UUID,
+    request: FormLinkBulkCreate,
+    current_user: User = Depends(PermissionChecker(Permissions.FORMS_WRITE)),
+    session: AsyncSession = Depends(get_session),
+) -> FormLinkBulkResponse:
+    """
+    Bulk create pre-identified form links for multiple contacts.
+
+    Useful for email campaigns where each contact needs a unique link.
+    """
+    # Verify form exists and belongs to tenant
+    form_result = await session.execute(
+        select(Form).where(
+            Form.id == form_id,
+            Form.tenant_id == current_user.tenant_id,
+        )
+    )
+    form = form_result.scalars().first()
+    if not form:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Form not found",
+        )
+
+    # Verify all contacts exist and belong to tenant
+    contacts_result = await session.execute(
+        select(Contact).where(
+            Contact.id.in_(request.contact_ids),
+            Contact.tenant_id == current_user.tenant_id,
+        )
+    )
+    valid_contacts = contacts_result.scalars().all()
+    valid_contact_ids = {c.id for c in valid_contacts}
+
+    # Create links for valid contacts
+    links = []
+    for contact_id in request.contact_ids:
+        if contact_id in valid_contact_ids:
+            link = await form_links_service.create_form_link(
+                session=session,
+                form_id=form_id,
+                contact_id=contact_id,
+                is_single_use=request.is_single_use,
+                expires_at=request.expires_at,
+            )
+            links.append(FormLinkRead.model_validate(link))
+
+    return FormLinkBulkResponse(
+        links=links,
+        created_count=len(links),
+    )
+
+
+@router.get("/{form_id}/links", response_model=FormLinkListResponse)
+async def list_form_links(
+    form_id: UUID,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    current_user: User = Depends(PermissionChecker(Permissions.FORMS_READ)),
+    session: AsyncSession = Depends(get_session),
+) -> FormLinkListResponse:
+    """List all links for a form with usage statistics."""
+    # Verify form exists and belongs to tenant
+    form_result = await session.execute(
+        select(Form).where(
+            Form.id == form_id,
+            Form.tenant_id == current_user.tenant_id,
+        )
+    )
+    if not form_result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Form not found",
+        )
+
+    # Get total count
+    count_result = await session.execute(
+        select(func.count()).where(FormLink.form_id == form_id)
+    )
+    total = count_result.scalar() or 0
+
+    # Get paginated links
+    offset = (page - 1) * page_size
+    links_result = await session.execute(
+        select(FormLink)
+        .where(FormLink.form_id == form_id)
+        .order_by(FormLink.created_at.desc())
+        .offset(offset)
+        .limit(page_size)
+    )
+    links = links_result.scalars().all()
+
+    return FormLinkListResponse(
+        items=[FormLinkRead.model_validate(link) for link in links],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.delete("/{form_id}/links/{token}")
+async def revoke_form_link(
+    form_id: UUID,
+    token: str,
+    current_user: User = Depends(PermissionChecker(Permissions.FORMS_WRITE)),
+    session: AsyncSession = Depends(get_session),
+):
+    """Revoke (delete) a form link."""
+    # Verify form exists and belongs to tenant
+    form_result = await session.execute(
+        select(Form).where(
+            Form.id == form_id,
+            Form.tenant_id == current_user.tenant_id,
+        )
+    )
+    if not form_result.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Form not found",
+        )
+
+    # Find the link
+    link = await form_links_service.get_link_by_token(session, token)
+    if not link or link.form_id != form_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Link not found",
+        )
+
+    await form_links_service.revoke_link(session, link)
+    return {"detail": "Link revoked"}

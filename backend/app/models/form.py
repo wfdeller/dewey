@@ -211,3 +211,73 @@ class FormSubmissionRead(SQLModel):
     submitted_at: datetime
     field_values: dict
     status: SubmissionStatus
+
+
+# ============================================================================
+# Form Links - Pre-identified user tokens for form submissions
+# ============================================================================
+
+
+class FormLink(BaseModel, table=True):
+    """Trackable form link for pre-identified users.
+
+    Allows generating unique URLs with tokens that pre-identify a contact,
+    so form submissions are automatically linked without requiring email entry.
+    """
+
+    __tablename__ = "form_link"
+
+    form_id: UUID = Field(foreign_key="form.id", index=True)
+    contact_id: UUID = Field(foreign_key="contact.id", index=True)
+
+    # URL-safe random token (unique identifier for the link)
+    token: str = Field(unique=True, index=True)
+
+    # Configuration
+    is_single_use: bool = Field(default=False)  # Invalidate after first submission
+    expires_at: datetime | None = None
+
+    # Tracking
+    used_at: datetime | None = None  # First use timestamp
+    use_count: int = Field(default=0)  # Total submissions via this link
+
+    # Relationships
+    form: Form = Relationship()
+    contact: "Contact" = Relationship()
+
+
+class FormLinkCreate(SQLModel):
+    """Schema for creating a form link."""
+
+    contact_id: UUID
+    is_single_use: bool = False
+    expires_at: datetime | None = None
+
+
+class FormLinkRead(SQLModel):
+    """Schema for reading a form link."""
+
+    id: UUID
+    form_id: UUID
+    contact_id: UUID
+    token: str
+    is_single_use: bool
+    expires_at: datetime | None
+    used_at: datetime | None
+    use_count: int
+    created_at: datetime
+
+
+class FormLinkBulkCreate(SQLModel):
+    """Schema for bulk creating form links."""
+
+    contact_ids: list[UUID]
+    is_single_use: bool = False
+    expires_at: datetime | None = None
+
+
+class FormLinkBulkResponse(SQLModel):
+    """Response schema for bulk link creation."""
+
+    links: list[FormLinkRead]
+    created_count: int
