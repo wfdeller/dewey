@@ -14,6 +14,9 @@ const Categories = lazy(() => import('./pages/Categories'));
 const Campaigns = lazy(() => import('./pages/Campaigns'));
 const Workflows = lazy(() => import('./pages/Workflows'));
 const Forms = lazy(() => import('./pages/Forms'));
+const FormBuilder = lazy(() => import('./pages/FormBuilder'));
+const FormSubmissions = lazy(() => import('./pages/FormSubmissions'));
+const FormEmbed = lazy(() => import('./pages/FormEmbed'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Login = lazy(() => import('./pages/Login'));
@@ -87,6 +90,9 @@ function App() {
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/workflows" element={<Workflows />} />
           <Route path="/forms" element={<Forms />} />
+          <Route path="/forms/:formId/builder" element={<FormBuilder />} />
+          <Route path="/forms/:formId/submissions" element={<FormSubmissions />} />
+          <Route path="/forms/:formId/embed" element={<FormEmbed />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
         </Route>

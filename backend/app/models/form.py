@@ -154,8 +154,8 @@ class FormRead(FormBase):
 
     id: UUID
     tenant_id: UUID
-    settings: dict
-    styling: dict
+    settings: dict | None = None
+    styling: dict | None = None
 
 
 class FormFieldCreate(SQLModel):
@@ -182,13 +182,13 @@ class FormFieldRead(SQLModel):
     form_id: UUID
     field_type: FieldType
     label: str
-    placeholder: str | None
-    help_text: str | None
-    is_required: bool
-    sort_order: int
-    validation: dict
-    options: list[dict]
-    conditional_logic: dict | None
+    placeholder: str | None = None
+    help_text: str | None = None
+    is_required: bool = False
+    sort_order: int = 0
+    validation: dict | None = None
+    options: list[dict] | None = None
+    conditional_logic: dict | None = None
 
 
 class FormSubmissionCreate(SQLModel):

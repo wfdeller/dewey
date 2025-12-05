@@ -296,27 +296,36 @@
 ## Phase 2: Core Features
 
 ### 2.1 Form Builder (Ant Design)
-- [ ] Create form management API endpoints
-- [ ] Build form builder UI
-  - [ ] Drag-and-drop with `dnd-kit` library
-  - [ ] `Card` for each field with edit/delete actions
-  - [ ] `Drawer` for field property editor
-  - [ ] `Tabs` for switching between Edit/Preview modes
-  - [ ] Live preview using Ant Design form components
-- [ ] Implement all field types (map to Ant Design):
-  - [ ] text → `Input`, textarea → `Input.TextArea`
-  - [ ] email/phone → `Input` with validation
-  - [ ] select → `Select`, multi_select → `Select mode="multiple"`
-  - [ ] radio → `Radio.Group`, checkbox → `Checkbox.Group`
-  - [ ] date → `DatePicker`, number → `InputNumber`
-  - [ ] rating → `Rate`, nps → custom with `Radio.Group`
-  - [ ] file_upload → `Upload`
+- [x] Create form management API endpoints
+- [x] Build form builder UI
+  - [x] Drag-and-drop with `dnd-kit` library
+  - [x] `Card` for each field with edit/delete actions
+  - [x] `Drawer` for field property editor
+  - [x] `Tabs` for switching between Edit/Preview modes
+  - [x] Live preview using Ant Design form components
+- [x] Implement all field types (map to Ant Design):
+  - [x] text → `Input`, textarea → `Input.TextArea`
+  - [x] email/phone → `Input` with validation
+  - [x] select → `Select`, multi_select → `Select mode="multiple"`
+  - [x] radio → `Radio.Group`, checkbox → `Checkbox.Group`
+  - [x] date → `DatePicker`, number → `InputNumber`
+  - [x] rating → `Rate`, nps → custom with `Radio.Group`
+  - [x] file_upload → `Upload`
 - [ ] Add conditional logic support
 - [ ] Create form styling options (`ConfigProvider` theme)
 - [ ] Build form templates library
-- [ ] Implement form submission endpoint
+- [x] Implement form submission endpoint (backend)
 - [ ] Create embeddable widget (standalone React build)
-- [ ] Create iframe embed option
+- [x] Create iframe embed option
+- [x] Build form list page (Forms.tsx)
+  - [x] Stats cards, CRUD modals, duplicate form
+  - [x] Dropdown menu with actions (preview, submissions, embed, etc.)
+- [x] Build form submissions viewer (FormSubmissions.tsx)
+  - [x] Paginated table, status filtering, detail modal
+  - [x] Analytics stats (total, today, this week)
+- [x] Create embed code generator page (FormEmbed.tsx)
+  - [x] Direct link, iFrame, and JavaScript widget options
+  - [x] Configurable iFrame dimensions
 - [ ] Generate shareable links
 
 ### 2.2 Contact Management (Ant Design)
@@ -751,4 +760,4 @@ Use this section to track overall progress:
 
 ---
 
-*Last updated: December 4, 2024*
+*Last updated: December 5, 2024*
