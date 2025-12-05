@@ -143,11 +143,14 @@
   - [x] PATCH /api/v1/api-keys/:id (update scopes, rate_limit)
   - [x] DELETE /api/v1/api-keys/:id (revoke)
   - [x] POST /api/v1/api-keys/:id/rotate
-- [ ] API key management UI (Ant Design)
-  - [ ] `Table` listing keys with last_used_at
-  - [ ] `Modal` for create with scope `Checkbox.Group`
-  - [ ] Copy-to-clipboard for new key
-  - [ ] Confirm dialog for revoke/rotate
+- [x] API key management UI (Ant Design)
+  - [x] `Table` listing keys with prefix, scopes, rate limit, expiration, last_used_at
+  - [x] `Modal` for create/edit with scope `Checkbox.Group` by category
+  - [x] Copy-to-clipboard for new key with secure display modal
+  - [x] Confirm dialog for revoke/rotate actions
+  - [x] Expiration status indicators (expired, expiring soon)
+  - [x] IP allowlist configuration (textarea)
+  - [x] Rate limit configuration
 
 ### 1.6 Core API Endpoints
 - [x] **Tenants**: POST, GET, PATCH /api/v1/tenants (scaffolded)
@@ -672,11 +675,11 @@ Use this section to track overall progress:
 | 1.2 Database & ORM | Models Complete, migrations pending |
 | 1.3 Authentication | Complete (JWT, password auth, Azure AD SSO) |
 | 1.4 RBAC | Complete (APIs, UI for users/roles management) |
-| 1.5 API Keys | Complete (middleware, rate limiting, endpoints) |
+| 1.5 API Keys | Complete (middleware, rate limiting, endpoints, UI) |
 | 1.6 Core API Endpoints | Scaffolded, implementation pending |
 | 1.7 Message Intake | Partial (Azure AD SSO done, Graph API pending) |
 | 1.8 AI Pipeline | Not Started |
-| 1.9 Basic Frontend | Complete (auth, users/roles UI, Settings page)
+| 1.9 Basic Frontend | Complete (auth, users/roles/API keys UI, Settings page) |
 
 ---
 

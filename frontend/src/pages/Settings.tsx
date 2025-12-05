@@ -11,6 +11,7 @@ import {
 } from '@ant-design/icons';
 import UsersTab from '../components/settings/UsersTab';
 import RolesTab from '../components/settings/RolesTab';
+import ApiKeysTab from '../components/settings/ApiKeysTab';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -64,17 +65,7 @@ export default function Settings() {
           API Keys
         </span>
       ),
-      children: (
-        <ComingSoon
-          title="API Key management"
-          items={[
-            'Create and revoke API keys',
-            'Set key permissions and scopes',
-            'View key usage statistics',
-            'Set expiration dates',
-          ]}
-        />
-      ),
+      children: <ApiKeysTab />,
     },
     {
       key: 'integrations',
