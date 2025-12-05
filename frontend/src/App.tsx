@@ -23,6 +23,7 @@ const EmailTemplates = lazy(() => import('./pages/EmailTemplates'));
 const EmailTemplateEditor = lazy(() => import('./pages/EmailTemplateEditor'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Profile = lazy(() => import('./pages/Profile'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const AzureCallback = lazy(() => import('./pages/AzureCallback'));
@@ -103,6 +104,7 @@ function App() {
           <Route path="/email-templates/:templateId/editor" element={<EmailTemplateEditor />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         {/* 404 */}

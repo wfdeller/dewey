@@ -95,6 +95,7 @@ export default function MainLayout() {
             key: 'profile',
             icon: <UserOutlined />,
             label: 'Profile',
+            onClick: () => navigate('/profile'),
         },
         {
             key: 'settings',

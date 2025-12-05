@@ -1,5 +1,6 @@
 import { api } from './api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '../stores/authStore';
 
 // Types
 export interface LOVItem {
@@ -98,18 +99,22 @@ export const lovService = {
 
 // Get all LOV data (for admin management)
 export const useLOVQuery = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return useQuery({
     queryKey: ['lov', 'all'],
     queryFn: () => lovService.getAll(),
+    enabled: isAuthenticated,
   });
 };
 
 // Get only active LOV data (for form dropdowns)
 export const useActiveLOVQuery = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return useQuery({
     queryKey: ['lov', 'active'],
     queryFn: () => lovService.getActive(),
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes (LOV changes rarely)
+    enabled: isAuthenticated,
   });
 };
 
