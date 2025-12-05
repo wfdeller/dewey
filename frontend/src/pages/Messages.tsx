@@ -144,6 +144,7 @@ export default function Messages() {
       analysis: {
         id: '1',
         message_id: '1',
+        tones: [{ label: 'grateful', confidence: 0.85 }, { label: 'polite', confidence: 0.72 }],
         sentiment_score: 0.5,
         sentiment_label: 'positive',
         sentiment_confidence: 0.95,
@@ -169,6 +170,7 @@ export default function Messages() {
       analysis: {
         id: '2',
         message_id: '2',
+        tones: [{ label: 'frustrated', confidence: 0.90 }, { label: 'demanding', confidence: 0.65 }],
         sentiment_score: -0.7,
         sentiment_label: 'negative',
         sentiment_confidence: 0.92,
@@ -195,6 +197,7 @@ export default function Messages() {
       analysis: {
         id: '3',
         message_id: '3',
+        tones: [{ label: 'formal', confidence: 0.88 }, { label: 'cordial', confidence: 0.75 }],
         sentiment_score: 0.1,
         sentiment_label: 'neutral',
         sentiment_confidence: 0.88,

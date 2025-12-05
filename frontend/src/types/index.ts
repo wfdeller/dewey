@@ -15,7 +15,25 @@ export interface PaginationParams {
 // Message types
 export type MessageSource = 'email' | 'form' | 'api' | 'upload';
 export type ProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+// Deprecated - kept for backwards compatibility
 export type SentimentLabel = 'positive' | 'neutral' | 'negative';
+
+// Tone system - emotional and communication style labels
+export type ToneLabel =
+  | 'angry' | 'frustrated' | 'grateful' | 'hopeful' | 'anxious'
+  | 'disappointed' | 'enthusiastic' | 'satisfied' | 'confused' | 'concerned'
+  | 'cordial' | 'formal' | 'informal' | 'urgent' | 'demanding'
+  | 'polite' | 'hostile' | 'professional' | 'casual' | 'apologetic';
+
+// Stance labels for category assignments (5-point scale)
+export type StanceLabel =
+  | 'strongly_supports' | 'supports' | 'neutral' | 'opposes' | 'strongly_opposes';
+
+export interface ToneScore {
+  label: ToneLabel;
+  confidence: number;
+}
 
 export interface Message {
   id: string;
@@ -39,9 +57,13 @@ export interface Message {
 export interface Analysis {
   id: string;
   message_id: string;
-  sentiment_score: number;
-  sentiment_label: SentimentLabel;
-  sentiment_confidence: number;
+  // New tone system
+  tones: ToneScore[];
+  // Deprecated sentiment fields - kept for backwards compatibility
+  sentiment_score?: number;
+  sentiment_label?: SentimentLabel;
+  sentiment_confidence?: number;
+  // Other fields
   summary: string;
   entities: Entity[];
   suggested_categories: SuggestedCategory[];
@@ -69,23 +91,86 @@ export interface Contact {
   email: string;
   name?: string;
   phone?: string;
+
+  // Demographics
+  date_of_birth?: string;
+  age_estimate?: number;
+  age_estimate_source?: 'manual' | 'inferred' | 'public_records';
+  gender?: 'male' | 'female' | 'non_binary' | 'other' | 'unknown';
+
+  // Name components
+  prefix?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  suffix?: string;
+  preferred_name?: string;
+
+  // Professional
+  occupation?: string;
+  employer?: string;
+  job_title?: string;
+  industry?: string;
+
+  // Voter/political
+  voter_status?: 'active' | 'inactive' | 'unregistered';
+  party_affiliation?: string;
+  voter_registration_date?: string;
+
+  // Socioeconomic
+  income_bracket?: 'under_25k' | '25k_50k' | '50k_75k' | '75k_100k' | '100k_150k' | 'over_150k';
+  education_level?: 'high_school' | 'some_college' | 'bachelors' | 'masters' | 'doctorate';
+  homeowner_status?: 'owner' | 'renter' | 'unknown';
+
+  // Household
+  household_size?: number;
+  has_children?: boolean;
+  marital_status?: 'single' | 'married' | 'divorced' | 'widowed';
+
+  // Communication preferences
+  preferred_language?: string;
+  communication_preference?: 'email' | 'phone' | 'mail' | 'sms';
+  secondary_email?: string;
+  mobile_phone?: string;
+  work_phone?: string;
+
+  // Address
   address?: Address;
+
+  // Geographic targeting
+  state?: string;
+  zip_code?: string;
+  county?: string;
+  congressional_district?: string;
+  state_legislative_district?: string;
+  latitude?: number;
+  longitude?: number;
+
+  // Stats
   first_contact_at?: string;
   last_contact_at?: string;
   message_count: number;
-  avg_sentiment?: number;
+  dominant_tones: ToneLabel[];
+  avg_sentiment?: number;  // Deprecated
   tags: string[];
+  notes?: string;
   custom_fields?: Record<string, unknown>;
   created_at: string;
 }
 
 export interface Address {
   street?: string;
+  street2?: string;
   city?: string;
   state?: string;
   zip?: string;
   country?: string;
-  district?: string;
+  county?: string;
+  congressional_district?: string;
+  state_legislative_district?: string;
+  precinct?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 // Category types

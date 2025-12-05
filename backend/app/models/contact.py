@@ -25,6 +25,50 @@ class ContactBase(SQLModel):
     name: str | None = None
     phone: str | None = None
 
+    # Demographics (can be extracted from messages or entered manually)
+    date_of_birth: date | None = Field(default=None)
+    age_estimate: int | None = Field(default=None)  # Estimated age if DOB unknown
+    age_estimate_source: str | None = Field(default=None)  # "manual", "inferred", "public_records"
+    gender: str | None = Field(default=None)  # "male", "female", "non_binary", "other", "unknown"
+
+    # Extended demographics for targeting
+    prefix: str | None = Field(default=None)  # Mr., Mrs., Dr., etc.
+    first_name: str | None = Field(default=None)
+    middle_name: str | None = Field(default=None)
+    last_name: str | None = Field(default=None)
+    suffix: str | None = Field(default=None)  # Jr., Sr., III, etc.
+    preferred_name: str | None = Field(default=None)  # Nickname or preferred name
+
+    # Professional/occupational
+    occupation: str | None = Field(default=None)
+    employer: str | None = Field(default=None)
+    job_title: str | None = Field(default=None)
+    industry: str | None = Field(default=None)
+
+    # Voter/political info (for constituent management)
+    voter_status: str | None = Field(default=None)  # "active", "inactive", "unregistered"
+    party_affiliation: str | None = Field(default=None)  # "democrat", "republican", "independent", etc.
+    voter_registration_date: date | None = Field(default=None)
+
+    # Socioeconomic indicators (inferred or from public data)
+    income_bracket: str | None = Field(default=None)  # "under_25k", "25k_50k", "50k_75k", "75k_100k", "100k_150k", "over_150k"
+    education_level: str | None = Field(default=None)  # "high_school", "some_college", "bachelors", "masters", "doctorate"
+    homeowner_status: str | None = Field(default=None)  # "owner", "renter", "unknown"
+
+    # Household info
+    household_size: int | None = Field(default=None)
+    has_children: bool | None = Field(default=None)
+    marital_status: str | None = Field(default=None)  # "single", "married", "divorced", "widowed"
+
+    # Language/communication preferences
+    preferred_language: str | None = Field(default=None)  # ISO 639-1 code, e.g., "en", "es"
+    communication_preference: str | None = Field(default=None)  # "email", "phone", "mail", "sms"
+
+    # Additional contact methods
+    secondary_email: str | None = Field(default=None)
+    mobile_phone: str | None = Field(default=None)
+    work_phone: str | None = Field(default=None)
+
 
 class Contact(ContactBase, TenantBaseModel, table=True):
     """Contact database model for sender/constituent tracking."""
@@ -34,13 +78,34 @@ class Contact(ContactBase, TenantBaseModel, table=True):
 
     # Address (stored as JSON for flexibility)
     address: dict | None = Field(default=None, sa_column=Column(JSONB))
-    # Structure: {street, city, state, zip, country, district}
+    # Structure: {
+    #   street, street2, city, state, zip, country,
+    #   county, congressional_district, state_legislative_district,
+    #   precinct, latitude, longitude
+    # }
+
+    # Geographic targeting (denormalized from address for efficient queries)
+    state: str | None = Field(default=None, index=True)  # 2-letter code
+    zip_code: str | None = Field(default=None, index=True)
+    county: str | None = Field(default=None, index=True)
+    congressional_district: str | None = Field(default=None, index=True)  # e.g., "CA-12"
+    state_legislative_district: str | None = Field(default=None, index=True)  # State senate/assembly
+
+    # Geolocation (for mapping and radius searches)
+    latitude: float | None = Field(default=None)
+    longitude: float | None = Field(default=None)
 
     # Aggregated stats (denormalized for performance)
     first_contact_at: datetime | None = Field(default=None)
     last_contact_at: datetime | None = Field(default=None)
     message_count: int = Field(default=0)
-    avg_sentiment: float | None = Field(default=None)  # Rolling average
+
+    # Dominant tones across all messages from this contact
+    # Computed from the most frequent tones in message analyses
+    dominant_tones: list[str] = Field(default_factory=list, sa_column=Column(ARRAY(String)))
+
+    # Deprecated - kept for migration period
+    avg_sentiment: float | None = Field(default=None)
 
     # Tags for quick categorization
     tags: list[str] = Field(default_factory=list, sa_column=Column(ARRAY(String)))
@@ -137,20 +202,88 @@ class ContactRead(ContactBase):
     id: UUID
     tenant_id: UUID
     address: dict | None
+
+    # Geographic targeting fields
+    state: str | None
+    zip_code: str | None
+    county: str | None
+    congressional_district: str | None
+    state_legislative_district: str | None
+    latitude: float | None
+    longitude: float | None
+
+    # Stats
     first_contact_at: datetime | None
     last_contact_at: datetime | None
     message_count: int
-    avg_sentiment: float | None
+    dominant_tones: list[str]
+    avg_sentiment: float | None  # Deprecated
     tags: list[str]
+    notes: str | None
     created_at: datetime
 
 
 class ContactUpdate(SQLModel):
     """Schema for updating a contact."""
 
+    # Basic info
     name: str | None = None
+    email: str | None = None
     phone: str | None = None
+
+    # Demographics
+    date_of_birth: date | None = None
+    age_estimate: int | None = None
+    age_estimate_source: str | None = None
+    gender: str | None = None
+
+    # Name components
+    prefix: str | None = None
+    first_name: str | None = None
+    middle_name: str | None = None
+    last_name: str | None = None
+    suffix: str | None = None
+    preferred_name: str | None = None
+
+    # Professional
+    occupation: str | None = None
+    employer: str | None = None
+    job_title: str | None = None
+    industry: str | None = None
+
+    # Voter/political
+    voter_status: str | None = None
+    party_affiliation: str | None = None
+    voter_registration_date: date | None = None
+
+    # Socioeconomic
+    income_bracket: str | None = None
+    education_level: str | None = None
+    homeowner_status: str | None = None
+
+    # Household
+    household_size: int | None = None
+    has_children: bool | None = None
+    marital_status: str | None = None
+
+    # Communication
+    preferred_language: str | None = None
+    communication_preference: str | None = None
+    secondary_email: str | None = None
+    mobile_phone: str | None = None
+    work_phone: str | None = None
+
+    # Address and location
     address: dict | None = None
+    state: str | None = None
+    zip_code: str | None = None
+    county: str | None = None
+    congressional_district: str | None = None
+    state_legislative_district: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+
+    # Other
     tags: list[str] | None = None
     notes: str | None = None
     custom_fields: dict[str, str | float | date | bool | list[str]] | None = None

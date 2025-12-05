@@ -32,22 +32,48 @@ import {
   ContactFilters,
 } from '../services/contactsService';
 import { getErrorMessage } from '../services/api';
-import type { Contact } from '../types';
+import type { Contact, ToneLabel } from '../types';
 
-// Sentiment indicator colors
-const getSentimentColor = (score: number | undefined): string => {
-  if (score === undefined || score === null) return 'default';
-  if (score > 0.3) return 'green';
-  if (score < -0.3) return 'red';
-  return 'gold';
+// Tone color mapping
+const getToneColor = (tone: ToneLabel): string => {
+  const emotionTones: Record<string, string> = {
+    angry: 'red',
+    frustrated: 'orange',
+    grateful: 'green',
+    hopeful: 'cyan',
+    anxious: 'gold',
+    disappointed: 'magenta',
+    enthusiastic: 'lime',
+    satisfied: 'green',
+    confused: 'purple',
+    concerned: 'volcano',
+  };
+  const styleTones: Record<string, string> = {
+    cordial: 'blue',
+    formal: 'geekblue',
+    informal: 'default',
+    urgent: 'red',
+    demanding: 'volcano',
+    polite: 'cyan',
+    hostile: 'magenta',
+    professional: 'blue',
+    casual: 'default',
+    apologetic: 'gold',
+  };
+  return emotionTones[tone] || styleTones[tone] || 'default';
 };
 
-const getSentimentLabel = (score: number | undefined): string => {
-  if (score === undefined || score === null) return 'N/A';
-  if (score > 0.3) return 'Positive';
-  if (score < -0.3) return 'Negative';
-  return 'Neutral';
-};
+// Available tone options for filtering
+const TONE_OPTIONS: { value: ToneLabel; label: string }[] = [
+  { value: 'grateful', label: 'Grateful' },
+  { value: 'frustrated', label: 'Frustrated' },
+  { value: 'angry', label: 'Angry' },
+  { value: 'hopeful', label: 'Hopeful' },
+  { value: 'cordial', label: 'Cordial' },
+  { value: 'formal', label: 'Formal' },
+  { value: 'urgent', label: 'Urgent' },
+  { value: 'professional', label: 'Professional' },
+];
 
 export default function Contacts() {
   const navigate = useNavigate();
@@ -104,13 +130,26 @@ export default function Contacts() {
       ),
     },
     {
-      title: 'Sentiment',
-      dataIndex: 'avg_sentiment',
-      key: 'avg_sentiment',
-      width: 120,
-      align: 'center',
-      render: (score: number | undefined) => (
-        <Tag color={getSentimentColor(score)}>{getSentimentLabel(score)}</Tag>
+      title: 'Tones',
+      dataIndex: 'dominant_tones',
+      key: 'dominant_tones',
+      width: 180,
+      render: (tones: ToneLabel[]) => (
+        <Space wrap size={[0, 4]}>
+          {tones?.slice(0, 2).map((tone) => (
+            <Tag key={tone} color={getToneColor(tone)}>
+              {tone}
+            </Tag>
+          ))}
+          {tones?.length > 2 && (
+            <Tooltip title={tones.slice(2).join(', ')}>
+              <Tag>+{tones.length - 2}</Tag>
+            </Tooltip>
+          )}
+          {(!tones || tones.length === 0) && (
+            <Tag color="default">-</Tag>
+          )}
+        </Space>
       ),
     },
     {
@@ -148,12 +187,7 @@ export default function Contacts() {
   const stats = {
     total: data?.total || 0,
     withMessages: data?.items.filter((c) => c.message_count > 0).length || 0,
-    positive:
-      data?.items.filter((c) => c.avg_sentiment && c.avg_sentiment > 0.3)
-        .length || 0,
-    negative:
-      data?.items.filter((c) => c.avg_sentiment && c.avg_sentiment < -0.3)
-        .length || 0,
+    withTones: data?.items.filter((c) => c.dominant_tones && c.dominant_tones.length > 0).length || 0,
   };
 
   return (
@@ -178,7 +212,7 @@ export default function Contacts() {
 
       {/* Stats Cards */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="Total Contacts"
@@ -187,7 +221,7 @@ export default function Contacts() {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
               title="With Messages"
@@ -196,21 +230,12 @@ export default function Contacts() {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col span={8}>
           <Card>
             <Statistic
-              title="Positive Sentiment"
-              value={stats.positive}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col span={6}>
-          <Card>
-            <Statistic
-              title="Negative Sentiment"
-              value={stats.negative}
-              valueStyle={{ color: '#ff4d4f' }}
+              title="With Tones"
+              value={stats.withTones}
+              valueStyle={{ color: '#1890ff' }}
             />
           </Card>
         </Col>
@@ -241,16 +266,12 @@ export default function Contacts() {
 
           <Col xs={24} sm={12} md={8} lg={4}>
             <Select
-              placeholder="Sentiment"
+              placeholder="Filter by tone..."
               style={{ width: '100%' }}
-              value={filters.sentiment}
-              onChange={(value) => setFilters({ ...filters, sentiment: value })}
+              value={filters.tone}
+              onChange={(value) => setFilters({ ...filters, tone: value })}
               allowClear
-              options={[
-                { value: 'positive', label: 'Positive' },
-                { value: 'neutral', label: 'Neutral' },
-                { value: 'negative', label: 'Negative' },
-              ]}
+              options={TONE_OPTIONS}
             />
           </Col>
 

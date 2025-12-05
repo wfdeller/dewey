@@ -1,6 +1,6 @@
 """Category model for issue classification."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from sqlalchemy import Column, UniqueConstraint
@@ -12,6 +12,16 @@ from app.models.base import TenantBaseModel
 if TYPE_CHECKING:
     from app.models.tenant import Tenant
     from app.models.message import Message
+
+
+# Stance labels for category assignments (5-point scale)
+StanceLabel = Literal[
+    "strongly_supports", "supports", "neutral", "opposes", "strongly_opposes"
+]
+
+STANCE_LABELS = [
+    "strongly_supports", "supports", "neutral", "opposes", "strongly_opposes"
+]
 
 
 class CategoryBase(SQLModel):
@@ -56,6 +66,11 @@ class MessageCategory(SQLModel, table=True):
     confidence: float | None = Field(default=None)  # AI confidence score
     is_ai_suggested: bool = Field(default=False)  # True if AI suggested, False if human assigned
     assigned_by: UUID | None = Field(default=None, foreign_key="user.id")
+
+    # Stance: the message's position on this category/issue
+    # e.g., "strongly_supports", "supports", "neutral", "opposes", "strongly_opposes"
+    stance: str | None = Field(default=None)
+    stance_confidence: float | None = Field(default=None, ge=0, le=1)
 
     # Relationships
     message: "Message" = Relationship(back_populates="message_categories")

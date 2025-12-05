@@ -55,6 +55,13 @@ class ContactDetailResponse(ContactRead):
     custom_fields: list[CustomFieldValueResponse] = []
 
 
+class ToneScore(BaseModel):
+    """Tone with confidence score."""
+
+    label: str
+    confidence: float
+
+
 class MessageSummary(BaseModel):
     """Brief message info for contact messages list."""
 
@@ -64,7 +71,8 @@ class MessageSummary(BaseModel):
     source: str
     processing_status: str
     received_at: datetime
-    sentiment_label: str | None = None
+    tones: list[ToneScore] = []
+    sentiment_label: str | None = None  # Deprecated
 
     class Config:
         from_attributes = True
@@ -121,7 +129,8 @@ async def list_contacts(
     search: str | None = Query(None, description="Search by email or name"),
     tag: str | None = Query(None, description="Filter by tag"),
     min_messages: int | None = Query(None, description="Minimum message count"),
-    sentiment: str | None = Query(None, description="Filter by avg sentiment (positive/neutral/negative)"),
+    tone: str | None = Query(None, description="Filter by dominant tone"),
+    sentiment: str | None = Query(None, description="Deprecated: Filter by avg sentiment"),
     sort_by: str = Query("last_contact_at", description="Sort field"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(PermissionChecker(Permissions.CONTACTS_READ)),
@@ -130,7 +139,7 @@ async def list_contacts(
     """
     List contacts with pagination and filters.
 
-    Supports searching by email/name and filtering by tags.
+    Supports searching by email/name and filtering by tags and tones.
     """
     query = select(Contact).where(Contact.tenant_id == current_user.tenant_id)
 
@@ -149,7 +158,11 @@ async def list_contacts(
     if min_messages:
         query = query.where(Contact.message_count >= min_messages)
 
-    # Apply sentiment filter
+    # Apply tone filter (new)
+    if tone:
+        query = query.where(Contact.dominant_tones.contains([tone]))
+
+    # Apply sentiment filter (deprecated, kept for backwards compatibility)
     if sentiment:
         if sentiment == "positive":
             query = query.where(Contact.avg_sentiment > 0.3)
@@ -424,6 +437,14 @@ async def get_contact_messages(
 
     items = []
     for msg in messages:
+        # Extract tones from analysis if available
+        tones = []
+        if msg.analysis and msg.analysis.tones:
+            tones = [
+                ToneScore(label=t.get("label", ""), confidence=t.get("confidence", 0))
+                for t in msg.analysis.tones
+            ]
+
         items.append(
             MessageSummary(
                 id=msg.id,
@@ -432,6 +453,7 @@ async def get_contact_messages(
                 source=msg.source,
                 processing_status=msg.processing_status,
                 received_at=msg.received_at,
+                tones=tones,
                 sentiment_label=msg.analysis.sentiment_label if msg.analysis else None,
             )
         )

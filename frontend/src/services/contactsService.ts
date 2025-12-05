@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Contact, SentimentLabel } from '../types';
+import { Contact, SentimentLabel, ToneLabel, ToneScore } from '../types';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 // Request types
@@ -7,41 +7,102 @@ export interface CreateContactRequest {
   email: string;
   name?: string;
   phone?: string;
+
+  // Demographics
+  date_of_birth?: string;
+  age_estimate?: number;
+  age_estimate_source?: string;
+  gender?: string;
+
+  // Name components
+  prefix?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  suffix?: string;
+  preferred_name?: string;
+
+  // Professional
+  occupation?: string;
+  employer?: string;
+  job_title?: string;
+  industry?: string;
+
+  // Voter/political
+  voter_status?: string;
+  party_affiliation?: string;
+  voter_registration_date?: string;
+
+  // Socioeconomic
+  income_bracket?: string;
+  education_level?: string;
+  homeowner_status?: string;
+
+  // Household
+  household_size?: number;
+  has_children?: boolean;
+  marital_status?: string;
+
+  // Communication
+  preferred_language?: string;
+  communication_preference?: string;
+  secondary_email?: string;
+  mobile_phone?: string;
+  work_phone?: string;
+
+  // Address
   address?: {
     street?: string;
+    street2?: string;
     city?: string;
     state?: string;
     zip?: string;
     country?: string;
-    district?: string;
+    county?: string;
+    congressional_district?: string;
+    state_legislative_district?: string;
+    precinct?: string;
+    latitude?: number;
+    longitude?: number;
   };
+
+  // Geographic (denormalized)
+  state?: string;
+  zip_code?: string;
+  county?: string;
+  congressional_district?: string;
+  state_legislative_district?: string;
+  latitude?: number;
+  longitude?: number;
+
   tags?: string[];
   notes?: string;
   custom_fields?: Record<string, unknown>;
 }
 
-export interface UpdateContactRequest {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address?: {
-    street?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    country?: string;
-    district?: string;
-  };
-  tags?: string[];
-  notes?: string;
-  custom_fields?: Record<string, unknown>;
+export interface UpdateContactRequest extends Partial<CreateContactRequest> {
+  // All fields from CreateContactRequest are optional for updates
 }
 
 export interface ContactFilters {
   search?: string;
   tag?: string;
   min_messages?: number;
-  sentiment?: 'positive' | 'neutral' | 'negative';
+  tone?: ToneLabel;  // Filter by dominant tone
+  sentiment?: 'positive' | 'neutral' | 'negative';  // Deprecated
+
+  // Geographic filters
+  state?: string;
+  zip_code?: string;
+  county?: string;
+  congressional_district?: string;
+
+  // Demographic filters
+  party_affiliation?: string;
+  voter_status?: string;
+  age_min?: number;
+  age_max?: number;
+
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
 }
@@ -65,18 +126,80 @@ export interface ContactDetailResponse {
   email: string;
   name?: string;
   phone?: string;
+
+  // Demographics
+  date_of_birth?: string;
+  age_estimate?: number;
+  age_estimate_source?: string;
+  gender?: string;
+
+  // Name components
+  prefix?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  suffix?: string;
+  preferred_name?: string;
+
+  // Professional
+  occupation?: string;
+  employer?: string;
+  job_title?: string;
+  industry?: string;
+
+  // Voter/political
+  voter_status?: string;
+  party_affiliation?: string;
+  voter_registration_date?: string;
+
+  // Socioeconomic
+  income_bracket?: string;
+  education_level?: string;
+  homeowner_status?: string;
+
+  // Household
+  household_size?: number;
+  has_children?: boolean;
+  marital_status?: string;
+
+  // Communication
+  preferred_language?: string;
+  communication_preference?: string;
+  secondary_email?: string;
+  mobile_phone?: string;
+  work_phone?: string;
+
+  // Address
   address?: {
     street?: string;
+    street2?: string;
     city?: string;
     state?: string;
     zip?: string;
     country?: string;
-    district?: string;
+    county?: string;
+    congressional_district?: string;
+    state_legislative_district?: string;
+    precinct?: string;
+    latitude?: number;
+    longitude?: number;
   };
+
+  // Geographic targeting
+  state?: string;
+  zip_code?: string;
+  county?: string;
+  congressional_district?: string;
+  state_legislative_district?: string;
+  latitude?: number;
+  longitude?: number;
+
+  // Stats
   first_contact_at?: string;
   last_contact_at?: string;
   message_count: number;
-  avg_sentiment?: number;
+  dominant_tones: ToneLabel[];
+  avg_sentiment?: number;  // Deprecated
   tags: string[];
   notes?: string;
   custom_fields: CustomFieldValue[];
@@ -98,7 +221,8 @@ export interface ContactMessageSummary {
   source: string;
   processing_status: string;
   received_at: string;
-  sentiment_label?: SentimentLabel;
+  tones: ToneScore[];
+  sentiment_label?: SentimentLabel;  // Deprecated
 }
 
 export interface ContactMessagesResponse {
@@ -136,7 +260,8 @@ export const contactsService = {
     if (filters?.search) params.search = filters.search;
     if (filters?.tag) params.tag = filters.tag;
     if (filters?.min_messages) params.min_messages = filters.min_messages;
-    if (filters?.sentiment) params.sentiment = filters.sentiment;
+    if (filters?.tone) params.tone = filters.tone;
+    if (filters?.sentiment) params.sentiment = filters.sentiment;  // Deprecated
     if (filters?.sort_by) params.sort_by = filters.sort_by;
     if (filters?.sort_order) params.sort_order = filters.sort_order;
 

@@ -19,14 +19,37 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useMessage } from '../hooks/useMessages';
-import type { SentimentLabel } from '../types';
+import type { ToneLabel } from '../types';
 
 const { Title, Paragraph, Text } = Typography;
 
-const sentimentColors: Record<SentimentLabel, string> = {
-  positive: 'green',
-  neutral: 'gold',
-  negative: 'red',
+// Tone color mapping
+const getToneColor = (tone: ToneLabel): string => {
+  const emotionTones: Record<string, string> = {
+    angry: 'red',
+    frustrated: 'orange',
+    grateful: 'green',
+    hopeful: 'cyan',
+    anxious: 'gold',
+    disappointed: 'magenta',
+    enthusiastic: 'lime',
+    satisfied: 'green',
+    confused: 'purple',
+    concerned: 'volcano',
+  };
+  const styleTones: Record<string, string> = {
+    cordial: 'blue',
+    formal: 'geekblue',
+    informal: 'default',
+    urgent: 'red',
+    demanding: 'volcano',
+    polite: 'cyan',
+    hostile: 'magenta',
+    professional: 'blue',
+    casual: 'default',
+    apologetic: 'gold',
+  };
+  return emotionTones[tone] || styleTones[tone] || 'default';
 };
 
 export default function MessageDetail() {
@@ -160,17 +183,19 @@ John Doe`,
               <Card title="AI Analysis" style={{ marginBottom: 16 }}>
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <div>
-                    <Text type="secondary">Sentiment</Text>
-                    <div>
-                      <Tag color={sentimentColors[analysis.sentiment_label]} style={{ marginTop: 4 }}>
-                        {analysis.sentiment_label.toUpperCase()}
-                      </Tag>
-                      <Text style={{ marginLeft: 8 }}>
-                        Score: {analysis.sentiment_score.toFixed(2)}
-                      </Text>
-                      <Text type="secondary" style={{ marginLeft: 8 }}>
-                        ({(analysis.sentiment_confidence * 100).toFixed(0)}% confidence)
-                      </Text>
+                    <Text type="secondary">Tones</Text>
+                    <div style={{ marginTop: 4 }}>
+                      {analysis.tones && analysis.tones.length > 0 ? (
+                        <Space wrap size={[4, 4]}>
+                          {analysis.tones.map((t) => (
+                            <Tag key={t.label} color={getToneColor(t.label as ToneLabel)}>
+                              {t.label} ({(t.confidence * 100).toFixed(0)}%)
+                            </Tag>
+                          ))}
+                        </Space>
+                      ) : (
+                        <Text type="secondary">No tones detected</Text>
+                      )}
                     </div>
                   </div>
 

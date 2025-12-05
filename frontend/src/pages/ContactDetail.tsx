@@ -44,14 +44,37 @@ import {
   ContactMessageSummary,
 } from '../services/contactsService';
 import { getErrorMessage } from '../services/api';
-import type { SentimentLabel } from '../types';
+import type { ToneScore } from '../types';
 
 const { Title, Text, Paragraph } = Typography;
 
-const sentimentColors: Record<SentimentLabel, string> = {
-  positive: 'green',
-  neutral: 'gold',
-  negative: 'red',
+// Tone color mapping
+const getToneColor = (tone: string): string => {
+  const emotionTones: Record<string, string> = {
+    angry: 'red',
+    frustrated: 'orange',
+    grateful: 'green',
+    hopeful: 'cyan',
+    anxious: 'gold',
+    disappointed: 'magenta',
+    enthusiastic: 'lime',
+    satisfied: 'green',
+    confused: 'purple',
+    concerned: 'volcano',
+  };
+  const styleTones: Record<string, string> = {
+    cordial: 'blue',
+    formal: 'geekblue',
+    informal: 'default',
+    urgent: 'red',
+    demanding: 'volcano',
+    polite: 'cyan',
+    hostile: 'magenta',
+    professional: 'blue',
+    casual: 'default',
+    apologetic: 'gold',
+  };
+  return emotionTones[tone] || styleTones[tone] || 'default';
 };
 
 export default function ContactDetail() {
@@ -157,16 +180,20 @@ export default function ContactDetail() {
       ),
     },
     {
-      title: 'Sentiment',
-      dataIndex: 'sentiment_label',
-      key: 'sentiment_label',
-      width: 100,
-      render: (label: SentimentLabel | undefined) => {
-        if (!label) return <Tag>Pending</Tag>;
+      title: 'Tones',
+      dataIndex: 'tones',
+      key: 'tones',
+      width: 150,
+      render: (tones: ToneScore[]) => {
+        if (!tones || tones.length === 0) return <Tag>Pending</Tag>;
         return (
-          <Tag color={sentimentColors[label]}>
-            {label.charAt(0).toUpperCase() + label.slice(1)}
-          </Tag>
+          <Space wrap size={[0, 4]}>
+            {tones.slice(0, 2).map((t) => (
+              <Tag key={t.label} color={getToneColor(t.label)}>
+                {t.label}
+              </Tag>
+            ))}
+          </Space>
         );
       },
     },
@@ -260,13 +287,6 @@ export default function ContactDetail() {
       </Empty>
     );
   }
-
-  const getSentimentColor = (score: number | undefined): string => {
-    if (score === undefined || score === null) return 'default';
-    if (score > 0.3) return '#52c41a';
-    if (score < -0.3) return '#ff4d4f';
-    return '#faad14';
-  };
 
   return (
     <div>
@@ -374,15 +394,22 @@ export default function ContactDetail() {
                 />
               </Col>
               <Col span={12}>
-                <Statistic
-                  title="Avg Sentiment"
-                  value={
-                    contact.avg_sentiment != null
-                      ? contact.avg_sentiment.toFixed(2)
-                      : 'N/A'
-                  }
-                  valueStyle={{ color: getSentimentColor(contact.avg_sentiment) }}
-                />
+                <div>
+                  <Text type="secondary" style={{ fontSize: 14 }}>Dominant Tones</Text>
+                  <div style={{ marginTop: 8 }}>
+                    {contact.dominant_tones && contact.dominant_tones.length > 0 ? (
+                      <Space wrap size={[4, 4]}>
+                        {contact.dominant_tones.slice(0, 3).map((tone) => (
+                          <Tag key={tone} color={getToneColor(tone)}>
+                            {tone}
+                          </Tag>
+                        ))}
+                      </Space>
+                    ) : (
+                      <Text type="secondary">None detected</Text>
+                    )}
+                  </div>
+                </div>
               </Col>
             </Row>
           </Card>

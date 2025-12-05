@@ -13,16 +13,39 @@ if TYPE_CHECKING:
     from app.models.message import Message
 
 
+# Deprecated - kept for backwards compatibility
 SentimentLabel = Literal["positive", "neutral", "negative"]
+
+# New tone system - emotional and communication style labels
+ToneLabel = Literal[
+    # Emotional tones
+    "angry", "frustrated", "grateful", "hopeful", "anxious",
+    "disappointed", "enthusiastic", "satisfied", "confused", "concerned",
+    # Communication style tones
+    "cordial", "formal", "informal", "urgent", "demanding",
+    "polite", "hostile", "professional", "casual", "apologetic"
+]
+
+# All valid tone labels as a list for validation
+TONE_LABELS = [
+    "angry", "frustrated", "grateful", "hopeful", "anxious",
+    "disappointed", "enthusiastic", "satisfied", "confused", "concerned",
+    "cordial", "formal", "informal", "urgent", "demanding",
+    "polite", "hostile", "professional", "casual", "apologetic"
+]
 
 
 class AnalysisBase(SQLModel):
     """Analysis base schema."""
 
-    # Sentiment analysis
-    sentiment_score: float = Field(ge=-1, le=1)  # -1 (negative) to 1 (positive)
-    sentiment_label: str  # positive, neutral, negative
-    sentiment_confidence: float = Field(ge=0, le=1)
+    # New tone system (multiple tones per message)
+    # Structure: [{"label": "grateful", "confidence": 0.85}, {"label": "formal", "confidence": 0.72}]
+    tones: list[dict] = Field(default_factory=list, sa_column=Column(JSONB))
+
+    # Deprecated sentiment fields - kept nullable for migration period
+    sentiment_score: float | None = Field(default=None, ge=-1, le=1)
+    sentiment_label: str | None = Field(default=None)
+    sentiment_confidence: float | None = Field(default=None, ge=0, le=1)
 
     # AI-generated summary
     summary: str = Field(sa_column=Column(Text))
@@ -63,10 +86,29 @@ class Analysis(AnalysisBase, BaseModel, table=True):
     message: "Message" = Relationship(back_populates="analysis")
 
 
-class AnalysisCreate(AnalysisBase):
+class ToneScore(SQLModel):
+    """Schema for a tone with confidence score."""
+
+    label: str
+    confidence: float = Field(ge=0, le=1)
+
+
+class AnalysisCreate(SQLModel):
     """Schema for creating an analysis."""
 
     message_id: UUID
+
+    # New tone system
+    tones: list[ToneScore] = []
+
+    # Deprecated sentiment fields (optional for backwards compatibility)
+    sentiment_score: float | None = None
+    sentiment_label: str | None = None
+    sentiment_confidence: float | None = None
+
+    # Other fields
+    summary: str
+    urgency_score: float = Field(ge=0, le=1)
     entities: list[dict] = []
     suggested_categories: list[dict] = []
     suggested_response: str | None = None
@@ -76,11 +118,23 @@ class AnalysisCreate(AnalysisBase):
     processing_time_ms: int = 0
 
 
-class AnalysisRead(AnalysisBase):
+class AnalysisRead(SQLModel):
     """Schema for reading an analysis."""
 
     id: UUID
     message_id: UUID
+
+    # New tone system
+    tones: list[ToneScore]
+
+    # Deprecated sentiment fields
+    sentiment_score: float | None
+    sentiment_label: str | None
+    sentiment_confidence: float | None
+
+    # Other fields
+    summary: str
+    urgency_score: float
     entities: list[dict]
     suggested_categories: list[dict]
     suggested_response: str | None
