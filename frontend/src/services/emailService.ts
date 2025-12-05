@@ -416,3 +416,37 @@ export const useSentEmailsQuery = (
     queryFn: () => emailService.listSentEmails(page, pageSize, status, templateId, contactId),
   });
 };
+
+export const useDuplicateEmailTemplateMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ templateId, newName }: { templateId: string; newName: string }) =>
+      emailService.duplicateTemplate(templateId, newName),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+    },
+  });
+};
+
+export const useTemplateVariablesQuery = () => {
+  return useQuery({
+    queryKey: ['email-template-variables'],
+    queryFn: () => emailService.getTemplateVariables(),
+  });
+};
+
+export const usePreviewTemplateMutation = () => {
+  return useMutation({
+    mutationFn: (params: {
+      subject: string;
+      bodyHtml: string;
+      bodyText?: string;
+      sampleData?: {
+        contactName?: string;
+        contactEmail?: string;
+        formName?: string;
+        formLinkUrl?: string;
+      };
+    }) => emailService.previewTemplate(params.subject, params.bodyHtml, params.bodyText, params.sampleData),
+  });
+};

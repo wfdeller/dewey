@@ -17,6 +17,7 @@ import {
   FlagOutlined,
   ThunderboltOutlined,
   FormOutlined,
+  FileTextOutlined,
   BarChartOutlined,
   SettingOutlined,
   MenuFoldOutlined,
@@ -64,6 +65,11 @@ const menuItems = [
     key: '/forms',
     icon: <FormOutlined />,
     label: 'Forms',
+  },
+  {
+    key: '/email-templates',
+    icon: <FileTextOutlined />,
+    label: 'Email Templates',
   },
   {
     key: '/analytics',

@@ -18,6 +18,8 @@ const FormBuilder = lazy(() => import('./pages/FormBuilder'));
 const FormSubmissions = lazy(() => import('./pages/FormSubmissions'));
 const FormEmbed = lazy(() => import('./pages/FormEmbed'));
 const FormLinks = lazy(() => import('./pages/FormLinks'));
+const EmailTemplates = lazy(() => import('./pages/EmailTemplates'));
+const EmailTemplateEditor = lazy(() => import('./pages/EmailTemplateEditor'));
 const Analytics = lazy(() => import('./pages/Analytics'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Login = lazy(() => import('./pages/Login'));
@@ -95,6 +97,8 @@ function App() {
           <Route path="/forms/:formId/submissions" element={<FormSubmissions />} />
           <Route path="/forms/:formId/embed" element={<FormEmbed />} />
           <Route path="/forms/:formId/links" element={<FormLinks />} />
+          <Route path="/email-templates" element={<EmailTemplates />} />
+          <Route path="/email-templates/:templateId/editor" element={<EmailTemplateEditor />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
