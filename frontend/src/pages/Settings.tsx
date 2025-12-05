@@ -12,6 +12,7 @@ import {
 import UsersTab from '../components/settings/UsersTab';
 import RolesTab from '../components/settings/RolesTab';
 import ApiKeysTab from '../components/settings/ApiKeysTab';
+import EmailTab from '../components/settings/EmailTab';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -95,17 +96,7 @@ export default function Settings() {
           Email
         </span>
       ),
-      children: (
-        <ComingSoon
-          title="Email"
-          items={[
-            'IMAP/SMTP configuration',
-            'Email routing rules',
-            'Sender verification',
-            'Inbound email processing',
-          ]}
-        />
-      ),
+      children: <EmailTab />,
     },
     {
       key: 'general',
