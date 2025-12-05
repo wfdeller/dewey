@@ -138,6 +138,10 @@ class APIKeyRead(APIKeyBase):
     allowed_ips: list[str] | None
     last_used_at: datetime | None
     usage_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
 
 
 class APIKeyCreateResponse(APIKeyRead):

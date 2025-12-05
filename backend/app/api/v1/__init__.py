@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, health, messages, roles, tenants, users
+from app.api.v1 import api_keys, auth, health, messages, roles, tenants, users
 
 router = APIRouter()
 
@@ -13,3 +13,4 @@ router.include_router(tenants.router, prefix="/tenants", tags=["Tenants"])
 router.include_router(messages.router, prefix="/messages", tags=["Messages"])
 router.include_router(roles.router, prefix="/roles", tags=["Roles"])
 router.include_router(users.router, prefix="/users", tags=["Users"])
+router.include_router(api_keys.router, prefix="/api-keys", tags=["API Keys"])

@@ -43,7 +43,10 @@
 - [x] Create UserRole model (many-to-many)
 - [ ] Add database indexes for common queries
 - [ ] Implement row-level security policies (tenant_id)
-- [ ] Create database seeding script for development
+- [x] Create database seeding script for development
+  - [x] `scripts/seed_dev_data.py` - creates demo tenant, roles, users
+  - [x] Idempotent (safe to run multiple times)
+  - [x] Test accounts with all role types
 - [ ] Generate initial Alembic migration
 
 ### 1.3 Authentication & Authorization
@@ -121,19 +124,25 @@
   - [x] expires_at, allowed_ips, last_used_at
 - [x] Implement secure key generation (prefix + random bytes)
 - [x] Implement key validation methods (is_expired, is_ip_allowed, has_scope)
-- [ ] API key authentication middleware
-  - [ ] Extract from Authorization header
-  - [ ] Hash and lookup
-  - [ ] Verify active, not expired, IP allowed
-  - [ ] Attach tenant context
-  - [ ] Scope checking per endpoint
-- [ ] Rate limiting per API key (Redis-based)
-- [ ] API key management endpoints
-  - [ ] POST /api/v1/api-keys (create, return plaintext once)
-  - [ ] GET /api/v1/api-keys (list with prefix only)
-  - [ ] PATCH /api/v1/api-keys/:id (update scopes, rate_limit)
-  - [ ] DELETE /api/v1/api-keys/:id (revoke)
-  - [ ] POST /api/v1/api-keys/:id/rotate
+- [x] API key authentication middleware
+  - [x] Extract from Authorization header (Bearer dwy_xxx)
+  - [x] Hash and lookup
+  - [x] Verify active, not expired, IP allowed
+  - [x] Attach tenant context (AuthContext)
+  - [x] Scope checking per endpoint (ScopeChecker)
+  - [x] Unified auth supporting both JWT and API key (get_auth_context)
+- [x] Rate limiting per API key (Redis-based)
+  - [x] Sliding window counter implementation
+  - [x] Per-key rate limit configuration
+  - [x] 429 response with Retry-After header
+- [x] API key management endpoints
+  - [x] GET /api/v1/api-keys/scopes (list available scopes)
+  - [x] POST /api/v1/api-keys (create, return plaintext once)
+  - [x] GET /api/v1/api-keys (list with prefix only)
+  - [x] GET /api/v1/api-keys/:id (get specific key)
+  - [x] PATCH /api/v1/api-keys/:id (update scopes, rate_limit)
+  - [x] DELETE /api/v1/api-keys/:id (revoke)
+  - [x] POST /api/v1/api-keys/:id/rotate
 - [ ] API key management UI (Ant Design)
   - [ ] `Table` listing keys with last_used_at
   - [ ] `Modal` for create with scope `Checkbox.Group`
@@ -651,7 +660,7 @@ Use this section to track overall progress:
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Foundation | In Progress | ~70% |
+| Phase 1: Foundation | In Progress | ~75% |
 | Phase 2: Core Features | Not Started | 0% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
@@ -663,7 +672,7 @@ Use this section to track overall progress:
 | 1.2 Database & ORM | Models Complete, migrations pending |
 | 1.3 Authentication | Complete (JWT, password auth, Azure AD SSO) |
 | 1.4 RBAC | Complete (APIs, UI for users/roles management) |
-| 1.5 API Keys | Partial (model done, middleware pending) |
+| 1.5 API Keys | Complete (middleware, rate limiting, endpoints) |
 | 1.6 Core API Endpoints | Scaffolded, implementation pending |
 | 1.7 Message Intake | Partial (Azure AD SSO done, Graph API pending) |
 | 1.8 AI Pipeline | Not Started |
