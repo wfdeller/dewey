@@ -121,14 +121,19 @@ Ant Design provides dashboard-optimized components that map directly to Dewey's 
 | Dewey Feature       | Ant Design Component                                       |
 | ------------------- | ---------------------------------------------------------- |
 | Message list        | `Table` with sorting, filtering, pagination, row selection |
+| Message detail      | `Card`, `Descriptions`, `Tag` for sentiment/status         |
 | Category hierarchy  | `Tree`, `TreeSelect`                                       |
 | Form builder        | `Form`, `Form.List` for dynamic fields, `dnd-kit` for drag |
+| Form links          | `Table`, `Modal`, `DatePicker` for expiration              |
 | Email templates     | `Table`, React Quill editor, `Drawer`, `Collapse`          |
 | Analytics dashboard | `@ant-design/charts` (Line, Pie, Bar)                      |
 | Workflow builder    | `Card`, `Steps`, combined with drag-drop                   |
-| Sentiment display   | `Tag`, `Badge`, `Progress`                                 |
-| Contact management  | `Table`, `Descriptions`, `Timeline`                        |
+| Sentiment display   | `Tag`, `Badge`, `Statistic`                                |
+| Contact list        | `Table`, `Statistic` cards, `Tag` for tags/sentiment       |
+| Contact detail      | `Descriptions`, `Tabs`, `@ant-design/charts` Line, `Card`  |
 | Settings/Admin      | `Tabs`, `Menu`, `Layout`, `Form` with provider configs     |
+| User management     | `Table`, `Modal`, `Select` for roles, `Switch` for status  |
+| API key management  | `Table`, `Modal`, `Checkbox.Group` for scopes              |
 
 **Key packages:**
 
@@ -467,10 +472,49 @@ Tenant (Organization)
 Key entities:
 
 -   **Message** - Email, form submission, or API-submitted content
--   **Contact** - Sender/constituent with custom field values
+-   **Contact** - Sender/constituent with custom field values, tags, and sentiment tracking
 -   **Campaign** - Detected coordinated messaging campaigns
 -   **Analysis** - AI-generated sentiment, entities, suggestions
 -   **Workflow** - Automated actions triggered by conditions
+-   **Form** - Embeddable forms with drag-drop builder
+-   **FormLink** - Pre-identified form links for known contacts
+-   **EmailTemplate** - Jinja2 templates with variable substitution
+
+### Contact Management
+
+Contacts track senders/constituents with aggregated metrics and custom fields:
+
+```python
+class Contact(TenantBaseModel, table=True):
+    email: str                          # Primary identifier (unique per tenant)
+    name: str | None
+    phone: str | None
+    address: dict | None                # JSON: {street, city, state, zip, country}
+
+    # Aggregated stats (denormalized for performance)
+    first_contact_at: datetime | None   # First message received
+    last_contact_at: datetime | None    # Most recent message
+    message_count: int                  # Total messages from this contact
+    avg_sentiment: float | None         # Rolling average sentiment (-1 to 1)
+
+    tags: list[str]                     # Quick categorization tags
+    notes: str | None                   # Staff notes
+```
+
+**Contact API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/contacts` | GET | List with search, pagination, sentiment/tag filters |
+| `/contacts` | POST | Create new contact |
+| `/contacts/{id}` | GET | Get contact with custom fields and notes |
+| `/contacts/{id}` | PATCH | Update contact info |
+| `/contacts/{id}` | DELETE | Delete (messages preserved, unlinked) |
+| `/contacts/{id}/messages` | GET | Paginated message history |
+| `/contacts/{id}/timeline` | GET | Daily sentiment/activity aggregates |
+| `/contacts/{id}/tags` | POST | Add tag |
+| `/contacts/{id}/tags/{tag}` | DELETE | Remove tag |
+| `/contacts/bulk-tag` | POST | Add tag to multiple contacts |
+| `/contacts/merge` | POST | Merge contacts (combine messages, tags) |
 
 ## Deployment Architecture
 
