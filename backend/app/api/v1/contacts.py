@@ -265,8 +265,8 @@ async def create_contact(
         address=request.address,
         tags=request.tags or [],
         notes=request.notes,
-        first_contact_at=datetime.utcnow(),
-        last_contact_at=datetime.utcnow(),
+        first_contact_at=None,
+        last_contact_at=None,
     )
     session.add(contact)
     await session.flush()  # Get the contact ID
@@ -475,9 +475,10 @@ async def get_contact_timeline(
     start_date = end_date - timedelta(days=days)
 
     # Query messages with analysis grouped by date
+    date_col = func.date_trunc("day", Message.received_at)
     query = (
         select(
-            func.date_trunc("day", Message.received_at).label("date"),
+            date_col.label("date"),
             func.count(Message.id).label("message_count"),
             func.avg(Analysis.sentiment_score).label("avg_sentiment"),
         )
@@ -487,8 +488,8 @@ async def get_contact_timeline(
             Message.received_at >= start_date,
             Message.received_at <= end_date,
         )
-        .group_by(func.date_trunc("day", Message.received_at))
-        .order_by(func.date_trunc("day", Message.received_at))
+        .group_by(date_col)
+        .order_by(date_col)
     )
 
     result = await session.execute(query)

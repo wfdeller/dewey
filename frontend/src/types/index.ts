@@ -76,6 +76,7 @@ export interface Contact {
   avg_sentiment?: number;
   tags: string[];
   custom_fields?: Record<string, unknown>;
+  created_at: string;
 }
 
 export interface Address {

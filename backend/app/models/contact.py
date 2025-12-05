@@ -142,6 +142,7 @@ class ContactRead(ContactBase):
     message_count: int
     avg_sentiment: float | None
     tags: list[str]
+    created_at: datetime
 
 
 class ContactUpdate(SQLModel):

@@ -10,6 +10,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Messages = lazy(() => import('./pages/Messages'));
 const MessageDetail = lazy(() => import('./pages/MessageDetail'));
 const Contacts = lazy(() => import('./pages/Contacts'));
+const ContactDetail = lazy(() => import('./pages/ContactDetail'));
 const Categories = lazy(() => import('./pages/Categories'));
 const Campaigns = lazy(() => import('./pages/Campaigns'));
 const Workflows = lazy(() => import('./pages/Workflows'));
@@ -89,6 +90,7 @@ function App() {
           <Route path="/messages" element={<Messages />} />
           <Route path="/messages/:id" element={<MessageDetail />} />
           <Route path="/contacts" element={<Contacts />} />
+          <Route path="/contacts/:contactId" element={<ContactDetail />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/workflows" element={<Workflows />} />
