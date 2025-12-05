@@ -23,6 +23,7 @@ from app.models.contact import (
 from app.models.message import Message
 from app.models.analysis import Analysis
 from app.models.vote_history import VoteHistory, VoteHistoryRead, VoteHistorySummary
+from app.services.audit import AuditService, compute_changes
 
 router = APIRouter()
 
@@ -287,6 +288,7 @@ async def create_contact(
         address=request.address,
         tags=request.tags or [],
         notes=request.notes,
+        source="manual",
         first_contact_at=None,
         last_contact_at=None,
     )
@@ -301,6 +303,15 @@ async def create_contact(
             contact.id,
             request.custom_fields,
         )
+
+    # Audit log
+    audit_service = AuditService(session, current_user.tenant_id)
+    await audit_service.log_create(
+        entity_type="contact",
+        entity_id=contact.id,
+        entity_name=contact.name or contact.email,
+        user=current_user,
+    )
 
     await session.commit()
     await session.refresh(contact)
@@ -330,8 +341,11 @@ async def update_contact(
             detail="Contact not found",
         )
 
-    # Apply updates (excluding custom_fields which needs special handling)
+    # Capture old values for audit log
     update_data = request.model_dump(exclude_unset=True, exclude={"custom_fields"})
+    old_values = {field: getattr(contact, field) for field in update_data.keys()}
+
+    # Apply updates (excluding custom_fields which needs special handling)
     for field, value in update_data.items():
         setattr(contact, field, value)
 
@@ -342,6 +356,18 @@ async def update_contact(
             current_user.tenant_id,
             contact_id,
             request.custom_fields,
+        )
+
+    # Audit log (only if there were changes)
+    changes = compute_changes(old_values, update_data)
+    if changes:
+        audit_service = AuditService(session, current_user.tenant_id)
+        await audit_service.log_update(
+            entity_type="contact",
+            entity_id=contact.id,
+            entity_name=contact.name or contact.email,
+            changes=changes,
+            user=current_user,
         )
 
     await session.commit()
@@ -375,6 +401,18 @@ async def delete_contact(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Contact not found",
         )
+
+    # Capture contact info for audit log before deletion
+    contact_name = contact.name or contact.email
+
+    # Audit log (before deletion)
+    audit_service = AuditService(session, current_user.tenant_id)
+    await audit_service.log_delete(
+        entity_type="contact",
+        entity_id=contact.id,
+        entity_name=contact_name,
+        user=current_user,
+    )
 
     # Unlink messages from this contact
     await session.execute(

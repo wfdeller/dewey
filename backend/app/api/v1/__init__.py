@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     analytics,
     api_keys,
+    audit,
     auth,
     campaigns,
     categories,
@@ -42,3 +43,4 @@ router.include_router(api_keys.router, prefix="/api-keys", tags=["API Keys"])
 router.include_router(email_templates.router, prefix="/email", tags=["Email Templates"])
 router.include_router(lov.router, prefix="/lov", tags=["List of Values"])
 router.include_router(voter_import.router, prefix="/voter-import", tags=["Voter Import"])
+router.include_router(audit.router)

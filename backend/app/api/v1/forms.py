@@ -671,6 +671,8 @@ async def submit_form(
                 tenant_id=form.tenant_id,
                 email=sender_email,
                 name=sender_name,
+                source="form_submission",
+                source_detail=form.name,
                 first_contact_at=datetime.utcnow(),
                 last_contact_at=datetime.utcnow(),
                 message_count=0,

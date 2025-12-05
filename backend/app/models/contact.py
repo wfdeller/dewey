@@ -94,6 +94,10 @@ class ContactBase(SQLModel):
     name: str | None = None
     phone: str | None = None
 
+    # How the contact was created
+    source: str | None = Field(default=None, index=True)  # "manual", "voter_import", "form_submission", "email", "api"
+    source_detail: str | None = Field(default=None)  # Additional context, e.g., form name, import filename
+
     # Status - whether contact is still relevant for outreach
     is_active: bool = Field(default=True)  # False if moved away, deceased, opt-out, etc.
     inactive_reason: str | None = Field(default=None)  # "moved", "deceased", "opt_out", "invalid_contact", "other"
@@ -305,6 +309,10 @@ class ContactRead(ContactBase):
     id: UUID
     tenant_id: UUID
     address: dict | None
+
+    # Source tracking (inherited from ContactBase but explicitly listed for clarity)
+    source: str | None
+    source_detail: str | None
 
     # Geographic targeting fields
     state: str | None

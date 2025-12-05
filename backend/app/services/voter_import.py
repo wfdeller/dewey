@@ -342,6 +342,8 @@ class VoterImportService:
 
             contact = Contact(
                 tenant_id=self.tenant_id,
+                source="voter_import",
+                source_detail=job.original_filename,
                 **contact_data,
             )
             self.session.add(contact)

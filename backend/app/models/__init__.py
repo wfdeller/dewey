@@ -13,6 +13,7 @@ from app.models.api_key import APIKey
 from app.models.lov import ListOfValues
 from app.models.vote_history import VoteHistory
 from app.models.job import Job
+from app.models.audit_log import AuditLog
 
 __all__ = [
     "Tenant",
@@ -36,4 +37,5 @@ __all__ = [
     "ListOfValues",
     "VoteHistory",
     "Job",
+    "AuditLog",
 ]
