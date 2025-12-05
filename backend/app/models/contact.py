@@ -25,6 +25,10 @@ class ContactBase(SQLModel):
     name: str | None = None
     phone: str | None = None
 
+    # Status - whether contact is still relevant for outreach
+    is_active: bool = Field(default=True)  # False if moved away, deceased, opt-out, etc.
+    inactive_reason: str | None = Field(default=None)  # "moved", "deceased", "opt_out", "invalid_contact", "other"
+
     # Demographics (can be extracted from messages or entered manually)
     date_of_birth: date | None = Field(default=None)
     age_estimate: int | None = Field(default=None)  # Estimated age if DOB unknown
@@ -230,6 +234,10 @@ class ContactUpdate(SQLModel):
     name: str | None = None
     email: str | None = None
     phone: str | None = None
+
+    # Status
+    is_active: bool | None = None
+    inactive_reason: str | None = None
 
     # Demographics
     date_of_birth: date | None = None

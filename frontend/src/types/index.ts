@@ -85,12 +85,18 @@ export interface SuggestedCategory {
 }
 
 // Contact types
+export type InactiveReason = 'moved' | 'deceased' | 'opt_out' | 'invalid_contact' | 'other';
+
 export interface Contact {
   id: string;
   tenant_id: string;
   email: string;
   name?: string;
   phone?: string;
+
+  // Status
+  is_active: boolean;
+  inactive_reason?: InactiveReason;
 
   // Demographics
   date_of_birth?: string;

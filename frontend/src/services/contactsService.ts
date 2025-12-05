@@ -8,6 +8,10 @@ export interface CreateContactRequest {
   name?: string;
   phone?: string;
 
+  // Status
+  is_active?: boolean;
+  inactive_reason?: string;
+
   // Demographics
   date_of_birth?: string;
   age_estimate?: number;
@@ -126,6 +130,10 @@ export interface ContactDetailResponse {
   email: string;
   name?: string;
   phone?: string;
+
+  // Status
+  is_active: boolean;
+  inactive_reason?: string;
 
   // Demographics
   date_of_birth?: string;

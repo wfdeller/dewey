@@ -49,9 +49,8 @@ class CustomFieldValueResponse(BaseModel):
 
 
 class ContactDetailResponse(ContactRead):
-    """Contact with additional details."""
+    """Contact with additional details including custom fields."""
 
-    notes: str | None = None
     custom_fields: list[CustomFieldValueResponse] = []
 
 
@@ -241,7 +240,6 @@ async def get_contact(
 
     return ContactDetailResponse(
         **ContactRead.model_validate(contact).model_dump(),
-        notes=contact.notes,
         custom_fields=custom_fields,
     )
 
