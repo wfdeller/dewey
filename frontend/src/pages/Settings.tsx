@@ -1,27 +1,175 @@
-import { Typography } from 'antd';
+import { useState } from 'react';
+import { Typography, Tabs, Card } from 'antd';
+import {
+  UserOutlined,
+  TeamOutlined,
+  KeyOutlined,
+  SettingOutlined,
+  CloudOutlined,
+  MailOutlined,
+  CreditCardOutlined,
+} from '@ant-design/icons';
+import UsersTab from '../components/settings/UsersTab';
+import RolesTab from '../components/settings/RolesTab';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
+
+// Placeholder component for tabs not yet implemented
+function ComingSoon({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div>
+      <Paragraph type="secondary">
+        {title} settings will include:
+      </Paragraph>
+      <ul>
+        {items.map((item, index) => (
+          <li key={index}>
+            <Text type="secondary">{item}</Text>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export default function Settings() {
+  const [activeTab, setActiveTab] = useState('users');
+
+  const tabItems = [
+    {
+      key: 'users',
+      label: (
+        <span>
+          <UserOutlined style={{ marginRight: 8 }} />
+          Users
+        </span>
+      ),
+      children: <UsersTab />,
+    },
+    {
+      key: 'roles',
+      label: (
+        <span>
+          <TeamOutlined style={{ marginRight: 8 }} />
+          Roles
+        </span>
+      ),
+      children: <RolesTab />,
+    },
+    {
+      key: 'api-keys',
+      label: (
+        <span>
+          <KeyOutlined style={{ marginRight: 8 }} />
+          API Keys
+        </span>
+      ),
+      children: (
+        <ComingSoon
+          title="API Key management"
+          items={[
+            'Create and revoke API keys',
+            'Set key permissions and scopes',
+            'View key usage statistics',
+            'Set expiration dates',
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'integrations',
+      label: (
+        <span>
+          <CloudOutlined style={{ marginRight: 8 }} />
+          Integrations
+        </span>
+      ),
+      children: (
+        <ComingSoon
+          title="Integration"
+          items={[
+            'Microsoft 365 / Azure AD configuration',
+            'AI provider settings (Claude, OpenAI)',
+            'Webhook configurations',
+            'Third-party app connections',
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'email',
+      label: (
+        <span>
+          <MailOutlined style={{ marginRight: 8 }} />
+          Email
+        </span>
+      ),
+      children: (
+        <ComingSoon
+          title="Email"
+          items={[
+            'IMAP/SMTP configuration',
+            'Email routing rules',
+            'Sender verification',
+            'Inbound email processing',
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'general',
+      label: (
+        <span>
+          <SettingOutlined style={{ marginRight: 8 }} />
+          General
+        </span>
+      ),
+      children: (
+        <ComingSoon
+          title="General"
+          items={[
+            'Organization name and branding',
+            'Timezone and locale settings',
+            'Custom field definitions',
+            'Data retention policies',
+          ]}
+        />
+      ),
+    },
+    {
+      key: 'billing',
+      label: (
+        <span>
+          <CreditCardOutlined style={{ marginRight: 8 }} />
+          Billing
+        </span>
+      ),
+      children: (
+        <ComingSoon
+          title="Billing"
+          items={[
+            'Current subscription plan',
+            'Usage metrics and limits',
+            'Payment methods',
+            'Invoice history',
+          ]}
+        />
+      ),
+    },
+  ];
+
   return (
     <div>
       <Title level={2}>Settings</Title>
-      <Paragraph>
-        Tenant configuration and administration.
-      </Paragraph>
-      <Paragraph type="secondary">
-        This page will include:
-        <ul>
-          <li>User management (invite, roles, permissions)</li>
-          <li>Role configuration with Azure AD group sync</li>
-          <li>API key management</li>
-          <li>Custom field definitions</li>
-          <li>AI provider configuration</li>
-          <li>Microsoft 365 integration settings</li>
-          <li>Email/IMAP configuration</li>
-          <li>Billing and subscription</li>
-        </ul>
-      </Paragraph>
+      <Card>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={tabItems}
+          tabPosition="left"
+          style={{ minHeight: 500 }}
+        />
+      </Card>
     </div>
   );
 }

@@ -102,15 +102,18 @@
   - [ ] On SSO login, fetch group memberships (Graph API /me/memberOf)
   - [ ] Auto-assign/remove roles based on group membership
   - [ ] Add GroupMember.Read.All permission to Azure AD app
-- [ ] User management UI (Ant Design)
-  - [ ] `Table` listing users with roles
-  - [ ] `Modal` for inviting new users
-  - [ ] `Select` for role assignment
-  - [ ] `Switch` for active/inactive status
-- [ ] Role management UI (Ant Design)
-  - [ ] `Table` listing roles
-  - [ ] `Checkbox.Group` for permission selection
-  - [ ] `Input` for Azure AD group ID linking
+- [x] User management UI (Ant Design)
+  - [x] `Table` listing users with roles, SSO status, active status
+  - [x] Search and pagination
+  - [x] `Modal` for viewing/editing user details
+  - [x] `Select` for role assignment (multi-select)
+  - [x] `Switch` for active/inactive status with confirmation
+- [x] Role management UI (Ant Design)
+  - [x] `Table` listing roles with permissions preview
+  - [x] `Modal` for creating/editing roles
+  - [x] `Collapse` with `Checkbox.Group` for permission selection by category
+  - [x] `Input` for Azure AD group ID linking
+  - [x] Reset to defaults action for system roles
 
 ### 1.5 API Keys & Service Credentials
 - [x] Create APIKey model (SQLModel)
@@ -648,7 +651,7 @@ Use this section to track overall progress:
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Foundation | In Progress | ~65% |
+| Phase 1: Foundation | In Progress | ~70% |
 | Phase 2: Core Features | Not Started | 0% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
@@ -659,12 +662,12 @@ Use this section to track overall progress:
 | 1.1 Project Setup | Complete |
 | 1.2 Database & ORM | Models Complete, migrations pending |
 | 1.3 Authentication | Complete (JWT, password auth, Azure AD SSO) |
-| 1.4 RBAC | Complete (roles API, users API, permission checker) |
+| 1.4 RBAC | Complete (APIs, UI for users/roles management) |
 | 1.5 API Keys | Partial (model done, middleware pending) |
 | 1.6 Core API Endpoints | Scaffolded, implementation pending |
 | 1.7 Message Intake | Partial (Azure AD SSO done, Graph API pending) |
 | 1.8 AI Pipeline | Not Started |
-| 1.9 Basic Frontend | Structure complete, auth integration done |
+| 1.9 Basic Frontend | Complete (auth, users/roles UI, Settings page)
 
 ---
 
