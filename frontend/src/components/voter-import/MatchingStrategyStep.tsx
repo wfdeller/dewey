@@ -1,4 +1,4 @@
-import { Radio, Typography, Card, Tag, Space, Alert } from 'antd';
+import { Radio, Typography, Card, Tag, Space, Alert, Checkbox, Divider } from 'antd';
 import { BulbOutlined, CheckCircleOutlined } from '@ant-design/icons';
 
 const { Text, Paragraph } = Typography;
@@ -9,6 +9,8 @@ interface MatchingStrategyStepProps {
   suggestedReason: string;
   selectedStrategy: string;
   onStrategyChange: (strategy: string) => void;
+  createUnmatched: boolean;
+  onCreateUnmatchedChange: (value: boolean) => void;
 }
 
 export default function MatchingStrategyStep({
@@ -17,6 +19,8 @@ export default function MatchingStrategyStep({
   suggestedReason,
   selectedStrategy,
   onStrategyChange,
+  createUnmatched,
+  onCreateUnmatchedChange,
 }: MatchingStrategyStepProps) {
   const strategyDescriptions: Record<string, { title: string; description: string }> = {
     voter_id_first: {
@@ -104,6 +108,21 @@ export default function MatchingStrategyStep({
           })}
         </Space>
       </Radio.Group>
+
+      <Divider />
+
+      <div style={{ marginTop: 16 }}>
+        <Checkbox
+          checked={createUnmatched}
+          onChange={(e) => onCreateUnmatchedChange(e.target.checked)}
+        >
+          <Text strong>Create new contacts if no match is found</Text>
+        </Checkbox>
+        <Paragraph type="secondary" style={{ marginTop: 8, marginLeft: 24 }}>
+          When enabled, records that don't match any existing contact will be imported as new contacts.
+          When disabled, only existing contacts will be updated and unmatched records will be skipped.
+        </Paragraph>
+      </div>
     </div>
   );
 }

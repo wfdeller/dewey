@@ -39,6 +39,7 @@ export default function VoterImport() {
   // Form state
   const [confirmedMappings, setConfirmedMappings] = useState<Record<string, string | null>>({});
   const [selectedStrategy, setSelectedStrategy] = useState<string>('');
+  const [createUnmatched, setCreateUnmatched] = useState<boolean>(true);
 
   // Queries and mutations
   const { data: strategies } = useMatchingStrategiesQuery();
@@ -114,6 +115,7 @@ export default function VoterImport() {
           data: {
             confirmed_mappings: confirmedMappings,
             matching_strategy: selectedStrategy,
+            create_unmatched: createUnmatched,
           },
         });
 
@@ -140,6 +142,7 @@ export default function VoterImport() {
     setAnalysisData(null);
     setConfirmedMappings({});
     setSelectedStrategy('');
+    setCreateUnmatched(true);
   };
 
   // Check if can proceed
@@ -201,6 +204,8 @@ export default function VoterImport() {
               suggestedReason={analysisData.matching_strategy_reason}
               selectedStrategy={selectedStrategy}
               onStrategyChange={handleStrategyChange}
+              createUnmatched={createUnmatched}
+              onCreateUnmatchedChange={setCreateUnmatched}
             />
           )}
 

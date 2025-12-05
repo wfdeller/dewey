@@ -242,6 +242,7 @@ async def confirm_mappings(
             job_id=job_id,
             confirmed_mappings=request.confirmed_mappings,
             matching_strategy=request.matching_strategy,
+            create_unmatched=request.create_unmatched,
         )
         return JobRead.model_validate(job)
 

@@ -17,6 +17,7 @@ export interface Job {
   matching_strategy: string | null;
   suggested_matching_strategy: string | null;
   matching_strategy_reason: string | null;
+  create_unmatched: boolean;
   rows_processed: number;
   rows_created: number;
   rows_updated: number;
@@ -67,6 +68,7 @@ export interface AnalysisResponse {
 export interface ConfirmMappingsRequest {
   confirmed_mappings: Record<string, string | null>;
   matching_strategy: string;
+  create_unmatched: boolean;
 }
 
 export interface JobListResponse {

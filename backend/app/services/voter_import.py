@@ -177,6 +177,7 @@ class VoterImportService:
         job_id: UUID,
         confirmed_mappings: dict,
         matching_strategy: str,
+        create_unmatched: bool = True,
     ) -> Job:
         """
         Confirm field mappings and matching strategy.
@@ -185,6 +186,7 @@ class VoterImportService:
             job_id: The job ID
             confirmed_mappings: User-confirmed field mappings
             matching_strategy: Selected matching strategy
+            create_unmatched: Whether to create new contacts for unmatched rows
 
         Returns:
             Updated job
@@ -196,6 +198,7 @@ class VoterImportService:
 
         job.confirmed_mappings = confirmed_mappings
         job.matching_strategy = matching_strategy
+        job.create_unmatched = create_unmatched
         job.status = "pending"  # Ready to start processing
 
         await self.session.commit()
@@ -335,8 +338,19 @@ class VoterImportService:
                     setattr(contact, field, value)
             job.rows_updated += 1
         else:
-            # Create new contact
-            if "email" not in contact_data:
+            # No matching contact found
+            if not job.create_unmatched:
+                # User opted not to create new contacts
+                job.rows_skipped += 1
+                return
+
+            # Create new contact - need at least some identifying info
+            has_email = "email" in contact_data
+            has_name = "name" in contact_data
+            has_voter_id = "state_voter_id" in contact_data
+
+            if not (has_email or has_name or has_voter_id):
+                # No identifying information at all - skip
                 job.rows_skipped += 1
                 return
 

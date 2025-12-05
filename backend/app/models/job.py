@@ -60,6 +60,9 @@ class Job(TenantBaseModel, table=True):
     suggested_matching_strategy: str | None = Field(default=None)
     matching_strategy_reason: str | None = Field(default=None, sa_column=Column(Text))  # AI explanation
 
+    # Import options
+    create_unmatched: bool = Field(default=True)  # Create new contacts for unmatched rows
+
     # Progress tracking
     rows_processed: int = Field(default=0)
     rows_created: int = Field(default=0)
@@ -118,6 +121,9 @@ class JobRead(SQLModel):
     suggested_matching_strategy: str | None
     matching_strategy_reason: str | None
 
+    # Options
+    create_unmatched: bool
+
     # Progress
     rows_processed: int
     rows_created: int
@@ -157,3 +163,4 @@ class JobConfirmMappings(SQLModel):
 
     confirmed_mappings: dict  # {header: field_name}
     matching_strategy: str  # "email_first", "voter_id_first", etc.
+    create_unmatched: bool = True  # Create new contacts for unmatched rows
