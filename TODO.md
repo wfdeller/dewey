@@ -352,6 +352,64 @@
   - [x] Pass to submission API
   - [x] Show "form expired" error for invalid tokens (410 Gone)
 
+### 2.1.2 Email System & Auto-Responses
+- [x] Email template model with Jinja2 variable support
+  - [x] Fields: name, subject, body_html, body_text, design_json
+  - [x] Form link integration (default_form_id, single_use, expires_days)
+  - [x] Attachment support
+  - [x] Send count tracking
+- [x] Tenant email configuration model
+  - [x] Per-tenant provider selection (SMTP, SES, Graph, SendGrid)
+  - [x] Provider-specific config storage (encrypted sensitive fields)
+  - [x] Rate limiting (max_sends_per_hour)
+  - [x] From email/name, reply-to configuration
+- [x] Pluggable email provider interface
+  - [x] SMTP provider implementation
+  - [x] AWS SES provider implementation
+  - [x] Microsoft Graph provider implementation
+  - [x] SendGrid provider implementation
+- [x] Template rendering service
+  - [x] Jinja2 template engine with custom filters
+  - [x] Variable substitution: contact, form, form_link, message, tenant, custom
+  - [x] Form link auto-generation in templates
+  - [x] Template validation and variable extraction
+- [x] Email sending service
+  - [x] Provider abstraction with send/validate
+  - [x] Rate limiting enforcement
+  - [x] Sent email logging with status tracking
+  - [x] Error handling and retry support
+- [x] Backend API endpoints (`/api/v1/email/`)
+  - [x] `GET /templates` - list templates
+  - [x] `POST /templates` - create template
+  - [x] `GET /templates/{id}` - get template
+  - [x] `PATCH /templates/{id}` - update template
+  - [x] `DELETE /templates/{id}` - delete template
+  - [x] `POST /templates/{id}/duplicate` - duplicate template
+  - [x] `POST /templates/validate` - validate syntax
+  - [x] `POST /templates/preview` - preview with sample data
+  - [x] `GET /templates/variables` - list available variables
+  - [x] `GET /config` - get tenant email config
+  - [x] `POST /config` - create/update email config
+  - [x] `POST /config/test` - send test email
+  - [x] `GET /sent` - list sent emails
+  - [x] `GET /sent/{id}` - get sent email details
+- [x] Database migration for email tables
+- [ ] Workflow action executor for auto_reply
+  - [ ] Execute auto_reply action with template
+  - [ ] Generate form links for contacts
+  - [ ] Log sent emails
+- [ ] Frontend: Email configuration UI in Settings
+  - [ ] Provider selection (SMTP, SES, Graph, SendGrid)
+  - [ ] Provider-specific configuration forms
+  - [ ] Test email functionality
+- [ ] Frontend: Email template management page
+  - [ ] Template list with send counts
+  - [ ] Create/edit modal with preview
+- [ ] Frontend: Visual template editor
+  - [ ] Block-based HTML editor
+  - [ ] Variable insertion toolbar
+  - [ ] Live preview panel
+
 ### 2.2 Contact Management (Ant Design)
 - [ ] Build contacts list page
   - [ ] `Table` with custom field columns
@@ -747,7 +805,7 @@ Use this section to track overall progress:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Foundation | In Progress | ~85% |
-| Phase 2: Core Features | In Progress | ~15% |
+| Phase 2: Core Features | In Progress | ~25% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
 
@@ -769,6 +827,7 @@ Use this section to track overall progress:
 |---------|--------|
 | 2.1 Form Builder | Complete (CRUD, drag-drop, preview, embed) |
 | 2.1.1 Pre-Identified Form Links | Complete |
+| 2.1.2 Email System & Auto-Responses | Backend Complete, Frontend Pending |
 | 2.2 Contact Management | Not Started |
 | 2.3 Category Management | Not Started |
 | 2.4 Campaign Detection | Not Started |
@@ -792,6 +851,7 @@ Use this section to track overall progress:
 | /roles | 6 | Working |
 | /users | 7 | Working |
 | /api-keys | 7 | Working |
+| /email | 15 | Working (templates, config, sent log) |
 
 ---
 

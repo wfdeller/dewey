@@ -10,6 +10,7 @@ from app.api.v1 import (
     categories,
     contacts,
     custom_fields,
+    email_templates,
     forms,
     health,
     messages,
@@ -36,3 +37,4 @@ router.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 router.include_router(roles.router, prefix="/roles", tags=["Roles"])
 router.include_router(users.router, prefix="/users", tags=["Users"])
 router.include_router(api_keys.router, prefix="/api-keys", tags=["API Keys"])
+router.include_router(email_templates.router, prefix="/email", tags=["Email Templates"])
