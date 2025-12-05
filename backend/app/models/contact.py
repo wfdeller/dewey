@@ -90,7 +90,8 @@ FieldType = Literal["text", "select", "multi_select", "number", "date", "boolean
 class ContactBase(SQLModel):
     """Contact base schema."""
 
-    email: str = Field(index=True)
+    # Email is nullable to support voter file imports where email is often not available
+    email: str | None = Field(default=None, index=True)
     name: str | None = None
     phone: str | None = None
 
@@ -148,12 +149,34 @@ class ContactBase(SQLModel):
     mobile_phone: str | None = Field(default=None)
     work_phone: str | None = Field(default=None)
 
-
 class Contact(ContactBase, TenantBaseModel, table=True):
     """Contact database model for sender/constituent tracking."""
 
     __tablename__ = "contact"
-    __table_args__ = (UniqueConstraint("tenant_id", "email", name="uq_contact_tenant_email"),)
+    # Note: Email uniqueness is now enforced via partial index in migration
+    # to allow multiple contacts with NULL email (common for voter imports)
+    __table_args__ = ()
+
+    def __init__(self, **data):
+        """Initialize Contact and compute full name from name parts."""
+        super().__init__(**data)
+        self._compute_full_name()
+
+    def _compute_full_name(self) -> None:
+        """Compute full name from first/middle/last name parts.
+
+        This ensures the 'name' field stays in sync with name parts.
+        """
+        name_parts = []
+        if self.first_name:
+            name_parts.append(self.first_name)
+        if self.middle_name:
+            name_parts.append(self.middle_name)
+        if self.last_name:
+            name_parts.append(self.last_name)
+
+        if name_parts:
+            self.name = " ".join(name_parts)
 
     # Address (stored as JSON for flexibility)
     address: dict | None = Field(default=None, sa_column=Column(JSONB))

@@ -340,6 +340,8 @@ class VoterImportService:
         if address_data:
             contact_data["address"] = address_data
 
+        # Note: name is auto-computed from first/middle/last by Contact model validator
+
         # Find or create contact
         contact = await self._match_contact(job, contact_data)
 
@@ -358,7 +360,7 @@ class VoterImportService:
 
             # Create new contact - need at least some identifying info
             has_email = "email" in contact_data
-            has_name = "name" in contact_data
+            has_name = "first_name" in contact_data or "last_name" in contact_data  # name auto-computed by model
             has_voter_id = "state_voter_id" in contact_data
 
             if not (has_email or has_name or has_voter_id):
