@@ -3,13 +3,13 @@ export interface PaginatedResponse<T> {
   items: T[];
   total: number;
   page: number;
-  pageSize: number;
+  page_size: number;
   pages: number;
 }
 
 export interface PaginationParams {
   page?: number;
-  pageSize?: number;
+  page_size?: number;
 }
 
 // Message types
@@ -19,36 +19,36 @@ export type SentimentLabel = 'positive' | 'neutral' | 'negative';
 
 export interface Message {
   id: string;
-  tenantId: string;
-  contactId?: string;
-  campaignId?: string;
+  tenant_id: string;
+  contact_id?: string;
+  campaign_id?: string;
   subject: string;
-  bodyText: string;
-  bodyHtml?: string;
-  senderEmail: string;
-  senderName?: string;
+  body_text: string;
+  body_html?: string;
+  sender_email: string;
+  sender_name?: string;
   source: MessageSource;
-  processingStatus: ProcessingStatus;
-  isTemplateMatch: boolean;
-  templateSimilarityScore?: number;
-  receivedAt: string;
-  processedAt?: string;
+  processing_status: ProcessingStatus;
+  is_template_match: boolean;
+  template_similarity_score?: number;
+  received_at: string;
+  processed_at?: string;
   analysis?: Analysis;
 }
 
 export interface Analysis {
   id: string;
-  messageId: string;
-  sentimentScore: number;
-  sentimentLabel: SentimentLabel;
-  sentimentConfidence: number;
+  message_id: string;
+  sentiment_score: number;
+  sentiment_label: SentimentLabel;
+  sentiment_confidence: number;
   summary: string;
   entities: Entity[];
-  suggestedCategories: SuggestedCategory[];
-  suggestedResponse?: string;
-  urgencyScore: number;
-  aiProvider: string;
-  aiModel: string;
+  suggested_categories: SuggestedCategory[];
+  suggested_response?: string;
+  urgency_score: number;
+  ai_provider: string;
+  ai_model: string;
 }
 
 export interface Entity {
@@ -58,24 +58,24 @@ export interface Entity {
 }
 
 export interface SuggestedCategory {
-  categoryId: string;
+  category_id: string;
   confidence: number;
 }
 
 // Contact types
 export interface Contact {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   email: string;
   name?: string;
   phone?: string;
   address?: Address;
-  firstContactAt?: string;
-  lastContactAt?: string;
-  messageCount: number;
-  avgSentiment?: number;
+  first_contact_at?: string;
+  last_contact_at?: string;
+  message_count: number;
+  avg_sentiment?: number;
   tags: string[];
-  customFields?: Record<string, unknown>;
+  custom_fields?: Record<string, unknown>;
 }
 
 export interface Address {
@@ -90,13 +90,13 @@ export interface Address {
 // Category types
 export interface Category {
   id: string;
-  tenantId: string;
-  parentId?: string;
+  tenant_id: string;
+  parent_id?: string;
   name: string;
   description?: string;
   color: string;
-  isActive: boolean;
-  sortOrder: number;
+  is_active: boolean;
+  sort_order: number;
   keywords: string[];
   children?: Category[];
 }
@@ -107,16 +107,16 @@ export type DetectionType = 'template' | 'coordinated' | 'manual';
 
 export interface Campaign {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   status: CampaignStatus;
-  detectionType: DetectionType;
-  templateSubjectPattern?: string;
-  firstSeenAt: string;
-  lastSeenAt: string;
-  messageCount: number;
-  uniqueSenders: number;
-  sourceOrganization?: string;
+  detection_type: DetectionType;
+  template_subject_pattern?: string;
+  first_seen_at: string;
+  last_seen_at: string;
+  message_count: number;
+  unique_senders: number;
+  source_organization?: string;
 }
 
 // Workflow types
@@ -124,10 +124,10 @@ export type ExecutionStatus = 'running' | 'completed' | 'failed';
 
 export interface Workflow {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   description?: string;
-  isActive: boolean;
+  is_active: boolean;
   priority: number;
   trigger: WorkflowTrigger;
   actions: WorkflowAction[];
@@ -169,7 +169,7 @@ export type FormFieldType =
 
 export interface Form {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   description?: string;
   slug: string;
@@ -180,18 +180,18 @@ export interface Form {
 }
 
 export interface FormSettings {
-  submitButtonText?: string;
-  successMessage?: string;
-  redirectUrl?: string;
-  notificationEmails?: string[];
-  autoResponseEnabled?: boolean;
-  captchaEnabled?: boolean;
+  submit_button_text?: string;
+  success_message?: string;
+  redirect_url?: string;
+  notification_emails?: string[];
+  auto_response_enabled?: boolean;
+  captcha_enabled?: boolean;
 }
 
 export interface FormStyling {
-  primaryColor?: string;
-  fontFamily?: string;
-  customCss?: string;
+  primary_color?: string;
+  font_family?: string;
+  custom_css?: string;
 }
 
 export interface FormField {
@@ -215,45 +215,45 @@ export interface FieldOption {
 // User types
 export interface User {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   email: string;
   name: string;
-  isActive: boolean;
-  azureAdOid?: string;
+  is_active: boolean;
+  azure_ad_oid?: string;
   roles?: Role[];
 }
 
 export interface Role {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   description?: string;
-  isSystem: boolean;
+  is_system: boolean;
   permissions: string[];
-  azureAdGroupId?: string;
+  azure_ad_group_id?: string;
 }
 
 // API Key types
 export interface APIKey {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
-  keyPrefix: string;
+  key_prefix: string;
   scopes: string[];
-  rateLimit: number;
-  expiresAt?: string;
-  allowedIps?: string[];
-  lastUsedAt?: string;
-  usageCount: number;
+  rate_limit: number;
+  expires_at?: string;
+  allowed_ips?: string[];
+  last_used_at?: string;
+  usage_count: number;
 }
 
 // Analytics types
 export interface DashboardStats {
-  totalMessages: number;
-  messagesThisWeek: number;
-  avgSentiment: number;
-  activeCampaigns: number;
-  pendingMessages: number;
+  total_messages: number;
+  messages_this_week: number;
+  avg_sentiment: number;
+  active_campaigns: number;
+  pending_messages: number;
 }
 
 export interface SentimentTrend {
@@ -261,12 +261,12 @@ export interface SentimentTrend {
   positive: number;
   neutral: number;
   negative: number;
-  avgScore: number;
+  avg_score: number;
 }
 
 export interface CategoryBreakdown {
-  categoryId: string;
-  categoryName: string;
+  category_id: string;
+  category_name: string;
   count: number;
   percentage: number;
 }

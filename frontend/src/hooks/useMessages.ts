@@ -6,10 +6,10 @@ import type { Message, PaginatedResponse, PaginationParams } from '../types';
 interface MessageFilters extends PaginationParams {
   source?: string;
   sentiment?: string;
-  categoryId?: string;
+  category_id?: string;
   search?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  date_from?: string;
+  date_to?: string;
   dateRange?: [string, string];
 }
 
@@ -18,8 +18,8 @@ export function useMessages(filters: MessageFilters = {}) {
   // Build query params, handling dateRange specially
   const queryParams: Record<string, unknown> = { ...filters };
   if (filters.dateRange) {
-    queryParams.dateFrom = filters.dateRange[0];
-    queryParams.dateTo = filters.dateRange[1];
+    queryParams.date_from = filters.dateRange[0];
+    queryParams.date_to = filters.dateRange[1];
     delete queryParams.dateRange;
   }
 
@@ -54,11 +54,11 @@ export function useMessage(id: string) {
 
 // Create message
 interface CreateMessageInput {
-  senderEmail: string;
-  senderName?: string;
+  sender_email: string;
+  sender_name?: string;
   subject: string;
-  bodyText: string;
-  bodyHtml?: string;
+  body_text: string;
+  body_html?: string;
   source?: string;
   metadata?: Record<string, unknown>;
 }
@@ -84,8 +84,8 @@ export function useCreateMessage() {
 // Update message (e.g., assign category)
 interface UpdateMessageInput {
   id: string;
-  categoryIds?: string[];
-  contactId?: string;
+  category_ids?: string[];
+  contact_id?: string;
 }
 
 export function useUpdateMessage() {

@@ -128,20 +128,20 @@ John Doe`,
 
             <Descriptions column={2} style={{ marginBottom: 24 }}>
               <Descriptions.Item label={<><UserOutlined /> From</>}>
-                {displayMessage.senderName || displayMessage.senderEmail}
+                {displayMessage.sender_name || displayMessage.sender_email}
                 <Text type="secondary" style={{ marginLeft: 8 }}>
-                  {displayMessage.senderEmail}
+                  {displayMessage.sender_email}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label={<><ClockCircleOutlined /> Received</>}>
-                {dayjs(displayMessage.receivedAt).format('MMMM D, YYYY h:mm A')}
+                {dayjs(displayMessage.received_at).format('MMMM D, YYYY h:mm A')}
               </Descriptions.Item>
               <Descriptions.Item label="Source">
                 <Tag color="blue">{displayMessage.source.toUpperCase()}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Status">
-                <Tag color={displayMessage.processingStatus === 'completed' ? 'success' : 'processing'}>
-                  {displayMessage.processingStatus}
+                <Tag color={displayMessage.processing_status === 'completed' ? 'success' : 'processing'}>
+                  {displayMessage.processing_status}
                 </Tag>
               </Descriptions.Item>
             </Descriptions>
@@ -149,7 +149,7 @@ John Doe`,
             <Divider />
 
             <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.8 }}>
-              {displayMessage.bodyText}
+              {displayMessage.body_text}
             </div>
           </Card>
         </Col>
@@ -162,14 +162,14 @@ John Doe`,
                   <div>
                     <Text type="secondary">Sentiment</Text>
                     <div>
-                      <Tag color={sentimentColors[analysis.sentimentLabel]} style={{ marginTop: 4 }}>
-                        {analysis.sentimentLabel.toUpperCase()}
+                      <Tag color={sentimentColors[analysis.sentiment_label]} style={{ marginTop: 4 }}>
+                        {analysis.sentiment_label.toUpperCase()}
                       </Tag>
                       <Text style={{ marginLeft: 8 }}>
-                        Score: {analysis.sentimentScore.toFixed(2)}
+                        Score: {analysis.sentiment_score.toFixed(2)}
                       </Text>
                       <Text type="secondary" style={{ marginLeft: 8 }}>
-                        ({(analysis.sentimentConfidence * 100).toFixed(0)}% confidence)
+                        ({(analysis.sentiment_confidence * 100).toFixed(0)}% confidence)
                       </Text>
                     </div>
                   </div>
@@ -177,11 +177,11 @@ John Doe`,
                   <div>
                     <Text type="secondary">Urgency</Text>
                     <div>
-                      <Tag color={analysis.urgencyScore > 0.7 ? 'red' : analysis.urgencyScore > 0.4 ? 'gold' : 'green'}>
-                        {analysis.urgencyScore > 0.7 ? 'HIGH' : analysis.urgencyScore > 0.4 ? 'MEDIUM' : 'LOW'}
+                      <Tag color={analysis.urgency_score > 0.7 ? 'red' : analysis.urgency_score > 0.4 ? 'gold' : 'green'}>
+                        {analysis.urgency_score > 0.7 ? 'HIGH' : analysis.urgency_score > 0.4 ? 'MEDIUM' : 'LOW'}
                       </Tag>
                       <Text style={{ marginLeft: 8 }}>
-                        {(analysis.urgencyScore * 100).toFixed(0)}%
+                        {(analysis.urgency_score * 100).toFixed(0)}%
                       </Text>
                     </div>
                   </div>
@@ -213,9 +213,9 @@ John Doe`,
                 )}
               </Card>
 
-              {analysis.suggestedResponse && (
+              {analysis.suggested_response && (
                 <Card title="Suggested Response">
-                  <Paragraph>{analysis.suggestedResponse}</Paragraph>
+                  <Paragraph>{analysis.suggested_response}</Paragraph>
                   <Button type="primary" style={{ marginTop: 8 }}>
                     Use This Response
                   </Button>

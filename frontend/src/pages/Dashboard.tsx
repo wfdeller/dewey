@@ -32,11 +32,11 @@ export default function Dashboard() {
 
   // Mock data for now
   const mockStats = stats || {
-    totalMessages: 12847,
-    messagesThisWeek: 342,
-    avgSentiment: 0.23,
-    activeCampaigns: 3,
-    pendingMessages: 47,
+    total_messages: 12847,
+    messages_this_week: 342,
+    avg_sentiment: 0.23,
+    active_campaigns: 3,
+    pending_messages: 47,
   };
 
   const getSentimentColor = (score: number) => {
@@ -60,7 +60,7 @@ export default function Dashboard() {
           <Card>
             <Statistic
               title="Total Messages"
-              value={mockStats.totalMessages}
+              value={mockStats.total_messages}
               prefix={<MailOutlined />}
             />
           </Card>
@@ -70,7 +70,7 @@ export default function Dashboard() {
           <Card>
             <Statistic
               title="This Week"
-              value={mockStats.messagesThisWeek}
+              value={mockStats.messages_this_week}
               prefix={<RiseOutlined />}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -81,11 +81,11 @@ export default function Dashboard() {
           <Card>
             <Statistic
               title="Avg Sentiment"
-              value={getSentimentLabel(mockStats.avgSentiment)}
+              value={getSentimentLabel(mockStats.avg_sentiment)}
               prefix={
-                mockStats.avgSentiment > 0 ? <RiseOutlined /> : <FallOutlined />
+                mockStats.avg_sentiment > 0 ? <RiseOutlined /> : <FallOutlined />
               }
-              valueStyle={{ color: getSentimentColor(mockStats.avgSentiment) }}
+              valueStyle={{ color: getSentimentColor(mockStats.avg_sentiment) }}
             />
           </Card>
         </Col>
@@ -94,7 +94,7 @@ export default function Dashboard() {
           <Card>
             <Statistic
               title="Active Campaigns"
-              value={mockStats.activeCampaigns}
+              value={mockStats.active_campaigns}
               prefix={<FlagOutlined />}
             />
           </Card>
@@ -121,7 +121,7 @@ export default function Dashboard() {
         <Col xs={24} lg={8}>
           <Card title="Pending Messages" extra={<ClockCircleOutlined />}>
             <Statistic
-              value={mockStats.pendingMessages}
+              value={mockStats.pending_messages}
               suffix="awaiting review"
             />
             <div style={{ marginTop: 16 }}>

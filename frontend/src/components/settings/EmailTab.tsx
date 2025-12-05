@@ -75,11 +75,11 @@ export default function EmailTab() {
       setSelectedProvider(config.provider as EmailProvider);
       form.setFieldsValue({
         provider: config.provider,
-        fromEmail: config.fromEmail,
-        fromName: config.fromName,
-        replyToEmail: config.replyToEmail,
-        maxSendsPerHour: config.maxSendsPerHour,
-        isActive: config.isActive,
+        from_email: config.from_email,
+        from_name: config.from_name,
+        reply_to_email: config.reply_to_email,
+        max_sends_per_hour: config.max_sends_per_hour,
+        is_active: config.is_active,
       });
     }
   }, [config, form]);
@@ -122,12 +122,12 @@ export default function EmailTab() {
 
       await saveMutation.mutateAsync({
         provider: selectedProvider,
-        fromEmail: values.fromEmail,
-        fromName: values.fromName,
-        replyToEmail: values.replyToEmail,
+        from_email: values.from_email,
+        from_name: values.from_name,
+        reply_to_email: values.reply_to_email,
         config: providerConfig,
-        maxSendsPerHour: values.maxSendsPerHour,
-        isActive: values.isActive,
+        max_sends_per_hour: values.max_sends_per_hour,
+        is_active: values.is_active,
       });
 
       message.success('Email configuration saved successfully');
@@ -181,10 +181,10 @@ export default function EmailTab() {
 
       {config && (
         <Alert
-          type={config.isActive ? 'success' : 'warning'}
+          type={config.is_active ? 'success' : 'warning'}
           message={
             <Space>
-              {config.isActive ? (
+              {config.is_active ? (
                 <>
                   <CheckCircleOutlined />
                   <span>Email sending is enabled</span>
@@ -202,11 +202,11 @@ export default function EmailTab() {
         />
       )}
 
-      {config?.lastError && (
+      {config?.last_error && (
         <Alert
           type="error"
           message="Last Error"
-          description={config.lastError}
+          description={config.last_error}
           style={{ marginBottom: 24 }}
         />
       )}
@@ -216,8 +216,8 @@ export default function EmailTab() {
         layout="vertical"
         initialValues={{
           provider: 'smtp',
-          maxSendsPerHour: 100,
-          isActive: true,
+          max_sends_per_hour: 100,
+          is_active: true,
           smtp_port: 587,
           smtp_use_tls: true,
           smtp_use_ssl: false,
@@ -247,7 +247,7 @@ export default function EmailTab() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="fromEmail"
+                name="from_email"
                 label="From Email"
                 rules={[
                   { required: true, message: 'Please enter sender email' },
@@ -258,14 +258,14 @@ export default function EmailTab() {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="fromName" label="From Name">
+              <Form.Item name="from_name" label="From Name">
                 <Input placeholder="Your Company Name" />
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            name="replyToEmail"
+            name="reply_to_email"
             label="Reply-To Email"
             rules={[{ type: 'email', message: 'Please enter a valid email' }]}
           >
@@ -494,7 +494,7 @@ export default function EmailTab() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="maxSendsPerHour"
+                name="max_sends_per_hour"
                 label="Max Emails Per Hour"
                 extra="Rate limit to prevent abuse"
               >
@@ -503,7 +503,7 @@ export default function EmailTab() {
             </Col>
             <Col span={12}>
               <Form.Item
-                name="isActive"
+                name="is_active"
                 label="Enable Email Sending"
                 valuePropName="checked"
               >

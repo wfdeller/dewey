@@ -102,15 +102,15 @@ export default function EmailTemplateEditor() {
   useEffect(() => {
     if (template) {
       setSubject(template.subject);
-      setBodyHtml(template.bodyHtml);
-      setBodyText(template.bodyText || '');
+      setBodyHtml(template.body_html);
+      setBodyText(template.body_text || '');
       settingsForm.setFieldsValue({
         name: template.name,
         description: template.description,
-        isActive: template.isActive,
-        defaultFormId: template.defaultFormId,
-        formLinkSingleUse: template.formLinkSingleUse,
-        formLinkExpiresDays: template.formLinkExpiresDays,
+        is_active: template.is_active,
+        defaultFormId: template.default_form_id,
+        formLinkSingleUse: template.form_link_single_use,
+        formLinkExpiresDays: template.form_link_expires_days,
       });
     }
   }, [template, settingsForm]);
@@ -136,12 +136,12 @@ export default function EmailTemplateEditor() {
           name: settingsValues.name,
           description: settingsValues.description,
           subject,
-          bodyHtml,
-          bodyText: bodyText || undefined,
-          isActive: settingsValues.isActive,
-          defaultFormId: settingsValues.defaultFormId || undefined,
-          formLinkSingleUse: settingsValues.formLinkSingleUse,
-          formLinkExpiresDays: settingsValues.formLinkExpiresDays,
+          body_html: bodyHtml,
+          body_text: bodyText || undefined,
+          is_active: settingsValues.is_active,
+          default_form_id: settingsValues.default_form_id || undefined,
+          form_link_single_use: settingsValues.form_link_single_use,
+          form_link_expires_days: settingsValues.form_link_expires_days,
         },
       });
       message.success('Template saved successfully');
@@ -156,16 +156,16 @@ export default function EmailTemplateEditor() {
     try {
       const result = await previewMutation.mutateAsync({
         subject,
-        bodyHtml,
-        bodyText: bodyText || undefined,
+        body_html: bodyHtml,
+        body_text: bodyText || undefined,
         sampleData: {
-          contactName: 'John Doe',
-          contactEmail: 'john.doe@example.com',
-          formName: 'Sample Form',
-          formLinkUrl: 'https://example.com/f/sample/form?t=abc123',
+          contact_name: 'John Doe',
+          contact_email: 'john.doe@example.com',
+          form_name: 'Sample Form',
+          form_link_url: 'https://example.com/f/sample/form?t=abc123',
         },
       });
-      setPreviewHtml(result.bodyHtml);
+      setPreviewHtml(result.body_html);
       setActiveTab('preview');
     } catch (error) {
       message.error(getErrorMessage(error));
@@ -235,8 +235,8 @@ export default function EmailTemplateEditor() {
             Back
           </Button>
           <Title level={3} style={{ margin: 0 }}>{template.name}</Title>
-          <Tag color={template.isActive ? 'green' : 'default'}>
-            {template.isActive ? 'ACTIVE' : 'INACTIVE'}
+          <Tag color={template.is_active ? 'green' : 'default'}>
+            {template.is_active ? 'ACTIVE' : 'INACTIVE'}
           </Tag>
           {hasUnsavedChanges && (
             <Tag color="orange">Unsaved changes</Tag>
@@ -491,16 +491,16 @@ export default function EmailTemplateEditor() {
           </Paragraph>
           <Space direction="vertical" size={4}>
             <Text type="secondary">
-              Sends: {template.sendCount.toLocaleString()}
+              Sends: {template.send_count.toLocaleString()}
             </Text>
             <Text type="secondary">
-              Last sent: {template.lastSentAt ? new Date(template.lastSentAt).toLocaleString() : 'Never'}
+              Last sent: {template.last_sent_at ? new Date(template.last_sent_at).toLocaleString() : 'Never'}
             </Text>
             <Text type="secondary">
-              Created: {new Date(template.createdAt).toLocaleDateString()}
+              Created: {new Date(template.created_at).toLocaleDateString()}
             </Text>
             <Text type="secondary">
-              Updated: {new Date(template.updatedAt).toLocaleDateString()}
+              Updated: {new Date(template.updated_at).toLocaleDateString()}
             </Text>
           </Space>
         </div>

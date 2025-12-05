@@ -15,9 +15,10 @@ interface UIState {
   messageFilters: {
     source?: string;
     sentiment?: string;
-    categoryId?: string;
+    category_id?: string;
     dateRange?: [string, string];
     search?: string;
+    page_size?: number;
   };
   setMessageFilters: (filters: UIState['messageFilters']) => void;
   clearMessageFilters: () => void;

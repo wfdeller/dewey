@@ -81,7 +81,7 @@ export default function EmailTemplates() {
         name: values.name,
         description: values.description,
         subject: 'New Email Template',
-        bodyHtml: '<p>Enter your email content here...</p>',
+        body_html: '<p>Enter your email content here...</p>',
       });
       message.success('Template created successfully');
       setCreateModal({ visible: false });
@@ -101,7 +101,7 @@ export default function EmailTemplates() {
       if (duplicateModal.template) {
         await duplicateMutation.mutateAsync({
           templateId: duplicateModal.template.id,
-          newName: values.name,
+          new_name: values.name,
         });
         message.success('Template duplicated successfully');
         setDuplicateModal({ visible: false });
@@ -225,8 +225,8 @@ export default function EmailTemplates() {
   // Calculate stats
   const stats = {
     total: data?.total || 0,
-    active: data?.items.filter((t) => t.isActive).length || 0,
-    totalSends: data?.items.reduce((sum, t) => sum + t.sendCount, 0) || 0,
+    active: data?.items.filter((t) => t.is_active).length || 0,
+    totalSends: data?.items.reduce((sum, t) => sum + t.send_count, 0) || 0,
   };
 
   return (

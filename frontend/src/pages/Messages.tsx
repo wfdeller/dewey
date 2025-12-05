@@ -46,7 +46,7 @@ export default function Messages() {
 
   const { data, isLoading, refetch } = useMessages({
     page,
-    pageSize,
+    page_size: pageSize,
     ...messageFilters,
   });
 
@@ -62,12 +62,12 @@ export default function Messages() {
     },
     {
       title: 'Sender',
-      dataIndex: 'senderEmail',
-      key: 'senderEmail',
+      dataIndex: 'sender_email',
+      key: 'sender_email',
       ellipsis: true,
       width: 200,
       render: (email: string, record: Message) => (
-        <span>{record.senderName || email}</span>
+        <span>{record.sender_name || email}</span>
       ),
     },
     {
@@ -84,7 +84,7 @@ export default function Messages() {
       key: 'sentiment',
       width: 100,
       render: (_: unknown, record: Message) => {
-        const label = record.analysis?.sentimentLabel;
+        const label = record.analysis?.sentiment_label;
         if (!label) return <Tag>Pending</Tag>;
         return (
           <Tag color={sentimentColors[label]}>
@@ -98,23 +98,23 @@ export default function Messages() {
       key: 'campaign',
       width: 100,
       render: (_: unknown, record: Message) => (
-        record.isTemplateMatch ? (
+        record.is_template_match ? (
           <Tag color="volcano">Campaign</Tag>
         ) : null
       ),
     },
     {
       title: 'Received',
-      dataIndex: 'receivedAt',
-      key: 'receivedAt',
+      dataIndex: 'received_at',
+      key: 'received_at',
       width: 150,
       render: (date: string) => dayjs(date).format('MMM D, YYYY HH:mm'),
       sorter: true,
     },
     {
       title: 'Status',
-      dataIndex: 'processingStatus',
-      key: 'processingStatus',
+      dataIndex: 'processing_status',
+      key: 'processing_status',
       width: 100,
       render: (status: string) => {
         const colors: Record<string, string> = {
@@ -132,78 +132,78 @@ export default function Messages() {
   const mockData: Message[] = [
     {
       id: '1',
-      tenantId: '1',
+      tenant_id: '1',
       subject: 'Question about my account',
-      bodyText: 'Hello, I have a question...',
-      senderEmail: 'john@example.com',
-      senderName: 'John Doe',
+      body_text: 'Hello, I have a question...',
+      sender_email: 'john@example.com',
+      sender_name: 'John Doe',
       source: 'email',
-      processingStatus: 'completed',
-      isTemplateMatch: false,
-      receivedAt: new Date().toISOString(),
+      processing_status: 'completed',
+      is_template_match: false,
+      received_at: new Date().toISOString(),
       analysis: {
         id: '1',
-        messageId: '1',
-        sentimentScore: 0.5,
-        sentimentLabel: 'positive',
-        sentimentConfidence: 0.95,
+        message_id: '1',
+        sentiment_score: 0.5,
+        sentiment_label: 'positive',
+        sentiment_confidence: 0.95,
         summary: 'Customer inquiry about account',
         entities: [],
-        suggestedCategories: [],
-        urgencyScore: 0.3,
-        aiProvider: 'claude',
-        aiModel: 'claude-3-sonnet',
+        suggested_categories: [],
+        urgency_score: 0.3,
+        ai_provider: 'claude',
+        ai_model: 'claude-3-sonnet',
       },
     },
     {
       id: '2',
-      tenantId: '1',
+      tenant_id: '1',
       subject: 'Complaint about service',
-      bodyText: 'I am very unhappy...',
-      senderEmail: 'jane@example.com',
-      senderName: 'Jane Smith',
+      body_text: 'I am very unhappy...',
+      sender_email: 'jane@example.com',
+      sender_name: 'Jane Smith',
       source: 'form',
-      processingStatus: 'completed',
-      isTemplateMatch: false,
-      receivedAt: new Date(Date.now() - 3600000).toISOString(),
+      processing_status: 'completed',
+      is_template_match: false,
+      received_at: new Date(Date.now() - 3600000).toISOString(),
       analysis: {
         id: '2',
-        messageId: '2',
-        sentimentScore: -0.7,
-        sentimentLabel: 'negative',
-        sentimentConfidence: 0.92,
+        message_id: '2',
+        sentiment_score: -0.7,
+        sentiment_label: 'negative',
+        sentiment_confidence: 0.92,
         summary: 'Customer complaint',
         entities: [],
-        suggestedCategories: [],
-        urgencyScore: 0.8,
-        aiProvider: 'claude',
-        aiModel: 'claude-3-sonnet',
+        suggested_categories: [],
+        urgency_score: 0.8,
+        ai_provider: 'claude',
+        ai_model: 'claude-3-sonnet',
       },
     },
     {
       id: '3',
-      tenantId: '1',
+      tenant_id: '1',
       subject: 'Support Bill XYZ',
-      bodyText: 'As your constituent, I urge you...',
-      senderEmail: 'activist@example.com',
-      senderName: 'Campaign Sender',
+      body_text: 'As your constituent, I urge you...',
+      sender_email: 'activist@example.com',
+      sender_name: 'Campaign Sender',
       source: 'email',
-      processingStatus: 'completed',
-      isTemplateMatch: true,
-      templateSimilarityScore: 0.95,
-      receivedAt: new Date(Date.now() - 7200000).toISOString(),
+      processing_status: 'completed',
+      is_template_match: true,
+      template_similarity_score: 0.95,
+      received_at: new Date(Date.now() - 7200000).toISOString(),
       analysis: {
         id: '3',
-        messageId: '3',
-        sentimentScore: 0.1,
-        sentimentLabel: 'neutral',
-        sentimentConfidence: 0.88,
+        message_id: '3',
+        sentiment_score: 0.1,
+        sentiment_label: 'neutral',
+        sentiment_confidence: 0.88,
         summary: 'Campaign email about legislation',
         entities: [],
-        suggestedCategories: [],
-        urgencyScore: 0.4,
-        aiProvider: 'claude',
-        aiModel: 'claude-3-sonnet',
+        suggested_categories: [],
+        urgency_score: 0.4,
+        ai_provider: 'claude',
+        ai_model: 'claude-3-sonnet',
       },
     },
   ];

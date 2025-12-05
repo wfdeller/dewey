@@ -85,7 +85,7 @@ export default function FormSubmissions() {
       key: 'summary',
       render: (_, record) => {
         // Show first few field values
-        const entries = Object.entries(record.fieldValues || {}).slice(0, 2);
+        const entries = Object.entries(record.field_values || {}).slice(0, 2);
         return (
           <Space direction="vertical" size={0}>
             {entries.map(([fieldId, value]) => {
@@ -161,17 +161,17 @@ export default function FormSubmissions() {
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col span={8}>
             <Card>
-              <Statistic title="Total Submissions" value={analytics.totalSubmissions} />
+              <Statistic title="Total Submissions" value={analytics.total_submissions} />
             </Card>
           </Col>
           <Col span={8}>
             <Card>
-              <Statistic title="Today" value={analytics.submissionsToday} />
+              <Statistic title="Today" value={analytics.submissions_today} />
             </Card>
           </Col>
           <Col span={8}>
             <Card>
-              <Statistic title="This Week" value={analytics.submissionsThisWeek} />
+              <Statistic title="This Week" value={analytics.submissions_this_week} />
             </Card>
           </Col>
         </Row>
@@ -232,23 +232,23 @@ export default function FormSubmissions() {
           <div>
             <Descriptions column={1} bordered size="small" style={{ marginBottom: 16 }}>
               <Descriptions.Item label="Submitted">
-                {dayjs(selectedSubmission.submittedAt).format('MMMM D, YYYY h:mm:ss A')}
+                {dayjs(selectedSubmission.submitted_at).format('MMMM D, YYYY h:mm:ss A')}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
                 <Tag color={getStatusColor(selectedSubmission.status)}>
                   {selectedSubmission.status.toUpperCase()}
                 </Tag>
               </Descriptions.Item>
-              {selectedSubmission.contactId && (
+              {selectedSubmission.contact_id && (
                 <Descriptions.Item label="Contact ID">
-                  {selectedSubmission.contactId}
+                  {selectedSubmission.contact_id}
                 </Descriptions.Item>
               )}
             </Descriptions>
 
             <Title level={5}>Field Values</Title>
             <Descriptions column={1} bordered size="small">
-              {Object.entries(selectedSubmission.fieldValues || {}).map(([fieldId, value]) => {
+              {Object.entries(selectedSubmission.field_values || {}).map(([fieldId, value]) => {
                 const field = form?.fields?.find((f) => f.id === fieldId);
                 return (
                   <Descriptions.Item key={fieldId} label={field?.label || fieldId}>

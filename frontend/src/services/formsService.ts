@@ -59,11 +59,11 @@ export interface FormDetailResponse extends Form {
 
 export interface FormSubmission {
   id: string;
-  formId: string;
-  contactId?: string;
-  messageId?: string;
-  submittedAt: string;
-  fieldValues: Record<string, unknown>;
+  form_id: string;
+  contact_id?: string;
+  message_id?: string;
+  submitted_at: string;
+  field_values: Record<string, unknown>;
   status: 'pending' | 'processed' | 'spam';
 }
 
@@ -71,58 +71,58 @@ export interface FormSubmissionListResponse {
   items: FormSubmission[];
   total: number;
   page: number;
-  pageSize: number;
+  page_size: number;
   pages: number;
 }
 
 export interface FormAnalytics {
-  formId: string;
-  totalSubmissions: number;
-  submissionsToday: number;
-  submissionsThisWeek: number;
-  completionRate?: number;
-  avgCompletionTimeSeconds?: number;
+  form_id: string;
+  total_submissions: number;
+  submissions_today: number;
+  submissions_this_week: number;
+  completion_rate?: number;
+  avg_completion_time_seconds?: number;
 }
 
 // Form Link types (pre-identified user tokens)
 export interface FormLink {
   id: string;
-  formId: string;
-  contactId: string;
+  form_id: string;
+  contact_id: string;
   token: string;
-  isSingleUse: boolean;
-  expiresAt?: string;
-  usedAt?: string;
-  useCount: number;
-  createdAt: string;
+  is_single_use: boolean;
+  expires_at?: string;
+  used_at?: string;
+  use_count: number;
+  created_at: string;
 }
 
 export interface CreateFormLinkRequest {
-  contactId: string;
-  isSingleUse?: boolean;
-  expiresAt?: string;
+  contact_id: string;
+  is_single_use?: boolean;
+  expires_at?: string;
 }
 
 export interface CreateFormLinksBulkRequest {
-  contactIds: string[];
-  isSingleUse?: boolean;
-  expiresAt?: string;
+  contact_ids: string[];
+  is_single_use?: boolean;
+  expires_at?: string;
 }
 
 export interface FormLinkListResponse {
   items: FormLink[];
   total: number;
   page: number;
-  pageSize: number;
+  page_size: number;
 }
 
 export interface FormLinkBulkResponse {
   links: FormLink[];
-  createdCount: number;
+  created_count: number;
 }
 
 export interface PublicFormResponse extends FormDetailResponse {
-  contactId?: string;
+  contact_id?: string;
 }
 
 // API functions
@@ -189,10 +189,10 @@ export const formsService = {
   async listSubmissions(
     formId: string,
     page = 1,
-    pageSize = 20,
+    page_size = 20,
     status?: string
   ): Promise<FormSubmissionListResponse> {
-    const params: Record<string, unknown> = { page, page_size: pageSize };
+    const params: Record<string, unknown> = { page, page_size };
     if (status) params.status = status;
     const response = await api.get<FormSubmissionListResponse>(
       `/forms/${formId}/submissions`,
@@ -229,28 +229,26 @@ export const formsService = {
 
   // Form Links (pre-identified user tokens)
   async createFormLink(formId: string, data: CreateFormLinkRequest): Promise<FormLink> {
-    const payload = {
-      contact_id: data.contactId,
-      is_single_use: data.isSingleUse ?? false,
-      expires_at: data.expiresAt,
-    };
-    const response = await api.post<FormLink>(`/forms/${formId}/links`, payload);
+    const response = await api.post<FormLink>(`/forms/${formId}/links`, {
+      contact_id: data.contact_id,
+      is_single_use: data.is_single_use ?? false,
+      expires_at: data.expires_at,
+    });
     return response.data;
   },
 
   async createFormLinksBulk(formId: string, data: CreateFormLinksBulkRequest): Promise<FormLinkBulkResponse> {
-    const payload = {
-      contact_ids: data.contactIds,
-      is_single_use: data.isSingleUse ?? false,
-      expires_at: data.expiresAt,
-    };
-    const response = await api.post<FormLinkBulkResponse>(`/forms/${formId}/links/bulk`, payload);
+    const response = await api.post<FormLinkBulkResponse>(`/forms/${formId}/links/bulk`, {
+      contact_ids: data.contact_ids,
+      is_single_use: data.is_single_use ?? false,
+      expires_at: data.expires_at,
+    });
     return response.data;
   },
 
-  async listFormLinks(formId: string, page = 1, pageSize = 20): Promise<FormLinkListResponse> {
+  async listFormLinks(formId: string, page = 1, page_size = 20): Promise<FormLinkListResponse> {
     const response = await api.get<FormLinkListResponse>(`/forms/${formId}/links`, {
-      params: { page, page_size: pageSize },
+      params: { page, page_size },
     });
     return response.data;
   },
@@ -281,12 +279,12 @@ export const useFormQuery = (formId: string) => {
 export const useFormSubmissionsQuery = (
   formId: string,
   page = 1,
-  pageSize = 20,
+  page_size = 20,
   status?: string
 ) => {
   return useQuery({
-    queryKey: ['forms', formId, 'submissions', page, pageSize, status],
-    queryFn: () => formsService.listSubmissions(formId, page, pageSize, status),
+    queryKey: ['forms', formId, 'submissions', page, page_size, status],
+    queryFn: () => formsService.listSubmissions(formId, page, page_size, status),
     enabled: !!formId,
   });
 };
@@ -387,10 +385,10 @@ export const useReorderFieldsMutation = () => {
 };
 
 // Form Links hooks
-export const useFormLinksQuery = (formId: string, page = 1, pageSize = 20) => {
+export const useFormLinksQuery = (formId: string, page = 1, page_size = 20) => {
   return useQuery({
-    queryKey: ['forms', formId, 'links', page, pageSize],
-    queryFn: () => formsService.listFormLinks(formId, page, pageSize),
+    queryKey: ['forms', formId, 'links', page, page_size],
+    queryFn: () => formsService.listFormLinks(formId, page, page_size),
     enabled: !!formId,
   });
 };

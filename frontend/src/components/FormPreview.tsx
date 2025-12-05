@@ -94,10 +94,14 @@ function renderField(field: FormField) {
       );
 
     case 'checkbox':
+      // If no options defined, render as a single checkbox (yes/no style)
+      if (!field.options || field.options.length === 0) {
+        return <Checkbox>Yes</Checkbox>;
+      }
       return (
         <Checkbox.Group>
           <Space direction="vertical">
-            {field.options?.map((opt) => (
+            {field.options.map((opt) => (
               <Checkbox key={opt.value} value={opt.value}>
                 {opt.label}
               </Checkbox>
@@ -165,8 +169,8 @@ export default function FormPreview({
       <Card
         style={{
           borderRadius: 8,
-          ...(formData.styling?.primaryColor && {
-            borderTop: `4px solid ${formData.styling.primaryColor}`,
+          ...(formData.styling?.primary_color && {
+            borderTop: `4px solid ${formData.styling.primary_color}`,
           }),
         }}
       >
@@ -248,12 +252,12 @@ export default function FormPreview({
               block
               size="large"
               style={
-                formData.styling?.primaryColor
-                  ? { backgroundColor: formData.styling.primaryColor }
+                formData.styling?.primary_color
+                  ? { backgroundColor: formData.styling.primary_color }
                   : undefined
               }
             >
-              {formData.settings?.submitButtonText || 'Submit'}
+              {formData.settings?.submit_button_text || 'Submit'}
             </Button>
           </Form.Item>
         </Form>

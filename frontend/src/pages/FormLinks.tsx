@@ -63,9 +63,9 @@ export default function FormLinks() {
       await createMutation.mutateAsync({
         formId: formId!,
         data: {
-          contactId: values.contactId,
-          isSingleUse: values.isSingleUse || false,
-          expiresAt: values.expiresAt ? values.expiresAt.toISOString() : undefined,
+          contact_id: values.contactId,
+          is_single_use: values.is_single_use || false,
+          expires_at: values.expires_at ? values.expires_at.toISOString() : undefined,
         },
       });
       message.success('Form link created successfully');
@@ -107,11 +107,11 @@ export default function FormLinks() {
 
   const getLinkStatus = (link: FormLink): { status: 'active' | 'used' | 'expired'; color: string } => {
     // Check expiration
-    if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+    if (link.expires_at && new Date(link.expires_at) < new Date()) {
       return { status: 'expired', color: 'default' };
     }
     // Check single-use
-    if (link.isSingleUse && link.usedAt) {
+    if (link.is_single_use && link.used_at) {
       return { status: 'used', color: 'orange' };
     }
     return { status: 'active', color: 'green' };
@@ -150,8 +150,8 @@ export default function FormLinks() {
       key: 'type',
       width: 100,
       render: (_, record) => (
-        <Tag color={record.isSingleUse ? 'blue' : 'purple'}>
-          {record.isSingleUse ? 'Single-use' : 'Reusable'}
+        <Tag color={record.is_single_use ? 'blue' : 'purple'}>
+          {record.is_single_use ? 'Single-use' : 'Reusable'}
         </Tag>
       ),
     },
@@ -219,7 +219,7 @@ export default function FormLinks() {
     total: linksData?.total || 0,
     active: linksData?.items.filter((l) => getLinkStatus(l).status === 'active').length || 0,
     used: linksData?.items.filter((l) => getLinkStatus(l).status === 'used').length || 0,
-    totalUses: linksData?.items.reduce((sum, l) => sum + l.useCount, 0) || 0,
+    totalUses: linksData?.items.reduce((sum, l) => sum + l.use_count, 0) || 0,
   };
 
   return (

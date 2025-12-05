@@ -6,35 +6,35 @@ export type EmailProvider = 'smtp' | 'ses' | 'graph' | 'sendgrid';
 // Email Configuration
 export interface EmailConfig {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   provider: EmailProvider;
-  fromEmail: string;
-  fromName?: string;
-  replyToEmail?: string;
-  isActive: boolean;
-  maxSendsPerHour: number;
-  lastSendAt?: string;
-  lastError?: string;
+  from_email: string;
+  from_name?: string;
+  reply_to_email?: string;
+  is_active: boolean;
+  max_sends_per_hour: number;
+  last_send_at?: string;
+  last_error?: string;
 }
 
 export interface EmailConfigCreate {
   provider: EmailProvider;
-  fromEmail: string;
-  fromName?: string;
-  replyToEmail?: string;
+  from_email: string;
+  from_name?: string;
+  reply_to_email?: string;
   config: Record<string, unknown>;
-  maxSendsPerHour?: number;
-  isActive?: boolean;
+  max_sends_per_hour?: number;
+  is_active?: boolean;
 }
 
 export interface EmailConfigUpdate {
   provider?: EmailProvider;
-  fromEmail?: string;
-  fromName?: string;
-  replyToEmail?: string;
+  from_email?: string;
+  from_name?: string;
+  reply_to_email?: string;
   config?: Record<string, unknown>;
-  maxSendsPerHour?: number;
-  isActive?: boolean;
+  max_sends_per_hour?: number;
+  is_active?: boolean;
 }
 
 // SMTP specific config
@@ -71,68 +71,68 @@ export interface SendGridConfig {
 // Email Template
 export interface EmailTemplate {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
   description?: string;
   subject: string;
-  bodyHtml: string;
-  bodyText?: string;
-  designJson?: Record<string, unknown>;
-  defaultFormId?: string;
-  formLinkSingleUse: boolean;
-  formLinkExpiresDays?: number;
-  attachments: Array<{ name: string; url: string; contentType: string }>;
-  isActive: boolean;
-  sendCount: number;
-  lastSentAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  body_html: string;
+  body_text?: string;
+  design_json?: Record<string, unknown>;
+  default_form_id?: string;
+  form_link_single_use: boolean;
+  form_link_expires_days?: number;
+  attachments: Array<{ name: string; url: string; content_type: string }>;
+  is_active: boolean;
+  send_count: number;
+  last_sent_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface EmailTemplateCreate {
   name: string;
   description?: string;
   subject: string;
-  bodyHtml: string;
-  bodyText?: string;
-  designJson?: Record<string, unknown>;
-  defaultFormId?: string;
-  formLinkSingleUse?: boolean;
-  formLinkExpiresDays?: number;
-  attachments?: Array<{ name: string; url: string; contentType: string }>;
-  isActive?: boolean;
+  body_html: string;
+  body_text?: string;
+  design_json?: Record<string, unknown>;
+  default_form_id?: string;
+  form_link_single_use?: boolean;
+  form_link_expires_days?: number;
+  attachments?: Array<{ name: string; url: string; content_type: string }>;
+  is_active?: boolean;
 }
 
 export interface EmailTemplateUpdate {
   name?: string;
   description?: string;
   subject?: string;
-  bodyHtml?: string;
-  bodyText?: string;
-  designJson?: Record<string, unknown>;
-  defaultFormId?: string;
-  formLinkSingleUse?: boolean;
-  formLinkExpiresDays?: number;
-  attachments?: Array<{ name: string; url: string; contentType: string }>;
-  isActive?: boolean;
+  body_html?: string;
+  body_text?: string;
+  design_json?: Record<string, unknown>;
+  default_form_id?: string;
+  form_link_single_use?: boolean;
+  form_link_expires_days?: number;
+  attachments?: Array<{ name: string; url: string; content_type: string }>;
+  is_active?: boolean;
 }
 
 // Sent Email
 export interface SentEmail {
   id: string;
-  tenantId: string;
-  templateId?: string;
-  toEmail: string;
-  toName?: string;
-  contactId?: string;
+  tenant_id: string;
+  template_id?: string;
+  to_email: string;
+  to_name?: string;
+  contact_id?: string;
   subject: string;
-  triggeredBy?: string;
+  triggered_by?: string;
   status: 'pending' | 'sent' | 'delivered' | 'bounced' | 'failed';
-  sentAt?: string;
-  errorMessage?: string;
-  openedAt?: string;
-  clickedAt?: string;
-  createdAt: string;
+  sent_at?: string;
+  error_message?: string;
+  opened_at?: string;
+  clicked_at?: string;
+  created_at: string;
 }
 
 // Response types
@@ -145,7 +145,7 @@ export interface SentEmailListResponse {
   items: SentEmail[];
   total: number;
   page: number;
-  pageSize: number;
+  page_size: number;
 }
 
 export interface TemplateVariablesResponse {
@@ -153,15 +153,15 @@ export interface TemplateVariablesResponse {
 }
 
 export interface TemplateValidationResponse {
-  isValid: boolean;
+  is_valid: boolean;
   error?: string;
-  variablesUsed: string[];
+  variables_used: string[];
 }
 
 export interface TemplatePreviewResponse {
   subject: string;
-  bodyHtml: string;
-  bodyText?: string;
+  body_html: string;
+  body_text?: string;
 }
 
 export interface EmailConfigTestResponse {
@@ -178,43 +178,29 @@ export const emailService = {
   },
 
   async createOrUpdateConfig(data: EmailConfigCreate): Promise<EmailConfig> {
-    const payload = {
-      provider: data.provider,
-      from_email: data.fromEmail,
-      from_name: data.fromName,
-      reply_to_email: data.replyToEmail,
-      config: data.config,
-      max_sends_per_hour: data.maxSendsPerHour ?? 100,
-      is_active: data.isActive ?? true,
-    };
-    const response = await api.post<EmailConfig>('/email/config', payload);
+    const response = await api.post<EmailConfig>('/email/config', {
+      ...data,
+      max_sends_per_hour: data.max_sends_per_hour ?? 100,
+      is_active: data.is_active ?? true,
+    });
     return response.data;
   },
 
   async updateConfig(data: EmailConfigUpdate): Promise<EmailConfig> {
-    const payload: Record<string, unknown> = {};
-    if (data.provider !== undefined) payload.provider = data.provider;
-    if (data.fromEmail !== undefined) payload.from_email = data.fromEmail;
-    if (data.fromName !== undefined) payload.from_name = data.fromName;
-    if (data.replyToEmail !== undefined) payload.reply_to_email = data.replyToEmail;
-    if (data.config !== undefined) payload.config = data.config;
-    if (data.maxSendsPerHour !== undefined) payload.max_sends_per_hour = data.maxSendsPerHour;
-    if (data.isActive !== undefined) payload.is_active = data.isActive;
-
-    const response = await api.patch<EmailConfig>('/email/config', payload);
+    const response = await api.patch<EmailConfig>('/email/config', data);
     return response.data;
   },
 
-  async testConfig(testEmail: string): Promise<EmailConfigTestResponse> {
+  async testConfig(test_email: string): Promise<EmailConfigTestResponse> {
     const response = await api.post<EmailConfigTestResponse>('/email/config/test', {
-      test_email: testEmail,
+      test_email,
     });
     return response.data;
   },
 
   // Email Templates
-  async listTemplates(isActive?: boolean): Promise<EmailTemplateListResponse> {
-    const params = isActive !== undefined ? { is_active: isActive } : {};
+  async listTemplates(is_active?: boolean): Promise<EmailTemplateListResponse> {
+    const params = is_active !== undefined ? { is_active } : {};
     const response = await api.get<EmailTemplateListResponse>('/email/templates', { params });
     return response.data;
   },
@@ -225,38 +211,17 @@ export const emailService = {
   },
 
   async createTemplate(data: EmailTemplateCreate): Promise<EmailTemplate> {
-    const payload = {
-      name: data.name,
-      description: data.description,
-      subject: data.subject,
-      body_html: data.bodyHtml,
-      body_text: data.bodyText,
-      design_json: data.designJson,
-      default_form_id: data.defaultFormId,
-      form_link_single_use: data.formLinkSingleUse ?? true,
-      form_link_expires_days: data.formLinkExpiresDays ?? 7,
-      attachments: data.attachments,
-      is_active: data.isActive ?? true,
-    };
-    const response = await api.post<EmailTemplate>('/email/templates', payload);
+    const response = await api.post<EmailTemplate>('/email/templates', {
+      ...data,
+      form_link_single_use: data.form_link_single_use ?? true,
+      form_link_expires_days: data.form_link_expires_days ?? 7,
+      is_active: data.is_active ?? true,
+    });
     return response.data;
   },
 
   async updateTemplate(templateId: string, data: EmailTemplateUpdate): Promise<EmailTemplate> {
-    const payload: Record<string, unknown> = {};
-    if (data.name !== undefined) payload.name = data.name;
-    if (data.description !== undefined) payload.description = data.description;
-    if (data.subject !== undefined) payload.subject = data.subject;
-    if (data.bodyHtml !== undefined) payload.body_html = data.bodyHtml;
-    if (data.bodyText !== undefined) payload.body_text = data.bodyText;
-    if (data.designJson !== undefined) payload.design_json = data.designJson;
-    if (data.defaultFormId !== undefined) payload.default_form_id = data.defaultFormId;
-    if (data.formLinkSingleUse !== undefined) payload.form_link_single_use = data.formLinkSingleUse;
-    if (data.formLinkExpiresDays !== undefined) payload.form_link_expires_days = data.formLinkExpiresDays;
-    if (data.attachments !== undefined) payload.attachments = data.attachments;
-    if (data.isActive !== undefined) payload.is_active = data.isActive;
-
-    const response = await api.patch<EmailTemplate>(`/email/templates/${templateId}`, payload);
+    const response = await api.patch<EmailTemplate>(`/email/templates/${templateId}`, data);
     return response.data;
   },
 
@@ -264,41 +229,41 @@ export const emailService = {
     await api.delete(`/email/templates/${templateId}`);
   },
 
-  async duplicateTemplate(templateId: string, newName: string): Promise<EmailTemplate> {
+  async duplicateTemplate(templateId: string, new_name: string): Promise<EmailTemplate> {
     const response = await api.post<EmailTemplate>(
       `/email/templates/${templateId}/duplicate`,
       null,
-      { params: { new_name: newName } }
+      { params: { new_name } }
     );
     return response.data;
   },
 
-  async validateTemplate(subject: string, bodyHtml: string): Promise<TemplateValidationResponse> {
+  async validateTemplate(subject: string, body_html: string): Promise<TemplateValidationResponse> {
     const response = await api.post<TemplateValidationResponse>('/email/templates/validate', null, {
-      params: { subject, body_html: bodyHtml },
+      params: { subject, body_html },
     });
     return response.data;
   },
 
   async previewTemplate(
     subject: string,
-    bodyHtml: string,
-    bodyText?: string,
+    body_html: string,
+    body_text?: string,
     sampleData?: {
-      contactName?: string;
-      contactEmail?: string;
-      formName?: string;
-      formLinkUrl?: string;
+      contact_name?: string;
+      contact_email?: string;
+      form_name?: string;
+      form_link_url?: string;
     }
   ): Promise<TemplatePreviewResponse> {
     const response = await api.post<TemplatePreviewResponse>('/email/templates/preview', {
       subject,
-      body_html: bodyHtml,
-      body_text: bodyText,
-      contact_name: sampleData?.contactName,
-      contact_email: sampleData?.contactEmail,
-      form_name: sampleData?.formName,
-      form_link_url: sampleData?.formLinkUrl,
+      body_html,
+      body_text,
+      contact_name: sampleData?.contact_name,
+      contact_email: sampleData?.contact_email,
+      form_name: sampleData?.form_name,
+      form_link_url: sampleData?.form_link_url,
     });
     return response.data;
   },
@@ -311,15 +276,15 @@ export const emailService = {
   // Sent Emails
   async listSentEmails(
     page = 1,
-    pageSize = 20,
+    page_size = 20,
     status?: string,
-    templateId?: string,
-    contactId?: string
+    template_id?: string,
+    contact_id?: string
   ): Promise<SentEmailListResponse> {
-    const params: Record<string, unknown> = { page, page_size: pageSize };
+    const params: Record<string, unknown> = { page, page_size };
     if (status) params.status = status;
-    if (templateId) params.template_id = templateId;
-    if (contactId) params.contact_id = contactId;
+    if (template_id) params.template_id = template_id;
+    if (contact_id) params.contact_id = contact_id;
 
     const response = await api.get<SentEmailListResponse>('/email/sent', { params });
     return response.data;
@@ -357,10 +322,10 @@ export const useTestEmailConfigMutation = () => {
   });
 };
 
-export const useEmailTemplatesQuery = (isActive?: boolean) => {
+export const useEmailTemplatesQuery = (is_active?: boolean) => {
   return useQuery({
-    queryKey: ['email-templates', isActive],
-    queryFn: () => emailService.listTemplates(isActive),
+    queryKey: ['email-templates', is_active],
+    queryFn: () => emailService.listTemplates(is_active),
   });
 };
 
@@ -406,22 +371,22 @@ export const useDeleteEmailTemplateMutation = () => {
 
 export const useSentEmailsQuery = (
   page = 1,
-  pageSize = 20,
+  page_size = 20,
   status?: string,
-  templateId?: string,
-  contactId?: string
+  template_id?: string,
+  contact_id?: string
 ) => {
   return useQuery({
-    queryKey: ['sent-emails', page, pageSize, status, templateId, contactId],
-    queryFn: () => emailService.listSentEmails(page, pageSize, status, templateId, contactId),
+    queryKey: ['sent-emails', page, page_size, status, template_id, contact_id],
+    queryFn: () => emailService.listSentEmails(page, page_size, status, template_id, contact_id),
   });
 };
 
 export const useDuplicateEmailTemplateMutation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ templateId, newName }: { templateId: string; newName: string }) =>
-      emailService.duplicateTemplate(templateId, newName),
+    mutationFn: ({ templateId, new_name }: { templateId: string; new_name: string }) =>
+      emailService.duplicateTemplate(templateId, new_name),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-templates'] });
     },
@@ -439,14 +404,14 @@ export const usePreviewTemplateMutation = () => {
   return useMutation({
     mutationFn: (params: {
       subject: string;
-      bodyHtml: string;
-      bodyText?: string;
+      body_html: string;
+      body_text?: string;
       sampleData?: {
-        contactName?: string;
-        contactEmail?: string;
-        formName?: string;
-        formLinkUrl?: string;
+        contact_name?: string;
+        contact_email?: string;
+        form_name?: string;
+        form_link_url?: string;
       };
-    }) => emailService.previewTemplate(params.subject, params.bodyHtml, params.bodyText, params.sampleData),
+    }) => emailService.previewTemplate(params.subject, params.body_html, params.body_text, params.sampleData),
   });
 };
