@@ -122,12 +122,13 @@ Ant Design provides dashboard-optimized components that map directly to Dewey's 
 | ------------------- | ---------------------------------------------------------- |
 | Message list        | `Table` with sorting, filtering, pagination, row selection |
 | Category hierarchy  | `Tree`, `TreeSelect`                                       |
-| Form builder        | `Form`, `Form.List` for dynamic fields                     |
+| Form builder        | `Form`, `Form.List` for dynamic fields, `dnd-kit` for drag |
+| Email templates     | `Table`, React Quill editor, `Drawer`, `Collapse`          |
 | Analytics dashboard | `@ant-design/charts` (Line, Pie, Bar)                      |
 | Workflow builder    | `Card`, `Steps`, combined with drag-drop                   |
 | Sentiment display   | `Tag`, `Badge`, `Progress`                                 |
 | Contact management  | `Table`, `Descriptions`, `Timeline`                        |
-| Settings/Admin      | `Tabs`, `Menu`, `Layout`                                   |
+| Settings/Admin      | `Tabs`, `Menu`, `Layout`, `Form` with provider configs     |
 
 **Key packages:**
 
@@ -135,7 +136,10 @@ Ant Design provides dashboard-optimized components that map directly to Dewey's 
 {
     "antd": "^5.x",
     "@ant-design/icons": "^5.x",
-    "@ant-design/charts": "^2.x"
+    "@ant-design/charts": "^2.x",
+    "@dnd-kit/core": "^6.x",
+    "@dnd-kit/sortable": "^8.x",
+    "react-quill": "^2.x"
 }
 ```
 
@@ -309,6 +313,61 @@ App Registration Settings:
 2. Find user by email → link Azure AD to existing account
 3. Match Azure tenant ID → add user to existing Dewey tenant
 4. No match → create new Dewey tenant + user as owner
+
+### Email System
+
+Dewey includes a comprehensive email system for sending templated emails with form link integration.
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Email System                                  │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   Templates      │   Configuration  │   Sent Log                │
+│ - Jinja2 syntax  │ - Per-tenant     │ - Delivery tracking       │
+│ - Variables      │ - Multi-provider │ - Error logging           │
+│ - Form links     │ - Rate limiting  │ - Statistics              │
+└──────────────────┴──────────────────┴───────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  Pluggable Email Providers                       │
+├─────────────┬─────────────┬─────────────┬───────────────────────┤
+│    SMTP     │   AWS SES   │  MS Graph   │     SendGrid          │
+└─────────────┴─────────────┴─────────────┴───────────────────────┘
+```
+
+**Email Template Variables:**
+| Category | Variable | Description |
+|----------|----------|-------------|
+| Contact | `{{ contact.name }}` | Contact's full name |
+| Contact | `{{ contact.email }}` | Contact's email |
+| Contact | `{{ contact.first_name }}` | First name |
+| Form | `{{ form.name }}` | Form name |
+| Form | `{{ form_link_url }}` | Pre-identified form link |
+| Form | `{{ form_link_expires }}` | Link expiration date |
+| Message | `{{ message.subject }}` | Original message subject |
+| Tenant | `{{ tenant.name }}` | Organization name |
+
+**Provider Configuration:**
+Each tenant can configure their preferred email provider:
+
+- **SMTP**: Standard email server (Gmail, Office 365 SMTP, custom servers)
+- **AWS SES**: Amazon Simple Email Service with IAM credentials
+- **Microsoft Graph**: Send via M365 mailbox using application credentials
+- **SendGrid**: API-based sending with delivery tracking
+
+**API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/email/templates` | GET/POST | List/create templates |
+| `/email/templates/{id}` | GET/PATCH/DELETE | Manage template |
+| `/email/templates/{id}/duplicate` | POST | Duplicate template |
+| `/email/templates/preview` | POST | Preview with sample data |
+| `/email/templates/variables` | GET | List available variables |
+| `/email/config` | GET/POST | Tenant email configuration |
+| `/email/config/test` | POST | Send test email |
+| `/email/sent` | GET | List sent emails |
 
 ### 2. Processing Pipeline
 

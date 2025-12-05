@@ -398,17 +398,21 @@
   - [ ] Execute auto_reply action with template
   - [ ] Generate form links for contacts
   - [ ] Log sent emails
-- [ ] Frontend: Email configuration UI in Settings
-  - [ ] Provider selection (SMTP, SES, Graph, SendGrid)
-  - [ ] Provider-specific configuration forms
-  - [ ] Test email functionality
-- [ ] Frontend: Email template management page
-  - [ ] Template list with send counts
-  - [ ] Create/edit modal with preview
-- [ ] Frontend: Visual template editor
-  - [ ] Block-based HTML editor
-  - [ ] Variable insertion toolbar
-  - [ ] Live preview panel
+- [x] Frontend: Email configuration UI in Settings
+  - [x] Provider selection (SMTP, SES, Graph, SendGrid)
+  - [x] Provider-specific configuration forms
+  - [x] Test email functionality
+- [x] Frontend: Email template management page
+  - [x] Template list with stats (total, active, sends)
+  - [x] Create/duplicate/delete modals
+  - [x] Status filtering
+- [x] Frontend: Visual template editor
+  - [x] Rich text editor (React Quill) with formatting toolbar
+  - [x] Variable insertion panel (click-to-copy)
+  - [x] Live preview with sample data
+  - [x] HTML source editing tab
+  - [x] Plain text fallback tab
+  - [x] Settings drawer (name, description, form link options)
 
 ### 2.2 Contact Management (Ant Design)
 - [ ] Build contacts list page
@@ -805,7 +809,7 @@ Use this section to track overall progress:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Foundation | In Progress | ~85% |
-| Phase 2: Core Features | In Progress | ~25% |
+| Phase 2: Core Features | In Progress | ~35% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
 
@@ -827,7 +831,7 @@ Use this section to track overall progress:
 |---------|--------|
 | 2.1 Form Builder | Complete (CRUD, drag-drop, preview, embed) |
 | 2.1.1 Pre-Identified Form Links | Complete |
-| 2.1.2 Email System & Auto-Responses | Backend Complete, Frontend Pending |
+| 2.1.2 Email System & Auto-Responses | Complete (backend + frontend UI) |
 | 2.2 Contact Management | Not Started |
 | 2.3 Category Management | Not Started |
 | 2.4 Campaign Detection | Not Started |
