@@ -1,10 +1,12 @@
 """Workflow management endpoints."""
 
+import re
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlmodel import select, func
 
 from app.core.database import get_session
@@ -18,6 +20,9 @@ from app.models.workflow import (
     WorkflowExecution,
     WorkflowExecutionRead,
 )
+from app.models.message import Message
+from app.models.analysis import Analysis
+from app.models.category import MessageCategory
 
 router = APIRouter()
 
@@ -51,6 +56,7 @@ class WorkflowTestResult(BaseModel):
 
     would_trigger: bool
     matched_conditions: list[dict]
+    unmatched_conditions: list[dict]
     actions_that_would_execute: list[dict]
 
 
@@ -74,6 +80,16 @@ class WorkflowActionSchema(BaseModel):
 
     type: str  # auto_reply, assign, add_category, notify, webhook, update_field
     config: dict
+
+
+class WorkflowStatsResponse(BaseModel):
+    """Workflow execution statistics."""
+
+    total_workflows: int
+    active_workflows: int
+    total_executions: int
+    executions_today: int
+    success_rate: float
 
 
 # =============================================================================
@@ -264,16 +280,99 @@ async def test_workflow(
             detail="Workflow not found",
         )
 
-    # TODO: Implement trigger evaluation logic
-    # - Load message if message_id provided
-    # - Or use sample_data
-    # - Evaluate each condition
-    # - Return test results
+    # Build test data
+    test_data = {}
+
+    if request.message_id:
+        # Load message with analysis
+        msg_result = await session.execute(
+            select(Message)
+            .where(
+                Message.id == request.message_id,
+                Message.tenant_id == current_user.tenant_id,
+            )
+            .options(
+                selectinload(Message.analysis),
+                selectinload(Message.message_categories),
+            )
+        )
+        message = msg_result.scalars().first()
+
+        if not message:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Message not found",
+            )
+
+        # Build test data from message
+        test_data = {
+            "source": message.source,
+            "sender_email": message.sender_email,
+            "subject": message.subject,
+            "body_text": message.body_text,
+            "is_template_match": message.is_template_match,
+        }
+
+        # Add analysis data if available
+        if message.analysis:
+            test_data["sentiment_score"] = message.analysis.sentiment_score
+            test_data["sentiment_label"] = message.analysis.sentiment_label
+            test_data["urgency_score"] = message.analysis.urgency_score
+
+        # Add category IDs
+        test_data["category_ids"] = [mc.category_id for mc in message.message_categories]
+
+    elif request.sample_data:
+        test_data = request.sample_data
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either message_id or sample_data is required",
+        )
+
+    # Evaluate trigger conditions
+    matched_conditions = []
+    unmatched_conditions = []
+    trigger = workflow.trigger
+    conditions = trigger.get("conditions", [])
+    match_mode = trigger.get("match", "all")
+
+    for condition in conditions:
+        field = condition.get("field")
+        operator = condition.get("operator")
+        expected_value = condition.get("value")
+
+        # Get actual value from test data
+        if field == "category_id":
+            actual_value = test_data.get("category_ids", [])
+        else:
+            actual_value = test_data.get(field)
+
+        # Evaluate condition
+        condition_met = _evaluate_condition(actual_value, operator, expected_value, field)
+
+        condition_result = {
+            **condition,
+            "actual_value": actual_value,
+            "matched": condition_met,
+        }
+
+        if condition_met:
+            matched_conditions.append(condition_result)
+        else:
+            unmatched_conditions.append(condition_result)
+
+    # Determine if workflow would trigger
+    if match_mode == "all":
+        would_trigger = len(unmatched_conditions) == 0 and len(matched_conditions) > 0
+    else:  # "any"
+        would_trigger = len(matched_conditions) > 0
 
     return WorkflowTestResult(
-        would_trigger=False,  # TODO: Implement
-        matched_conditions=[],  # TODO: Implement
-        actions_that_would_execute=workflow.actions if False else [],  # TODO: Implement
+        would_trigger=would_trigger,
+        matched_conditions=matched_conditions,
+        unmatched_conditions=unmatched_conditions,
+        actions_that_would_execute=workflow.actions if would_trigger else [],
     )
 
 
@@ -358,6 +457,44 @@ async def list_workflow_executions(
         page_size=page_size,
         pages=pages,
     )
+
+
+@router.post("/{workflow_id}/duplicate", response_model=WorkflowRead)
+async def duplicate_workflow(
+    workflow_id: UUID,
+    current_user: User = Depends(PermissionChecker(Permissions.WORKFLOWS_WRITE)),
+    session: AsyncSession = Depends(get_session),
+) -> WorkflowRead:
+    """Create a copy of an existing workflow."""
+    result = await session.execute(
+        select(Workflow).where(
+            Workflow.id == workflow_id,
+            Workflow.tenant_id == current_user.tenant_id,
+        )
+    )
+    workflow = result.scalars().first()
+
+    if not workflow:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Workflow not found",
+        )
+
+    # Create duplicate with modified name
+    new_workflow = Workflow(
+        tenant_id=current_user.tenant_id,
+        name=f"{workflow.name} (Copy)",
+        description=workflow.description,
+        is_active=False,  # Start inactive
+        priority=workflow.priority,
+        trigger=workflow.trigger,
+        actions=workflow.actions,
+    )
+    session.add(new_workflow)
+    await session.commit()
+    await session.refresh(new_workflow)
+
+    return WorkflowRead.model_validate(new_workflow)
 
 
 @router.get("/trigger-fields")
@@ -506,3 +643,80 @@ async def get_action_types(
             },
         ]
     }
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+
+def _evaluate_condition(
+    actual_value,
+    operator: str,
+    expected_value,
+    field: str,
+) -> bool:
+    """Evaluate a single trigger condition."""
+    try:
+        # Handle null actual values
+        if actual_value is None:
+            return operator == "ne"
+
+        # Comparison operators
+        if operator == "eq":
+            if field == "category_id" and isinstance(actual_value, list):
+                # Check if expected category is in the list
+                return str(expected_value) in [str(v) for v in actual_value]
+            return actual_value == expected_value
+
+        elif operator == "ne":
+            if field == "category_id" and isinstance(actual_value, list):
+                return str(expected_value) not in [str(v) for v in actual_value]
+            return actual_value != expected_value
+
+        elif operator == "gt":
+            return float(actual_value) > float(expected_value)
+
+        elif operator == "lt":
+            return float(actual_value) < float(expected_value)
+
+        elif operator == "gte":
+            return float(actual_value) >= float(expected_value)
+
+        elif operator == "lte":
+            return float(actual_value) <= float(expected_value)
+
+        elif operator == "in":
+            if isinstance(expected_value, list):
+                if field == "category_id" and isinstance(actual_value, list):
+                    # Check if any expected category is in the list
+                    return any(str(v) in [str(e) for e in expected_value] for v in actual_value)
+                return actual_value in expected_value
+            return str(actual_value) in str(expected_value)
+
+        elif operator == "not_in":
+            if isinstance(expected_value, list):
+                if field == "category_id" and isinstance(actual_value, list):
+                    return not any(str(v) in [str(e) for e in expected_value] for v in actual_value)
+                return actual_value not in expected_value
+            return str(actual_value) not in str(expected_value)
+
+        elif operator == "contains":
+            return str(expected_value).lower() in str(actual_value).lower()
+
+        elif operator == "starts_with":
+            return str(actual_value).lower().startswith(str(expected_value).lower())
+
+        elif operator == "ends_with":
+            return str(actual_value).lower().endswith(str(expected_value).lower())
+
+        elif operator == "regex":
+            try:
+                return bool(re.search(str(expected_value), str(actual_value), re.IGNORECASE))
+            except re.error:
+                return False
+
+        return False
+
+    except (ValueError, TypeError):
+        return False

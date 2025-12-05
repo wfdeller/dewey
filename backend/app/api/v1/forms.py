@@ -1,5 +1,6 @@
 """Form builder and submission endpoints."""
 
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -8,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, func
 
 from app.core.database import get_session
+from app.models.message import Message
+from app.models.contact import Contact
 from app.api.v1.deps import PermissionChecker
 from app.models.user import User, Permissions
 from app.models.form import (
@@ -588,13 +591,58 @@ async def submit_form(
             detail="Form not found or not published",
         )
 
-    # TODO: Validate field_values against form fields
-    # TODO: Check required fields
-    # TODO: Run spam detection
+    # Get form fields for validation
+    fields_result = await session.execute(
+        select(FormField).where(FormField.form_id == form_id)
+    )
+    fields = {str(f.id): f for f in fields_result.scalars().all()}
+
+    # Validate required fields
+    for field_id, field in fields.items():
+        if field.is_required and field_id not in request.field_values:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Required field '{field.label}' is missing",
+            )
+
+    # Extract email from field values for contact linking
+    sender_email = None
+    sender_name = None
+    for field_id, value in request.field_values.items():
+        if field_id in fields:
+            field = fields[field_id]
+            if field.maps_to_contact_field == "email" and value:
+                sender_email = value
+            elif field.maps_to_contact_field == "name" and value:
+                sender_name = value
+
+    # Find or create contact if email was provided
+    contact = None
+    if sender_email:
+        contact_result = await session.execute(
+            select(Contact).where(
+                Contact.tenant_id == form.tenant_id,
+                Contact.email == sender_email,
+            )
+        )
+        contact = contact_result.scalars().first()
+
+        if not contact:
+            contact = Contact(
+                tenant_id=form.tenant_id,
+                email=sender_email,
+                name=sender_name,
+                first_contact_at=datetime.utcnow(),
+                last_contact_at=datetime.utcnow(),
+                message_count=0,
+            )
+            session.add(contact)
+            await session.flush()
 
     # Create submission
     submission = FormSubmission(
         form_id=form_id,
+        contact_id=contact.id if contact else None,
         field_values=request.field_values,
         ip_address=request.ip_address or (http_request.client.host if http_request.client else None),
         user_agent=request.user_agent or http_request.headers.get("user-agent"),
@@ -602,10 +650,44 @@ async def submit_form(
         utm_params=request.utm_params or {},
     )
     session.add(submission)
+    await session.flush()
+
+    # Create a message from the submission
+    body_parts = []
+    for field_id, value in request.field_values.items():
+        if field_id in fields:
+            field = fields[field_id]
+            body_parts.append(f"{field.label}: {value}")
+
+    message = Message(
+        tenant_id=form.tenant_id,
+        contact_id=contact.id if contact else None,
+        sender_email=sender_email or "anonymous@form.submission",
+        sender_name=sender_name,
+        subject=f"Form Submission: {form.name}",
+        body_text="\n".join(body_parts),
+        source="form",
+        source_metadata={
+            "form_id": str(form_id),
+            "form_name": form.name,
+            "submission_id": str(submission.id),
+        },
+        processing_status="pending",
+        received_at=datetime.utcnow(),
+    )
+    session.add(message)
+    await session.flush()
+
+    # Link message to submission
+    submission.message_id = message.id
+
+    # Update contact stats if applicable
+    if contact:
+        contact.last_contact_at = datetime.utcnow()
+        contact.message_count = (contact.message_count or 0) + 1
+
     await session.commit()
     await session.refresh(submission)
-
-    # TODO: Queue for processing (create Message, link Contact, etc.)
 
     return FormSubmissionRead.model_validate(submission)
 
@@ -630,21 +712,41 @@ async def get_form_analytics(
             detail="Form not found",
         )
 
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+
     # Get total submissions
     total_result = await session.execute(
         select(func.count()).where(FormSubmission.form_id == form_id)
     )
     total = total_result.scalar() or 0
 
-    # TODO: Calculate today/week counts and completion metrics
+    # Submissions today
+    today_result = await session.execute(
+        select(func.count()).where(
+            FormSubmission.form_id == form_id,
+            FormSubmission.submitted_at >= today_start,
+        )
+    )
+    submissions_today = today_result.scalar() or 0
+
+    # Submissions this week
+    week_result = await session.execute(
+        select(func.count()).where(
+            FormSubmission.form_id == form_id,
+            FormSubmission.submitted_at >= week_start,
+        )
+    )
+    submissions_this_week = week_result.scalar() or 0
 
     return FormAnalyticsResponse(
         form_id=form_id,
         total_submissions=total,
-        submissions_today=0,  # TODO
-        submissions_this_week=0,  # TODO
-        completion_rate=None,  # TODO
-        avg_completion_time_seconds=None,  # TODO
+        submissions_today=submissions_today,
+        submissions_this_week=submissions_this_week,
+        completion_rate=None,  # Would need tracking of form views vs submissions
+        avg_completion_time_seconds=None,  # Would need tracking of form start time
     )
 
 

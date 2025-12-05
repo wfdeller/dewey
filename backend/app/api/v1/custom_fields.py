@@ -193,12 +193,13 @@ async def delete_custom_field(
         )
 
     # Delete all field values for this definition
-    await session.execute(
+    field_values_result = await session.execute(
         select(ContactFieldValue).where(
             ContactFieldValue.field_definition_id == field_id
         )
     )
-    # TODO: Bulk delete field values
+    for fv in field_values_result.scalars().all():
+        await session.delete(fv)
 
     await session.delete(field)
     await session.commit()

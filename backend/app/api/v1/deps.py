@@ -109,7 +109,7 @@ async def get_current_active_user(
 
 async def get_api_key_auth(
     request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(optional_security)],
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
     session: AsyncSession = Depends(get_session),
 ) -> APIKey:
     """
@@ -198,7 +198,7 @@ async def get_api_key_auth(
 
 async def get_auth_context(
     request: Request,
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(optional_security)],
+    credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
     session: AsyncSession = Depends(get_session),
 ) -> AuthContext:
     """
@@ -379,7 +379,7 @@ class ScopeChecker:
     async def __call__(
         self,
         request: Request,
-        credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(optional_security)],
+        credentials: HTTPAuthorizationCredentials | None = Depends(optional_security),
         session: AsyncSession = Depends(get_session),
     ) -> AuthContext:
         """Check if auth context has required scopes."""

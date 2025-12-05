@@ -203,7 +203,15 @@
 - [x] Add filtering and sorting (scaffolded with query params)
 - [x] Implement request validation (Pydantic schemas created)
 - [ ] Add OpenAPI documentation customization
-- [ ] Implement actual database operations (currently scaffolded with TODOs)
+- [x] Implement actual database operations
+  - [x] Categories CRUD (was already implemented)
+  - [x] Messages CRUD with filtering, bulk actions, email webhook
+  - [x] Contacts CRUD with custom fields, timeline, merge, tags
+  - [x] Custom Fields CRUD with cascade delete
+  - [x] Campaigns CRUD with merge, bulk respond, confirm/dismiss
+  - [x] Workflows CRUD with trigger evaluation, test against messages
+  - [x] Forms CRUD with submission validation, auto-contact creation
+  - [x] Analytics queries (dashboard, trends, breakdowns, datasets for BI)
 
 ### 1.7 Message Intake
 
@@ -705,7 +713,7 @@ Use this section to track overall progress:
 
 | Phase | Status | Progress |
 |-------|--------|----------|
-| Phase 1: Foundation | In Progress | ~80% |
+| Phase 1: Foundation | In Progress | ~85% |
 | Phase 2: Core Features | Not Started | 0% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
@@ -718,7 +726,7 @@ Use this section to track overall progress:
 | 1.3 Authentication | Complete (JWT, password auth, Azure AD SSO) |
 | 1.4 RBAC | Complete (APIs, UI for users/roles management) |
 | 1.5 API Keys | Complete (middleware, rate limiting, endpoints, UI) |
-| 1.6 Core API Endpoints | Complete (all endpoints scaffolded with auth/validation) |
+| 1.6 Core API Endpoints | Complete (all endpoints with full DB operations) |
 | 1.7 Message Intake | Partial (Azure AD SSO done, Graph API pending) |
 | 1.8 AI Pipeline | Not Started |
 | 1.9 Basic Frontend | Complete (auth, users/roles/API keys UI, Settings page) |
@@ -729,14 +737,14 @@ Use this section to track overall progress:
 | /health | 1 | Working |
 | /auth | 6 | Working |
 | /tenants | 3 | Scaffolded |
-| /messages | 4 | Scaffolded |
-| /categories | 7 | Scaffolded |
-| /contacts | 9 | Scaffolded |
-| /custom-fields | 5 | Scaffolded |
-| /campaigns | 8 | Scaffolded |
-| /workflows | 9 | Scaffolded |
-| /forms | 12 | Scaffolded |
-| /analytics | 12 | Scaffolded |
+| /messages | 4 | Working (full CRUD with filtering) |
+| /categories | 7 | Working (full CRUD with hierarchy) |
+| /contacts | 9 | Working (full CRUD with custom fields) |
+| /custom-fields | 5 | Working (full CRUD) |
+| /campaigns | 8 | Working (full CRUD with merge/respond) |
+| /workflows | 9 | Working (full CRUD with trigger eval) |
+| /forms | 12 | Working (full CRUD with submissions) |
+| /analytics | 12 | Working (dashboard, trends, datasets) |
 | /roles | 6 | Working |
 | /users | 7 | Working |
 | /api-keys | 7 | Working |
