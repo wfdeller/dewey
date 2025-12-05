@@ -1,11 +1,12 @@
-import { Progress, Typography, Card, Statistic, Row, Col, Table, Result, Alert } from 'antd';
+import { Typography, Card, Statistic, Row, Col, Table, Result, Alert } from 'antd';
 import {
   PlusOutlined,
   SyncOutlined,
   MinusCircleOutlined,
   WarningOutlined,
-  LoadingOutlined,
+  CheckCircleOutlined,
 } from '@ant-design/icons';
+import { Link } from 'react-router-dom';
 import type { JobProgress, Job } from '../../services/voterImportService';
 
 const { Text, Paragraph } = Typography;
@@ -16,6 +17,7 @@ interface ImportProgressStepProps {
 }
 
 export default function ImportProgressStep({ job, progress }: ImportProgressStepProps) {
+  const isQueued = job.status === 'queued';
   const isProcessing = job.status === 'processing';
   const isCompleted = job.status === 'completed';
   const isFailed = job.status === 'failed';
@@ -33,23 +35,36 @@ export default function ImportProgressStep({ job, progress }: ImportProgressStep
       : 0,
   };
 
-  const getStatusDisplay = () => {
-    if (isProcessing) {
-      return (
-        <div style={{ textAlign: 'center', marginBottom: 24 }}>
-          <LoadingOutlined style={{ fontSize: 48, color: '#1890ff' }} />
-          <Paragraph style={{ marginTop: 16 }}>
-            Processing import... {currentProgress.rows_processed} of {currentProgress.total_rows || '?'} rows
-          </Paragraph>
-          <Progress
-            percent={Math.round(currentProgress.percent_complete || 0)}
-            status="active"
-            style={{ maxWidth: 400, margin: '0 auto' }}
+  // For queued jobs, show a simple confirmation
+  if (isQueued || (job.status !== 'completed' && job.status !== 'failed' && !isProcessing)) {
+    return (
+      <Result
+        icon={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+        title="Import Submitted"
+        subTitle={
+          <>
+            Your import of <strong>{job.original_filename}</strong> with {job.total_rows?.toLocaleString() || 'N/A'} rows has been queued for processing.
+          </>
+        }
+        extra={
+          <Alert
+            message="Track Progress"
+            description={
+              <>
+                You can monitor the import status on the <Link to="/jobs">Jobs page</Link>.
+                The import will continue processing in the background.
+              </>
+            }
+            type="info"
+            showIcon
+            style={{ textAlign: 'left', maxWidth: 500, margin: '0 auto' }}
           />
-        </div>
-      );
-    }
+        }
+      />
+    );
+  }
 
+  const getStatusDisplay = () => {
     if (isCompleted) {
       return (
         <Result
@@ -70,10 +85,11 @@ export default function ImportProgressStep({ job, progress }: ImportProgressStep
       );
     }
 
+    // Processing state (shouldn't normally show since we redirect to Jobs)
     return (
       <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <SyncOutlined style={{ fontSize: 48, color: '#1890ff' }} />
-        <Paragraph style={{ marginTop: 16 }}>Starting import...</Paragraph>
+        <SyncOutlined spin style={{ fontSize: 48, color: '#1890ff' }} />
+        <Paragraph style={{ marginTop: 16 }}>Processing...</Paragraph>
       </div>
     );
   };

@@ -79,16 +79,17 @@ services:
     profiles:
       - full  # Only start with --profile full
 
-  # Background Worker (added in later phase)
+  # ARQ Background Worker
   worker:
     build:
       context: ./backend
       target: development
     container_name: dewey-worker
     restart: unless-stopped
-    command: ["python", "-m", "app.workers.processor"]
+    command: ["python", "-m", "app.workers.worker"]
     volumes:
       - ./backend:/app
+      - /app/.venv  # Exclude venv from mount
     environment:
       - DATABASE_URL=postgresql://dewey:dewey@postgres:5432/dewey
       - REDIS_URL=redis://redis:6379/0

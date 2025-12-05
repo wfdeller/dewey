@@ -183,6 +183,28 @@ export const useJobsQuery = (limit = 50, offset = 0) => {
   });
 };
 
+// Check for active jobs (for the Jobs pill in the header)
+export const useActiveJobsQuery = () => {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  return useQuery({
+    queryKey: ['voter-import', 'active-jobs'],
+    queryFn: async () => {
+      const response = await voterImportService.listJobs(10, 0);
+      const activeJobs = response.items.filter(
+        (job) => job.status === 'processing' || job.status === 'queued' || job.status === 'analyzing'
+      );
+      return {
+        hasActive: activeJobs.length > 0,
+        activeCount: activeJobs.length,
+        totalJobs: response.total,
+      };
+    },
+    enabled: isAuthenticated,
+    refetchInterval: 5000, // Poll every 5 seconds
+    staleTime: 2000,
+  });
+};
+
 // Upload file mutation
 export const useUploadFileMutation = () => {
   const queryClient = useQueryClient();
@@ -242,34 +264,80 @@ export const useDeleteJobMutation = () => {
 
 // Available contact fields for mapping
 export const CONTACT_FIELDS = [
+  // Contact Info
   { value: 'email', label: 'Email', group: 'Contact' },
-  { value: 'first_name', label: 'First Name', group: 'Name' },
-  { value: 'last_name', label: 'Last Name', group: 'Name' },
-  { value: 'middle_name', label: 'Middle Name', group: 'Name' },
-  { value: 'name', label: 'Full Name', group: 'Name' },
-  { value: 'prefix', label: 'Prefix', group: 'Name' },
-  { value: 'suffix', label: 'Suffix', group: 'Name' },
+  { value: 'secondary_email', label: 'Secondary Email', group: 'Contact' },
   { value: 'phone', label: 'Phone', group: 'Contact' },
   { value: 'mobile_phone', label: 'Mobile Phone', group: 'Contact' },
+  { value: 'work_phone', label: 'Work Phone', group: 'Contact' },
+
+  // Name
+  { value: 'name', label: 'Full Name', group: 'Name' },
+  { value: 'prefix', label: 'Prefix (Mr., Mrs., etc.)', group: 'Name' },
+  { value: 'first_name', label: 'First Name', group: 'Name' },
+  { value: 'middle_name', label: 'Middle Name', group: 'Name' },
+  { value: 'last_name', label: 'Last Name', group: 'Name' },
+  { value: 'suffix', label: 'Suffix (Jr., Sr., etc.)', group: 'Name' },
+  { value: 'preferred_name', label: 'Preferred Name/Nickname', group: 'Name' },
+
+  // Address
   { value: 'address_street', label: 'Street Address', group: 'Address' },
   { value: 'address_street2', label: 'Address Line 2', group: 'Address' },
   { value: 'address_city', label: 'City', group: 'Address' },
   { value: 'address_state', label: 'State', group: 'Address' },
   { value: 'address_zip', label: 'ZIP Code', group: 'Address' },
+
+  // Geographic/Political
+  { value: 'state', label: 'State (2-letter)', group: 'Geographic' },
+  { value: 'zip_code', label: 'ZIP Code', group: 'Geographic' },
   { value: 'county', label: 'County', group: 'Geographic' },
   { value: 'congressional_district', label: 'Congressional District', group: 'Geographic' },
   { value: 'state_legislative_district', label: 'State Legislative District', group: 'Geographic' },
   { value: 'precinct', label: 'Precinct', group: 'Geographic' },
   { value: 'school_district', label: 'School District', group: 'Geographic' },
   { value: 'municipal_district', label: 'Municipal District', group: 'Geographic' },
+
+  // Voter Info
   { value: 'state_voter_id', label: 'State Voter ID', group: 'Voter' },
   { value: 'party_affiliation', label: 'Party Affiliation', group: 'Voter' },
   { value: 'voter_status', label: 'Voter Status', group: 'Voter' },
   { value: 'voter_registration_date', label: 'Voter Registration Date', group: 'Voter' },
   { value: 'modeled_party', label: 'Modeled Party', group: 'Voter' },
+
+  // Demographics
   { value: 'date_of_birth', label: 'Date of Birth', group: 'Demographics' },
+  { value: 'age_estimate', label: 'Age (Estimated)', group: 'Demographics' },
   { value: 'gender', label: 'Gender', group: 'Demographics' },
-  { value: 'vote_history', label: 'Vote History Column', group: 'Vote History' },
+  { value: 'pronouns', label: 'Pronouns', group: 'Demographics' },
+  { value: 'preferred_language', label: 'Preferred Language', group: 'Demographics' },
+
+  // Socioeconomic
+  { value: 'income_bracket', label: 'Income Bracket', group: 'Socioeconomic' },
+  { value: 'education_level', label: 'Education Level', group: 'Socioeconomic' },
+  { value: 'homeowner_status', label: 'Homeowner Status', group: 'Socioeconomic' },
+  { value: 'household_size', label: 'Household Size', group: 'Socioeconomic' },
+  { value: 'has_children', label: 'Has Children', group: 'Socioeconomic' },
+  { value: 'marital_status', label: 'Marital Status', group: 'Socioeconomic' },
+
+  // Employment
+  { value: 'occupation', label: 'Occupation', group: 'Employment' },
+  { value: 'employer', label: 'Employer', group: 'Employment' },
+  { value: 'job_title', label: 'Job Title', group: 'Employment' },
+  { value: 'industry', label: 'Industry', group: 'Employment' },
+
+  // Vote History (for explicit column mapping)
+  { value: 'vote_history', label: 'Vote History Column (auto-detect)', group: 'Vote History' },
+  { value: 'vh_election_name', label: 'Election Name', group: 'Vote History' },
+  { value: 'vh_election_date', label: 'Election Date', group: 'Vote History' },
+  { value: 'vh_election_type', label: 'Election Type', group: 'Vote History' },
+  { value: 'vh_voted', label: 'Voted (Yes/No)', group: 'Vote History' },
+  { value: 'vh_voting_method', label: 'Voting Method', group: 'Vote History' },
+  { value: 'vh_primary_party', label: 'Primary Party Voted', group: 'Vote History' },
+
+  // Other
+  { value: 'notes', label: 'Notes', group: 'Other' },
+  { value: 'is_active', label: 'Is Active', group: 'Other' },
+  { value: 'inactive_reason', label: 'Inactive Reason', group: 'Other' },
 ];
 
 // Group fields for select dropdown

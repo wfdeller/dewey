@@ -9,12 +9,14 @@ import {
   MailOutlined,
   CreditCardOutlined,
   UnorderedListOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import UsersTab from '../components/settings/UsersTab';
 import RolesTab from '../components/settings/RolesTab';
 import ApiKeysTab from '../components/settings/ApiKeysTab';
 import EmailTab from '../components/settings/EmailTab';
 import LOVTab from '../components/settings/LOVTab';
+import WorkerTab from '../components/settings/WorkerTab';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -109,6 +111,16 @@ export default function Settings() {
         </span>
       ),
       children: <LOVTab />,
+    },
+    {
+      key: 'worker',
+      label: (
+        <span>
+          <ThunderboltOutlined style={{ marginRight: 8 }} />
+          Job Queue
+        </span>
+      ),
+      children: <WorkerTab />,
     },
     {
       key: 'general',

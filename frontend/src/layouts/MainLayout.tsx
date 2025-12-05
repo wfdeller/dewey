@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Avatar, Dropdown, Space, Button, theme } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Space, Button, Badge, theme } from 'antd';
 import {
     DashboardOutlined,
     MailOutlined,
@@ -18,8 +18,11 @@ import {
     LogoutOutlined,
     BulbOutlined,
     UploadOutlined,
+    SyncOutlined,
+    CheckCircleOutlined,
 } from '@ant-design/icons';
 import { useUIStore, useAuthStore } from '../stores';
+import { useActiveJobsQuery } from '../services/voterImportService';
 
 const { Header, Sider, Content } = Layout;
 
@@ -88,6 +91,7 @@ export default function MainLayout() {
 
     const { sidebarCollapsed, toggleSidebar, darkMode, toggleDarkMode } = useUIStore();
     const { user, logout } = useAuthStore();
+    const { data: activeJobsData } = useActiveJobsQuery();
 
     const [selectedKeys, setSelectedKeys] = useState([location.pathname]);
 
@@ -175,6 +179,24 @@ export default function MainLayout() {
                     />
 
                     <Space size='middle'>
+                        <Badge
+                            count={activeJobsData?.activeCount || 0}
+                            size='small'
+                            offset={[-2, 2]}
+                        >
+                            <Button
+                                type='text'
+                                icon={activeJobsData?.hasActive ? <SyncOutlined spin /> : <CheckCircleOutlined />}
+                                onClick={() => navigate('/jobs')}
+                                title={activeJobsData?.hasActive ? `${activeJobsData.activeCount} active job(s)` : 'View job history'}
+                                style={{
+                                    color: activeJobsData?.hasActive ? token.colorPrimary : token.colorTextSecondary,
+                                }}
+                            >
+                                {!sidebarCollapsed && 'Jobs'}
+                            </Button>
+                        </Badge>
+
                         <Button
                             type='text'
                             icon={<BulbOutlined />}

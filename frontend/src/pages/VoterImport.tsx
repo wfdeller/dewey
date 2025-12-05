@@ -121,7 +121,7 @@ export default function VoterImport() {
 
         await startMutation.mutateAsync(jobId!);
         setCurrentStep(3);
-        message.success('Import started');
+        message.success('Import submitted');
       } catch (error) {
         message.error(getErrorMessage(error));
       }
@@ -241,7 +241,7 @@ export default function VoterImport() {
                 loading={isLoading}
                 disabled={!canProceed()}
               >
-                {currentStep === 2 ? 'Start Import' : 'Next'}
+                {currentStep === 2 ? 'Submit Import' : 'Next'}
               </Button>
             )}
           </Space>

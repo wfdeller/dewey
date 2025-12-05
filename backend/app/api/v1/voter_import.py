@@ -1,12 +1,14 @@
 """Voter file import API endpoints."""
 
+from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
 from app.core.database import get_session
+from app.core.queue import enqueue_job
 from app.api.v1.deps import get_current_user
 from app.models.user import User
 from app.models.job import JobRead, JobProgress, JobConfirmMappings, Job
@@ -256,7 +258,6 @@ async def confirm_mappings(
 @router.post("/{job_id}/start", response_model=JobRead)
 async def start_import(
     job_id: UUID,
-    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> JobRead:
@@ -265,6 +266,8 @@ async def start_import(
 
     The job must have confirmed mappings before starting.
     Poll the /progress endpoint to track progress.
+
+    Jobs are queued to ARQ and processed by a separate worker process.
     """
     service = VoterImportService(session, current_user.tenant_id)
 
@@ -277,10 +280,10 @@ async def start_import(
                 detail="Mappings must be confirmed before starting import",
             )
 
-        if job.status == "processing":
+        if job.status in ("processing", "queued"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Import is already running",
+                detail="Import is already running or queued",
             )
 
         if job.status == "completed":
@@ -289,12 +292,24 @@ async def start_import(
                 detail="Import has already completed",
             )
 
-        # Start background processing
-        # Note: We need to create a new session for the background task
-        background_tasks.add_task(_run_import_background, job_id, current_user.tenant_id)
+        # Enqueue to ARQ task queue
+        arq_job_id = await enqueue_job(
+            "process_voter_import",
+            str(job_id),
+            str(current_user.tenant_id),
+            _job_id=f"voter_import:{job_id}",  # Deduplication key
+        )
 
-        # Update status
-        job.status = "processing"
+        if not arq_job_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Job is already queued for processing",
+            )
+
+        # Update job status to queued
+        job.status = "queued"
+        job.arq_job_id = arq_job_id
+        job.queued_at = datetime.utcnow()
         await session.commit()
         await session.refresh(job)
 
@@ -316,17 +331,17 @@ async def delete_job(
     """
     Delete an import job and its uploaded file.
 
-    Cannot delete jobs that are currently processing.
+    Cannot delete jobs that are currently processing or queued.
     """
     service = VoterImportService(session, current_user.tenant_id)
 
     try:
         job = await service.get_job(job_id)
 
-        if job.status == "processing":
+        if job.status in ("processing", "queued"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete a job that is currently processing",
+                detail="Cannot delete a job that is queued or processing",
             )
 
         await service.delete_job(job_id)
@@ -362,27 +377,3 @@ async def list_jobs(
     )
 
 
-# =============================================================================
-# Background Task
-# =============================================================================
-
-
-async def _run_import_background(job_id: UUID, tenant_id: UUID) -> None:
-    """
-    Run the import in a background task with its own session.
-    """
-    from app.core.database import async_session_maker
-
-    async with async_session_maker() as session:
-        service = VoterImportService(session, tenant_id)
-        try:
-            await service.process_import(job_id)
-        except Exception as e:
-            # Error is logged in the service
-            import structlog
-            logger = structlog.get_logger()
-            logger.error(
-                "Background import failed",
-                job_id=str(job_id),
-                error=str(e),
-            )

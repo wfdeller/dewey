@@ -27,6 +27,7 @@ JOB_STATUSES = [
     "pending",
     "analyzing",
     "mapping",
+    "queued",      # Enqueued to ARQ, waiting for worker
     "processing",
     "completed",
     "failed",
@@ -78,6 +79,10 @@ class Job(TenantBaseModel, table=True):
     # Timing
     started_at: datetime | None = Field(default=None)
     completed_at: datetime | None = Field(default=None)
+
+    # ARQ queue tracking
+    arq_job_id: str | None = Field(default=None, index=True)  # ARQ job ID for tracking
+    queued_at: datetime | None = Field(default=None)  # When job was enqueued
 
     # Owner
     created_by_id: UUID = Field(foreign_key="user.id", index=True)
@@ -140,6 +145,10 @@ class JobRead(SQLModel):
     completed_at: datetime | None
     created_at: datetime
     updated_at: datetime
+
+    # ARQ queue tracking
+    arq_job_id: str | None
+    queued_at: datetime | None
 
     # Owner
     created_by_id: UUID
