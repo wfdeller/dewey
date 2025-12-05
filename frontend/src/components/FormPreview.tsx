@@ -188,52 +188,59 @@ export default function FormPreview({
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {fields
             .filter((f) => f.field_type !== 'hidden')
-            .map((field) => (
-              <Form.Item
-                key={field.id}
-                name={field.id}
-                label={field.label}
-                rules={[
-                  {
-                    required: field.is_required,
-                    message: `${field.label} is required`,
-                  },
-                  // Email validation
-                  ...(field.field_type === 'email'
-                    ? [{ type: 'email' as const, message: 'Please enter a valid email' }]
-                    : []),
-                  // Min/max length validation
-                  ...(field.validation?.minLength
-                    ? [
-                        {
-                          min: field.validation.minLength as number,
-                          message: `Minimum ${field.validation.minLength} characters`,
-                        },
-                      ]
-                    : []),
-                  ...(field.validation?.maxLength
-                    ? [
-                        {
-                          max: field.validation.maxLength as number,
-                          message: `Maximum ${field.validation.maxLength} characters`,
-                        },
-                      ]
-                    : []),
-                  // Pattern validation
-                  ...(field.validation?.pattern
-                    ? [
-                        {
-                          pattern: new RegExp(field.validation.pattern as string),
-                          message: 'Invalid format',
-                        },
-                      ]
-                    : []),
-                ]}
-                extra={field.help_text}
-              >
-                {renderField(field)}
-              </Form.Item>
-            ))}
+            .map((field) => {
+              // Single checkbox (no options) needs valuePropName="checked"
+              const isSingleCheckbox = field.field_type === 'checkbox' &&
+                (!field.options || field.options.length === 0);
+
+              return (
+                <Form.Item
+                  key={field.id}
+                  name={field.id}
+                  label={field.label}
+                  valuePropName={isSingleCheckbox ? 'checked' : undefined}
+                  rules={[
+                    {
+                      required: field.is_required,
+                      message: `${field.label} is required`,
+                    },
+                    // Email validation
+                    ...(field.field_type === 'email'
+                      ? [{ type: 'email' as const, message: 'Please enter a valid email' }]
+                      : []),
+                    // Min/max length validation
+                    ...(field.validation?.minLength
+                      ? [
+                          {
+                            min: field.validation.minLength as number,
+                            message: `Minimum ${field.validation.minLength} characters`,
+                          },
+                        ]
+                      : []),
+                    ...(field.validation?.maxLength
+                      ? [
+                          {
+                            max: field.validation.maxLength as number,
+                            message: `Maximum ${field.validation.maxLength} characters`,
+                          },
+                        ]
+                      : []),
+                    // Pattern validation
+                    ...(field.validation?.pattern
+                      ? [
+                          {
+                            pattern: new RegExp(field.validation.pattern as string),
+                            message: 'Invalid format',
+                          },
+                        ]
+                      : []),
+                  ]}
+                  extra={field.help_text}
+                >
+                  {renderField(field)}
+                </Form.Item>
+              );
+            })}
 
           {/* Hidden fields */}
           {fields
