@@ -8,11 +8,13 @@ import {
   CloudOutlined,
   MailOutlined,
   CreditCardOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import UsersTab from '../components/settings/UsersTab';
 import RolesTab from '../components/settings/RolesTab';
 import ApiKeysTab from '../components/settings/ApiKeysTab';
 import EmailTab from '../components/settings/EmailTab';
+import LOVTab from '../components/settings/LOVTab';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -97,6 +99,16 @@ export default function Settings() {
         </span>
       ),
       children: <EmailTab />,
+    },
+    {
+      key: 'lov',
+      label: (
+        <span>
+          <UnorderedListOutlined style={{ marginRight: 8 }} />
+          List of Values
+        </span>
+      ),
+      children: <LOVTab />,
     },
     {
       key: 'general',

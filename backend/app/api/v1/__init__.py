@@ -13,6 +13,7 @@ from app.api.v1 import (
     email_templates,
     forms,
     health,
+    lov,
     messages,
     roles,
     tenants,
@@ -38,3 +39,4 @@ router.include_router(roles.router, prefix="/roles", tags=["Roles"])
 router.include_router(users.router, prefix="/users", tags=["Users"])
 router.include_router(api_keys.router, prefix="/api-keys", tags=["API Keys"])
 router.include_router(email_templates.router, prefix="/email", tags=["Email Templates"])
+router.include_router(lov.router, prefix="/lov", tags=["List of Values"])

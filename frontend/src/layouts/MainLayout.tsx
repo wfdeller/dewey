@@ -1,222 +1,202 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Layout, Menu, Avatar, Dropdown, Space, Button, theme } from 'antd';
 import {
-  Layout,
-  Menu,
-  Avatar,
-  Dropdown,
-  Space,
-  Button,
-  theme,
-} from 'antd';
-import {
-  DashboardOutlined,
-  MailOutlined,
-  TeamOutlined,
-  TagsOutlined,
-  FlagOutlined,
-  ThunderboltOutlined,
-  FormOutlined,
-  FileTextOutlined,
-  BarChartOutlined,
-  SettingOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  UserOutlined,
-  LogoutOutlined,
-  BulbOutlined,
+    DashboardOutlined,
+    MailOutlined,
+    TeamOutlined,
+    TagsOutlined,
+    FlagOutlined,
+    ThunderboltOutlined,
+    FormOutlined,
+    FileTextOutlined,
+    BarChartOutlined,
+    SettingOutlined,
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    UserOutlined,
+    LogoutOutlined,
+    BulbOutlined,
 } from '@ant-design/icons';
 import { useUIStore, useAuthStore } from '../stores';
 
 const { Header, Sider, Content } = Layout;
 
 const menuItems = [
-  {
-    key: '/dashboard',
-    icon: <DashboardOutlined />,
-    label: 'Dashboard',
-  },
-  {
-    key: '/messages',
-    icon: <MailOutlined />,
-    label: 'Messages',
-  },
-  {
-    key: '/contacts',
-    icon: <TeamOutlined />,
-    label: 'Contacts',
-  },
-  {
-    key: '/categories',
-    icon: <TagsOutlined />,
-    label: 'Categories',
-  },
-  {
-    key: '/campaigns',
-    icon: <FlagOutlined />,
-    label: 'Campaigns',
-  },
-  {
-    key: '/workflows',
-    icon: <ThunderboltOutlined />,
-    label: 'Workflows',
-  },
-  {
-    key: '/forms',
-    icon: <FormOutlined />,
-    label: 'Forms',
-  },
-  {
-    key: '/email-templates',
-    icon: <FileTextOutlined />,
-    label: 'Email Templates',
-  },
-  {
-    key: '/analytics',
-    icon: <BarChartOutlined />,
-    label: 'Analytics',
-  },
-  {
-    key: '/settings',
-    icon: <SettingOutlined />,
-    label: 'Settings',
-  },
+    {
+        key: '/dashboard',
+        icon: <DashboardOutlined />,
+        label: 'Dashboard',
+    },
+    {
+        key: '/messages',
+        icon: <MailOutlined />,
+        label: 'Messages',
+    },
+    {
+        key: '/contacts',
+        icon: <TeamOutlined />,
+        label: 'Contacts',
+    },
+    {
+        key: '/categories',
+        icon: <TagsOutlined />,
+        label: 'Categories',
+    },
+    {
+        key: '/campaigns',
+        icon: <FlagOutlined />,
+        label: 'Campaigns',
+    },
+    {
+        key: '/workflows',
+        icon: <ThunderboltOutlined />,
+        label: 'Workflows',
+    },
+    {
+        key: '/forms',
+        icon: <FormOutlined />,
+        label: 'Forms',
+    },
+    {
+        key: '/email-templates',
+        icon: <FileTextOutlined />,
+        label: 'Email Templates',
+    },
+    {
+        key: '/analytics',
+        icon: <BarChartOutlined />,
+        label: 'Analytics',
+    },
+    {
+        key: '/settings',
+        icon: <SettingOutlined />,
+        label: 'Settings',
+    },
 ];
 
 export default function MainLayout() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { token } = theme.useToken();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { token } = theme.useToken();
 
-  const { sidebarCollapsed, toggleSidebar, darkMode, toggleDarkMode } = useUIStore();
-  const { user, logout } = useAuthStore();
+    const { sidebarCollapsed, toggleSidebar, darkMode, toggleDarkMode } = useUIStore();
+    const { user, logout } = useAuthStore();
 
-  const [selectedKeys, setSelectedKeys] = useState([location.pathname]);
+    const [selectedKeys, setSelectedKeys] = useState([location.pathname]);
 
-  const handleMenuClick = ({ key }: { key: string }) => {
-    setSelectedKeys([key]);
-    navigate(key);
-  };
+    const handleMenuClick = ({ key }: { key: string }) => {
+        setSelectedKeys([key]);
+        navigate(key);
+    };
 
-  const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: 'Profile',
-    },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Settings',
-      onClick: () => navigate('/settings'),
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Logout',
-      onClick: () => {
-        logout();
-        navigate('/login');
-      },
-    },
-  ];
+    const userMenuItems = [
+        {
+            key: 'profile',
+            icon: <UserOutlined />,
+            label: 'Profile',
+        },
+        {
+            key: 'settings',
+            icon: <SettingOutlined />,
+            label: 'Settings',
+            onClick: () => navigate('/settings'),
+        },
+        {
+            type: 'divider' as const,
+        },
+        {
+            key: 'logout',
+            icon: <LogoutOutlined />,
+            label: 'Logout',
+            onClick: () => {
+                logout();
+                navigate('/login');
+            },
+        },
+    ];
 
-  return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={sidebarCollapsed}
-        theme="dark"
-        width={220}
-      >
-        <div
-          style={{
-            height: 64,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderBottom: '1px solid rgba(255,255,255,0.1)',
-          }}
-        >
-          <h1
-            style={{
-              color: 'white',
-              margin: 0,
-              fontSize: sidebarCollapsed ? 20 : 24,
-              fontWeight: 600,
-            }}
-          >
-            {sidebarCollapsed ? 'D' : 'Dewey'}
-          </h1>
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={selectedKeys}
-          items={menuItems}
-          onClick={handleMenuClick}
-          style={{ borderRight: 0 }}
-        />
-      </Sider>
+    return (
+        <Layout style={{ minHeight: '100vh' }}>
+            <Sider trigger={null} collapsible collapsed={sidebarCollapsed} theme='dark' width={220}>
+                <div
+                    style={{
+                        height: 64,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                >
+                    <h1
+                        style={{
+                            color: 'white',
+                            margin: 0,
+                            fontSize: sidebarCollapsed ? 20 : 24,
+                            fontWeight: 600,
+                        }}
+                    >
+                        {sidebarCollapsed ? 'D' : 'Dewey'}
+                    </h1>
+                </div>
+                <Menu
+                    theme='dark'
+                    mode='inline'
+                    selectedKeys={selectedKeys}
+                    items={menuItems}
+                    onClick={handleMenuClick}
+                    style={{ borderRight: 0 }}
+                />
+            </Sider>
 
-      <Layout>
-        <Header
-          style={{
-            padding: '0 24px',
-            background: token.colorBgContainer,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: `1px solid ${token.colorBorderSecondary}`,
-          }}
-        >
-          <Button
-            type="text"
-            icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={toggleSidebar}
-            style={{ fontSize: 16, width: 40, height: 40 }}
-          />
+            <Layout>
+                <Header
+                    style={{
+                        padding: '0 24px',
+                        background: token.colorBgContainer,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                    }}
+                >
+                    <Button
+                        type='text'
+                        icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        onClick={toggleSidebar}
+                        style={{ fontSize: 16, width: 40, height: 40 }}
+                    />
 
-          <Space size="middle">
-            <Button
-              type="text"
-              icon={<BulbOutlined />}
-              onClick={toggleDarkMode}
-              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-            />
+                    <Space size='middle'>
+                        <Button
+                            type='text'
+                            icon={<BulbOutlined />}
+                            onClick={toggleDarkMode}
+                            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                        />
 
-            <Dropdown
-              menu={{ items: userMenuItems }}
-              placement="bottomRight"
-              arrow
-            >
-              <Space style={{ cursor: 'pointer' }}>
-                <Avatar icon={<UserOutlined />} />
-                {!sidebarCollapsed && (
-                  <span>{user?.name || 'User'}</span>
-                )}
-              </Space>
-            </Dropdown>
-          </Space>
-        </Header>
+                        <Dropdown menu={{ items: userMenuItems }} placement='bottomRight' arrow>
+                            <Space style={{ cursor: 'pointer' }}>
+                                <Avatar icon={<UserOutlined />} />
+                                {!sidebarCollapsed && <span>{user?.name || 'User'}</span>}
+                            </Space>
+                        </Dropdown>
+                    </Space>
+                </Header>
 
-        <Content
-          style={{
-            margin: 24,
-            padding: 24,
-            background: token.colorBgContainer,
-            borderRadius: token.borderRadiusLG,
-            minHeight: 280,
-            overflow: 'auto',
-          }}
-        >
-          <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
-  );
+                <Content
+                    style={{
+                        margin: 24,
+                        padding: 24,
+                        background: token.colorBgContainer,
+                        borderRadius: token.borderRadiusLG,
+                        minHeight: 280,
+                        overflow: 'auto',
+                    }}
+                >
+                    <Outlet />
+                </Content>
+            </Layout>
+        </Layout>
+    );
 }

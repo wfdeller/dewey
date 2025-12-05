@@ -17,6 +17,7 @@ export interface CreateContactRequest {
   age_estimate?: number;
   age_estimate_source?: string;
   gender?: string;
+  pronouns?: string;
 
   // Name components
   prefix?: string;
@@ -140,6 +141,7 @@ export interface ContactDetailResponse {
   age_estimate?: number;
   age_estimate_source?: string;
   gender?: string;
+  pronouns?: string;
 
   // Name components
   prefix?: string;

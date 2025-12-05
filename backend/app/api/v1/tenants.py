@@ -5,13 +5,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from app.core.database import get_session
+from app.models.tenant import Tenant
+from app.models.lov import create_default_lov_entries
 
 router = APIRouter()
 
 
-class TenantCreate(BaseModel):
+class TenantCreateRequest(BaseModel):
     """Tenant creation schema."""
 
     name: str
@@ -36,14 +39,41 @@ class TenantUpdate(BaseModel):
 
 @router.post("", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
 async def create_tenant(
-    tenant: TenantCreate,
+    request: TenantCreateRequest,
     session: AsyncSession = Depends(get_session),
 ) -> TenantResponse:
     """Create a new tenant (marketplace provisioning)."""
-    # TODO: Implement tenant creation
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Tenant creation not yet implemented",
+    # Check if slug already exists
+    existing = await session.execute(
+        select(Tenant).where(Tenant.slug == request.slug.lower().replace(" ", "-"))
+    )
+    if existing.scalars().first():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Tenant with slug '{request.slug}' already exists",
+        )
+
+    # Create tenant
+    tenant = Tenant(
+        name=request.name,
+        slug=request.slug,
+    )
+    session.add(tenant)
+    await session.flush()  # Get tenant ID
+
+    # Seed default LOV entries
+    lov_entries = create_default_lov_entries(tenant.id)
+    for entry in lov_entries:
+        session.add(entry)
+
+    await session.commit()
+    await session.refresh(tenant)
+
+    return TenantResponse(
+        id=tenant.id,
+        name=tenant.name,
+        slug=tenant.slug,
+        subscription_tier=tenant.subscription_tier,
     )
 
 

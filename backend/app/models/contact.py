@@ -1,14 +1,82 @@
 """Contact model for sender/constituent tracking with custom fields."""
 
+import re
 from datetime import datetime, date
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
+from pydantic import field_validator
 from sqlalchemy import Column, UniqueConstraint, Text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlmodel import Field, Relationship, SQLModel, String
 
 from app.models.base import BaseModel, TenantBaseModel
+
+
+# =============================================================================
+# Data Cleaning Utilities
+# =============================================================================
+
+def clean_name_field(value: str | None) -> str | None:
+    """Clean and normalize a name field to title case."""
+    if not value or not isinstance(value, str):
+        return value
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    return cleaned.title()
+
+
+def clean_phone_field(value: str | None) -> str | None:
+    """Clean and format phone number to (555) 555-5555 format."""
+    if not value or not isinstance(value, str):
+        return value
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    # Extract only digits
+    digits = re.sub(r'\D', '', cleaned)
+
+    # Format based on digit count
+    if len(digits) == 10:
+        return f"({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+    elif len(digits) == 11 and digits[0] == '1':
+        return f"({digits[1:4]}) {digits[4:7]}-{digits[7:]}"
+
+    # Return original if can't parse
+    return cleaned
+
+
+def clean_email_field(value: str | None) -> str | None:
+    """Clean email to lowercase and strip whitespace."""
+    if not value or not isinstance(value, str):
+        return value
+    cleaned = value.strip().lower()
+    return cleaned if cleaned else None
+
+
+def clean_prefix_field(value: str | None) -> str | None:
+    """Normalize prefix to standard format."""
+    if not value or not isinstance(value, str):
+        return value
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+
+    # Map common variations to canonical form
+    prefix_map = {
+        'mr': 'Mr.', 'mr.': 'Mr.',
+        'mrs': 'Mrs.', 'mrs.': 'Mrs.',
+        'ms': 'Ms.', 'ms.': 'Ms.',
+        'miss': 'Miss', 'miss.': 'Miss',
+        'dr': 'Dr.', 'dr.': 'Dr.',
+        'prof': 'Prof.', 'prof.': 'Prof.',
+        'rev': 'Rev.', 'rev.': 'Rev.',
+        'hon': 'Hon.', 'hon.': 'Hon.',
+    }
+    normalized = cleaned.lower()
+    return prefix_map.get(normalized, cleaned.title())
 
 if TYPE_CHECKING:
     from app.models.tenant import Tenant
@@ -34,6 +102,7 @@ class ContactBase(SQLModel):
     age_estimate: int | None = Field(default=None)  # Estimated age if DOB unknown
     age_estimate_source: str | None = Field(default=None)  # "manual", "inferred", "public_records"
     gender: str | None = Field(default=None)  # "male", "female", "non_binary", "other", "unknown"
+    pronouns: str | None = Field(default=None)  # "he_him", "she_her", "they_them", etc.
 
     # Extended demographics for targeting
     prefix: str | None = Field(default=None)  # Mr., Mrs., Dr., etc.
@@ -199,6 +268,27 @@ class ContactCreate(ContactBase):
     notes: str | None = None
     custom_fields: dict[str, str | float | date | bool | list[str]] | None = None
 
+    # Data cleaning validators
+    @field_validator('first_name', 'last_name', 'middle_name', 'preferred_name', mode='before')
+    @classmethod
+    def clean_names(cls, v: str | None) -> str | None:
+        return clean_name_field(v)
+
+    @field_validator('phone', 'mobile_phone', 'work_phone', mode='before')
+    @classmethod
+    def clean_phones(cls, v: str | None) -> str | None:
+        return clean_phone_field(v)
+
+    @field_validator('email', 'secondary_email', mode='before')
+    @classmethod
+    def clean_emails(cls, v: str | None) -> str | None:
+        return clean_email_field(v)
+
+    @field_validator('prefix', mode='before')
+    @classmethod
+    def clean_prefix(cls, v: str | None) -> str | None:
+        return clean_prefix_field(v)
+
 
 class ContactRead(ContactBase):
     """Schema for reading a contact."""
@@ -244,6 +334,7 @@ class ContactUpdate(SQLModel):
     age_estimate: int | None = None
     age_estimate_source: str | None = None
     gender: str | None = None
+    pronouns: str | None = None
 
     # Name components
     prefix: str | None = None
@@ -295,6 +386,27 @@ class ContactUpdate(SQLModel):
     tags: list[str] | None = None
     notes: str | None = None
     custom_fields: dict[str, str | float | date | bool | list[str]] | None = None
+
+    # Data cleaning validators
+    @field_validator('first_name', 'last_name', 'middle_name', 'preferred_name', mode='before')
+    @classmethod
+    def clean_names(cls, v: str | None) -> str | None:
+        return clean_name_field(v)
+
+    @field_validator('phone', 'mobile_phone', 'work_phone', mode='before')
+    @classmethod
+    def clean_phones(cls, v: str | None) -> str | None:
+        return clean_phone_field(v)
+
+    @field_validator('email', 'secondary_email', mode='before')
+    @classmethod
+    def clean_emails(cls, v: str | None) -> str | None:
+        return clean_email_field(v)
+
+    @field_validator('prefix', mode='before')
+    @classmethod
+    def clean_prefix(cls, v: str | None) -> str | None:
+        return clean_prefix_field(v)
 
 
 class CustomFieldCreate(SQLModel):

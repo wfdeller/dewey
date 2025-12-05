@@ -10,6 +10,7 @@ from app.models.campaign import Campaign
 from app.models.workflow import Workflow, WorkflowExecution
 from app.models.form import Form, FormField, FormSubmission
 from app.models.api_key import APIKey
+from app.models.lov import ListOfValues
 
 __all__ = [
     "Tenant",
@@ -30,4 +31,5 @@ __all__ = [
     "FormField",
     "FormSubmission",
     "APIKey",
+    "ListOfValues",
 ]

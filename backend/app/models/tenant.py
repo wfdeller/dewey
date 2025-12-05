@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from app.models.form import Form
     from app.models.campaign import Campaign
     from app.models.api_key import APIKey
+    from app.models.lov import ListOfValues
 
 
 SubscriptionTier = Literal["free", "pro", "enterprise"]
@@ -84,6 +85,7 @@ class Tenant(TenantBase, BaseModel, table=True):
     forms: list["Form"] = Relationship(back_populates="tenant")
     campaigns: list["Campaign"] = Relationship(back_populates="tenant")
     api_keys: list["APIKey"] = Relationship(back_populates="tenant")
+    list_of_values: list["ListOfValues"] = Relationship(back_populates="tenant")
 
     @model_validator(mode="before")
     @classmethod

@@ -103,6 +103,7 @@ export interface Contact {
   age_estimate?: number;
   age_estimate_source?: 'manual' | 'inferred' | 'public_records';
   gender?: 'male' | 'female' | 'non_binary' | 'other' | 'unknown';
+  pronouns?: string;
 
   // Name components
   prefix?: string;
