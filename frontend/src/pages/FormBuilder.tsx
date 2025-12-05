@@ -97,7 +97,7 @@ function SortableFieldCard({ field, onEdit, onDelete, onDuplicate }: SortableFie
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const fieldTypeConfig = FIELD_TYPES.find((t) => t.type === field.fieldType);
+  const fieldTypeConfig = FIELD_TYPES.find((t) => t.type === field.field_type);
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -135,10 +135,10 @@ function SortableFieldCard({ field, onEdit, onDelete, onDuplicate }: SortableFie
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Text strong>{field.label}</Text>
-              {field.isRequired && <Tag color="red" style={{ fontSize: 10 }}>Required</Tag>}
+              {field.is_required && <Tag color="red" style={{ fontSize: 10 }}>Required</Tag>}
             </div>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {fieldTypeConfig?.label || field.fieldType}
+              {fieldTypeConfig?.label || field.field_type}
             </Text>
           </div>
 
@@ -227,10 +227,10 @@ export default function FormBuilder() {
       await addFieldMutation.mutateAsync({
         formId,
         data: {
-          fieldType,
+          field_type: fieldType,
           label: `New ${FIELD_TYPES.find((t) => t.type === fieldType)?.label || 'Field'}`,
-          isRequired: false,
-          sortOrder: fields.length,
+          is_required: false,
+          sort_order: fields.length,
         },
       });
       message.success('Field added');
@@ -255,8 +255,8 @@ export default function FormBuilder() {
         data: {
           label: data.label,
           placeholder: data.placeholder,
-          helpText: data.helpText,
-          isRequired: data.isRequired,
+          help_text: data.help_text,
+          is_required: data.is_required,
           validation: data.validation as Record<string, unknown>,
           options: data.options,
         },
@@ -289,12 +289,12 @@ export default function FormBuilder() {
       await addFieldMutation.mutateAsync({
         formId,
         data: {
-          fieldType: field.fieldType,
+          field_type: field.field_type,
           label: `${field.label} (Copy)`,
           placeholder: field.placeholder,
-          helpText: field.helpText,
-          isRequired: field.isRequired,
-          sortOrder: fields.length,
+          help_text: field.help_text,
+          is_required: field.is_required,
+          sort_order: fields.length,
           validation: field.validation as Record<string, unknown>,
           options: field.options,
         },

@@ -31,7 +31,7 @@ function renderField(field: FormField) {
     placeholder: field.placeholder,
   };
 
-  switch (field.fieldType) {
+  switch (field.field_type) {
     case 'text':
       return <Input {...commonProps} />;
 
@@ -183,7 +183,7 @@ export default function FormPreview({
         {/* Form fields */}
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {fields
-            .filter((f) => f.fieldType !== 'hidden')
+            .filter((f) => f.field_type !== 'hidden')
             .map((field) => (
               <Form.Item
                 key={field.id}
@@ -191,11 +191,11 @@ export default function FormPreview({
                 label={field.label}
                 rules={[
                   {
-                    required: field.isRequired,
+                    required: field.is_required,
                     message: `${field.label} is required`,
                   },
                   // Email validation
-                  ...(field.fieldType === 'email'
+                  ...(field.field_type === 'email'
                     ? [{ type: 'email' as const, message: 'Please enter a valid email' }]
                     : []),
                   // Min/max length validation
@@ -225,7 +225,7 @@ export default function FormPreview({
                       ]
                     : []),
                 ]}
-                extra={field.helpText}
+                extra={field.help_text}
               >
                 {renderField(field)}
               </Form.Item>
@@ -233,7 +233,7 @@ export default function FormPreview({
 
           {/* Hidden fields */}
           {fields
-            .filter((f) => f.fieldType === 'hidden')
+            .filter((f) => f.field_type === 'hidden')
             .map((field) => (
               <Form.Item key={field.id} name={field.id} hidden>
                 <Input type="hidden" />

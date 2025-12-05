@@ -196,13 +196,13 @@ export interface FormStyling {
 
 export interface FormField {
   id: string;
-  formId: string;
-  fieldType: FormFieldType;
+  form_id: string;
+  field_type: FormFieldType;
   label: string;
   placeholder?: string;
-  helpText?: string;
-  isRequired: boolean;
-  sortOrder: number;
+  help_text?: string;
+  is_required: boolean;
+  sort_order: number;
   validation?: Record<string, unknown>;
   options?: FieldOption[];
 }

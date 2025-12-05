@@ -42,8 +42,8 @@ export default function FieldPropertyDrawer({
       form.setFieldsValue({
         label: field.label,
         placeholder: field.placeholder || '',
-        helpText: field.helpText || '',
-        isRequired: field.isRequired,
+        help_text: field.help_text || '',
+        is_required: field.is_required,
         options: field.options || [],
         validation: field.validation || {},
       });
@@ -63,7 +63,7 @@ export default function FieldPropertyDrawer({
     }
   };
 
-  const showOptions = field && OPTION_FIELD_TYPES.includes(field.fieldType);
+  const showOptions = field && OPTION_FIELD_TYPES.includes(field.field_type);
 
   return (
     <Drawer
@@ -95,14 +95,14 @@ export default function FieldPropertyDrawer({
             <Input placeholder="Enter placeholder text" />
           </Form.Item>
 
-          <Form.Item name="helpText" label="Help Text">
+          <Form.Item name="help_text" label="Help Text">
             <Input.TextArea
               rows={2}
               placeholder="Additional instructions for the user"
             />
           </Form.Item>
 
-          <Form.Item name="isRequired" label="Required" valuePropName="checked">
+          <Form.Item name="is_required" label="Required" valuePropName="checked">
             <Switch />
           </Form.Item>
 
@@ -164,7 +164,7 @@ export default function FieldPropertyDrawer({
           {/* Validation rules based on field type */}
           <Divider>Validation</Divider>
 
-          {field.fieldType === 'text' && (
+          {field.field_type === 'text' && (
             <>
               <Form.Item name={['validation', 'minLength']} label="Min Length">
                 <InputNumber min={0} style={{ width: '100%' }} />
@@ -178,7 +178,7 @@ export default function FieldPropertyDrawer({
             </>
           )}
 
-          {field.fieldType === 'textarea' && (
+          {field.field_type === 'textarea' && (
             <>
               <Form.Item name={['validation', 'minLength']} label="Min Length">
                 <InputNumber min={0} style={{ width: '100%' }} />
@@ -189,7 +189,7 @@ export default function FieldPropertyDrawer({
             </>
           )}
 
-          {field.fieldType === 'number' && (
+          {field.field_type === 'number' && (
             <>
               <Form.Item name={['validation', 'min']} label="Min Value">
                 <InputNumber style={{ width: '100%' }} />
@@ -200,7 +200,7 @@ export default function FieldPropertyDrawer({
             </>
           )}
 
-          {field.fieldType === 'file_upload' && (
+          {field.field_type === 'file_upload' && (
             <>
               <Form.Item name={['validation', 'maxSize']} label="Max File Size (MB)">
                 <InputNumber min={1} max={100} style={{ width: '100%' }} />

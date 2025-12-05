@@ -21,29 +21,29 @@ export interface UpdateFormRequest {
 }
 
 export interface CreateFieldRequest {
-  fieldType: FormFieldType;
+  field_type: FormFieldType;
   label: string;
   placeholder?: string;
-  helpText?: string;
-  isRequired?: boolean;
-  sortOrder?: number;
+  help_text?: string;
+  is_required?: boolean;
+  sort_order?: number;
   validation?: Record<string, unknown>;
   options?: Array<{ value: string; label: string }>;
-  conditionalLogic?: Record<string, unknown>;
-  mapsToContactField?: string;
-  mapsToCustomFieldId?: string;
+  conditional_logic?: Record<string, unknown>;
+  maps_to_contact_field?: string;
+  maps_to_custom_field_id?: string;
   settings?: Record<string, unknown>;
 }
 
 export interface UpdateFieldRequest {
   label?: string;
   placeholder?: string;
-  helpText?: string;
-  isRequired?: boolean;
-  sortOrder?: number;
+  help_text?: string;
+  is_required?: boolean;
+  sort_order?: number;
   validation?: Record<string, unknown>;
   options?: Array<{ value: string; label: string }>;
-  conditionalLogic?: Record<string, unknown>;
+  conditional_logic?: Record<string, unknown>;
   settings?: Record<string, unknown>;
 }
 
@@ -164,39 +164,12 @@ export const formsService = {
 
   // Field CRUD
   async addField(formId: string, data: CreateFieldRequest): Promise<FormField> {
-    // Convert camelCase to snake_case for API
-    const payload = {
-      field_type: data.fieldType,
-      label: data.label,
-      placeholder: data.placeholder,
-      help_text: data.helpText,
-      is_required: data.isRequired,
-      sort_order: data.sortOrder,
-      validation: data.validation,
-      options: data.options,
-      conditional_logic: data.conditionalLogic,
-      maps_to_contact_field: data.mapsToContactField,
-      maps_to_custom_field_id: data.mapsToCustomFieldId,
-      settings: data.settings,
-    };
-    const response = await api.post<FormField>(`/forms/${formId}/fields`, payload);
+    const response = await api.post<FormField>(`/forms/${formId}/fields`, data);
     return response.data;
   },
 
   async updateField(formId: string, fieldId: string, data: UpdateFieldRequest): Promise<FormField> {
-    // Convert camelCase to snake_case for API
-    const payload: Record<string, unknown> = {};
-    if (data.label !== undefined) payload.label = data.label;
-    if (data.placeholder !== undefined) payload.placeholder = data.placeholder;
-    if (data.helpText !== undefined) payload.help_text = data.helpText;
-    if (data.isRequired !== undefined) payload.is_required = data.isRequired;
-    if (data.sortOrder !== undefined) payload.sort_order = data.sortOrder;
-    if (data.validation !== undefined) payload.validation = data.validation;
-    if (data.options !== undefined) payload.options = data.options;
-    if (data.conditionalLogic !== undefined) payload.conditional_logic = data.conditionalLogic;
-    if (data.settings !== undefined) payload.settings = data.settings;
-
-    const response = await api.patch<FormField>(`/forms/${formId}/fields/${fieldId}`, payload);
+    const response = await api.patch<FormField>(`/forms/${formId}/fields/${fieldId}`, data);
     return response.data;
   },
 
