@@ -16,7 +16,6 @@ import {
     Form,
     Input,
     Modal,
-    message,
     Popconfirm,
     Tabs,
     Select,
@@ -24,6 +23,7 @@ import {
     InputNumber,
     Switch,
     Alert,
+    App,
 } from 'antd';
 import {
     ArrowLeftOutlined,
@@ -63,6 +63,7 @@ import {
 } from '../services/contactsService';
 import { useActiveLOVQuery, toSelectOptions } from '../services/lovService';
 import { getErrorMessage } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 import type { ToneScore } from '../types';
 
 const { Title, Text, Paragraph } = Typography;
@@ -123,6 +124,9 @@ type EditModalType = 'contact' | 'demographics' | 'professional' | 'location' | 
 export default function ContactDetail() {
     const { contactId } = useParams<{ contactId: string }>();
     const navigate = useNavigate();
+    const { message } = App.useApp();
+    const hasPermission = useAuthStore((state) => state.hasPermission);
+    const canEdit = hasPermission('contacts:write');
     const [messagesPage, setMessagesPage] = useState(1);
     const [messagesPageSize, setMessagesPageSize] = useState(10);
     const [editModal, setEditModal] = useState<EditModalType>(null);
@@ -495,9 +499,11 @@ export default function ContactDetail() {
                     showIcon
                     style={{ marginBottom: 16 }}
                     action={
-                        <Button size='small' onClick={() => openEditModal('status')}>
-                            Update Status
-                        </Button>
+                        canEdit && (
+                            <Button size='small' onClick={() => openEditModal('status')}>
+                                Update Status
+                            </Button>
+                        )
                     }
                 />
             )}
@@ -526,17 +532,19 @@ export default function ContactDetail() {
                             </Text>
                         )}
                     </div>
-                    <Popconfirm
-                        title='Delete this contact?'
-                        description='Messages will be preserved but unlinked.'
-                        onConfirm={handleDelete}
-                        okText='Delete'
-                        okType='danger'
-                    >
-                        <Button danger icon={<DeleteOutlined />}>
-                            Delete
-                        </Button>
-                    </Popconfirm>
+                    {canEdit && (
+                        <Popconfirm
+                            title='Delete this contact?'
+                            description='Messages will be preserved but unlinked.'
+                            onConfirm={handleDelete}
+                            okText='Delete'
+                            okType='danger'
+                        >
+                            <Button danger icon={<DeleteOutlined />}>
+                                Delete
+                            </Button>
+                        </Popconfirm>
+                    )}
                 </div>
             </div>
 
@@ -552,9 +560,11 @@ export default function ContactDetail() {
                         }
                         style={{ marginBottom: 16 }}
                         extra={
-                            <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('contact')}>
-                                Edit
-                            </Button>
+                            canEdit && (
+                                <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('contact')}>
+                                    Edit
+                                </Button>
+                            )
                         }
                     >
                         <Descriptions column={1} size='small'>
@@ -609,9 +619,11 @@ export default function ContactDetail() {
                         }
                         style={{ marginBottom: 16 }}
                         extra={
-                            <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('demographics')}>
-                                Edit
-                            </Button>
+                            canEdit && (
+                                <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('demographics')}>
+                                    Edit
+                                </Button>
+                            )
                         }
                     >
                         <Descriptions column={1} size='small'>
@@ -662,9 +674,11 @@ export default function ContactDetail() {
                         }
                         style={{ marginBottom: 16 }}
                         extra={
-                            <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('professional')}>
-                                Edit
-                            </Button>
+                            canEdit && (
+                                <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('professional')}>
+                                    Edit
+                                </Button>
+                            )
                         }
                     >
                         <Descriptions column={1} size='small'>
@@ -684,9 +698,11 @@ export default function ContactDetail() {
                         }
                         style={{ marginBottom: 16 }}
                         extra={
-                            <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('location')}>
-                                Edit
-                            </Button>
+                            canEdit && (
+                                <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('location')}>
+                                    Edit
+                                </Button>
+                            )
                         }
                     >
                         <Descriptions column={1} size='small'>
@@ -735,9 +751,11 @@ export default function ContactDetail() {
                         }
                         style={{ marginBottom: 16 }}
                         extra={
-                            <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('voter')}>
-                                Edit
-                            </Button>
+                            canEdit && (
+                                <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('voter')}>
+                                    Edit
+                                </Button>
+                            )
                         }
                     >
                         <Descriptions column={1} size='small'>
@@ -820,22 +838,24 @@ export default function ContactDetail() {
                     >
                         <Space wrap style={{ marginBottom: 12 }}>
                             {contact.tags?.map((tag) => (
-                                <Tag key={tag} closable onClose={() => handleRemoveTag(tag)}>
+                                <Tag key={tag} closable={canEdit} onClose={() => handleRemoveTag(tag)}>
                                     {tag}
                                 </Tag>
                             ))}
                             {(!contact.tags || contact.tags.length === 0) && <Text type='secondary'>No tags</Text>}
                         </Space>
-                        <Input
-                            placeholder='Add tag...'
-                            prefix={<PlusOutlined />}
-                            value={newTag}
-                            onChange={(e) => setNewTag(e.target.value)}
-                            onPressEnter={handleAddTag}
-                            suffix={
-                                newTag && <CloseOutlined style={{ cursor: 'pointer' }} onClick={() => setNewTag('')} />
-                            }
-                        />
+                        {canEdit && (
+                            <Input
+                                placeholder='Add tag...'
+                                prefix={<PlusOutlined />}
+                                value={newTag}
+                                onChange={(e) => setNewTag(e.target.value)}
+                                onPressEnter={handleAddTag}
+                                suffix={
+                                    newTag && <CloseOutlined style={{ cursor: 'pointer' }} onClick={() => setNewTag('')} />
+                                }
+                            />
+                        )}
                     </Card>
 
                     {/* Custom Fields Card */}
@@ -862,9 +882,11 @@ export default function ContactDetail() {
                         title='Status & Notes'
                         style={{ marginBottom: 16 }}
                         extra={
-                            <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('status')}>
-                                Edit
-                            </Button>
+                            canEdit && (
+                                <Button type='text' icon={<EditOutlined />} onClick={() => openEditModal('status')}>
+                                    Edit
+                                </Button>
+                            )
                         }
                     >
                         <Descriptions column={1} size='small'>
@@ -1087,9 +1109,11 @@ export default function ContactDetail() {
                                                     </span>
                                                 }
                                             >
-                                                <Button type='primary' onClick={() => openEditModal('voter')}>
-                                                    Add Voter Info
-                                                </Button>
+                                                {canEdit && (
+                                                    <Button type='primary' onClick={() => openEditModal('voter')}>
+                                                        Add Voter Info
+                                                    </Button>
+                                                )}
                                             </Empty>
                                         )}
                                     </Card>
@@ -1264,12 +1288,14 @@ export default function ContactDetail() {
                                                         type='warning'
                                                         showIcon
                                                         action={
-                                                            <Button
-                                                                size='small'
-                                                                onClick={() => openEditModal('contact')}
-                                                            >
-                                                                Add
-                                                            </Button>
+                                                            canEdit && (
+                                                                <Button
+                                                                    size='small'
+                                                                    onClick={() => openEditModal('contact')}
+                                                                >
+                                                                    Add
+                                                                </Button>
+                                                            )
                                                         }
                                                     />
                                                 )}
@@ -1280,9 +1306,11 @@ export default function ContactDetail() {
                                                         type='warning'
                                                         showIcon
                                                         action={
-                                                            <Button size='small' onClick={() => openEditModal('voter')}>
-                                                                Add
-                                                            </Button>
+                                                            canEdit && (
+                                                                <Button size='small' onClick={() => openEditModal('voter')}>
+                                                                    Add
+                                                                </Button>
+                                                            )
                                                         }
                                                     />
                                                 )}
@@ -1293,12 +1321,14 @@ export default function ContactDetail() {
                                                         type='warning'
                                                         showIcon
                                                         action={
-                                                            <Button
-                                                                size='small'
-                                                                onClick={() => openEditModal('location')}
-                                                            >
-                                                                Add
-                                                            </Button>
+                                                            canEdit && (
+                                                                <Button
+                                                                    size='small'
+                                                                    onClick={() => openEditModal('location')}
+                                                                >
+                                                                    Add
+                                                                </Button>
+                                                            )
                                                         }
                                                     />
                                                 )}

@@ -39,7 +39,7 @@ export default function Profile() {
             </Space>
           }
         >
-          <Descriptions column={1} labelStyle={{ fontWeight: 500 }}>
+          <Descriptions column={1} styles={{ label: { fontWeight: 500 } }}>
             <Descriptions.Item label="Name">{user.name}</Descriptions.Item>
             <Descriptions.Item label="Email">
               <Space>
@@ -75,7 +75,7 @@ export default function Profile() {
             </Space>
           }
         >
-          <Descriptions column={1} labelStyle={{ fontWeight: 500 }}>
+          <Descriptions column={1} styles={{ label: { fontWeight: 500 } }}>
             <Descriptions.Item label="Tenant Name">
               <Text strong>{user.tenantName}</Text>
             </Descriptions.Item>

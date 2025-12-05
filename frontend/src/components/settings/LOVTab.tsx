@@ -7,13 +7,13 @@ import {
     Form,
     Input,
     Switch,
-    message,
     Tabs,
     Typography,
     Popconfirm,
     Tag,
     Spin,
     Alert,
+    App,
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -31,6 +31,7 @@ import { getErrorMessage } from '../../services/api';
 const { Title, Text } = Typography;
 
 export default function LOVTab() {
+    const { message } = App.useApp();
     const [selectedListType, setSelectedListType] = useState('prefix');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<LOVItem | null>(null);

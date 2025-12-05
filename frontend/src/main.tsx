@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { ConfigProvider, theme as antdTheme } from 'antd';
+import { ConfigProvider, theme as antdTheme, App as AntApp } from 'antd';
 import App from './App';
 import { queryClient } from './services/queryClient';
 import { useUIStore } from './stores';
@@ -21,7 +21,11 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
     },
   };
 
-  return <ConfigProvider theme={theme}>{children}</ConfigProvider>;
+  return (
+    <ConfigProvider theme={theme}>
+      <AntApp>{children}</AntApp>
+    </ConfigProvider>
+  );
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
