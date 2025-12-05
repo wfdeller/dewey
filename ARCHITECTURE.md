@@ -479,6 +479,8 @@ Key entities:
 -   **Form** - Embeddable forms with drag-drop builder
 -   **FormLink** - Pre-identified form links for known contacts
 -   **EmailTemplate** - Jinja2 templates with variable substitution
+-   **Job** - Background job tracking for voter imports and other async tasks
+-   **VoteHistory** - Per-contact election participation records
 
 ### Contact Management
 
@@ -490,6 +492,13 @@ class Contact(TenantBaseModel, table=True):
     name: str | None
     phone: str | None
     address: dict | None                # JSON: {street, city, state, zip, country}
+
+    # Voter-specific fields
+    state_voter_id: str | None          # State-assigned voter ID for matching
+    precinct: str | None                # Voting precinct
+    school_district: str | None         # Local school district
+    municipal_district: str | None      # Municipal district
+    modeled_party: str | None           # Party affiliation for non-registration states
 
     # Aggregated stats (denormalized for performance)
     first_contact_at: datetime | None   # First message received
@@ -515,6 +524,78 @@ class Contact(TenantBaseModel, table=True):
 | `/contacts/{id}/tags/{tag}` | DELETE | Remove tag |
 | `/contacts/bulk-tag` | POST | Add tag to multiple contacts |
 | `/contacts/merge` | POST | Merge contacts (combine messages, tags) |
+| `/contacts/{id}/vote-history` | GET | Paginated voting history |
+| `/contacts/{id}/vote-history/summary` | GET | Aggregated voting stats |
+
+### Voter File Import System
+
+Imports CSV voter files, matches records to contacts, and stores voting history. Includes AI-assisted field mapping.
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Voter Import Pipeline                         │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   CSV Upload     │   AI Analysis    │   Background Processing   │
+│ - File upload    │ - Field mapping  │ - Contact matching        │
+│ - Row parsing    │ - Strategy rec.  │ - Vote history creation   │
+│ - Job creation   │ - Claude Haiku   │ - Progress via Redis      │
+└──────────────────┴──────────────────┴───────────────────────────┘
+```
+
+**Data Models:**
+
+```python
+class Job(TenantBaseModel, table=True):
+    """Generic background job tracking"""
+    job_type: str                 # "voter_import", etc.
+    status: str                   # pending, analyzing, processing, completed, failed
+    original_filename: str | None
+    file_path: str | None
+    total_rows: int | None
+    detected_headers: list[str]   # JSONB - CSV column headers
+    suggested_mappings: dict      # JSONB - AI-suggested field mappings
+    confirmed_mappings: dict      # JSONB - User-confirmed mappings
+    matching_strategy: str        # voter_id_first, email_first, etc.
+    rows_processed: int
+    rows_created: int
+    rows_updated: int
+    rows_skipped: int
+    rows_errored: int
+    error_details: list[dict]     # JSONB - Per-row errors
+
+class VoteHistory(TenantBaseModel, table=True):
+    """Per-contact election participation"""
+    contact_id: UUID              # FK to Contact
+    election_name: str            # "2024 General Election"
+    election_date: date           # indexed
+    election_type: str            # general, primary, special
+    voted: bool | None            # True/False/Unknown
+    voting_method: str | None     # early, absentee, election_day
+    primary_party_voted: str | None
+    job_id: UUID | None           # FK to Job
+```
+
+**Matching Strategies:**
+| Strategy | Description |
+|----------|-------------|
+| `voter_id_first` | Match by state_voter_id, fallback to email |
+| `email_first` | Match by email, fallback to voter_id |
+| `voter_id_only` | Only match by state_voter_id |
+| `email_only` | Only match by email |
+
+**Voter Import API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/voter-import/upload` | POST | Upload CSV file, create job |
+| `/voter-import/{job_id}` | GET | Get job status and details |
+| `/voter-import/{job_id}/progress` | GET | Real-time progress from Redis |
+| `/voter-import/{job_id}/analyze` | POST | Trigger AI field mapping |
+| `/voter-import/{job_id}/confirm` | PATCH | Confirm mappings & strategy |
+| `/voter-import/{job_id}/start` | POST | Start background processing |
+| `/voter-import/{job_id}` | DELETE | Cancel/delete job |
+| `/voter-import` | GET | List all import jobs |
+| `/voter-import/matching-strategies` | GET | List available strategies |
 
 ## Deployment Architecture
 

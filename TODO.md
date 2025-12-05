@@ -435,8 +435,45 @@
   - [x] Edit contact `Modal` with `Form`
   - [x] Tag management with `Tag closable` and `Input` for adding
   - [x] Delete contact with `Popconfirm`
-- [ ] Bulk import contacts (`Upload` + CSV parser)
+  - [x] Voting History tab with vote summary and election history table
+- [x] Voter File Import wizard (see 2.7)
 - [x] Contact tagging system (`Select mode="tags"`)
+
+### 2.7 Voter File Import System
+- [x] Backend: Database models
+  - [x] Job model (generic background job tracking)
+  - [x] VoteHistory model (per-contact election participation)
+  - [x] New Contact fields (state_voter_id, precinct, school_district, municipal_district, modeled_party)
+  - [x] LOV types (election_type, voting_method, party_ballot)
+  - [x] Database migration
+- [x] Backend: Core services
+  - [x] `job_status.py` - Redis helpers for real-time progress
+  - [x] `ai/field_mapper.py` - AI-powered field mapping with Claude Haiku
+  - [x] `voter_import.py` - Import processing service
+- [x] Backend: API endpoints (`/api/v1/voter-import/`)
+  - [x] POST `/upload` - Upload CSV, create job
+  - [x] POST `/{job_id}/analyze` - Trigger AI analysis
+  - [x] GET `/{job_id}` - Get job status
+  - [x] GET `/{job_id}/progress` - Real-time progress from Redis
+  - [x] PATCH `/{job_id}/confirm` - Confirm mappings & strategy
+  - [x] POST `/{job_id}/start` - Start background processing
+  - [x] DELETE `/{job_id}` - Cancel/delete job
+  - [x] GET `/` - List import jobs
+  - [x] GET `/matching-strategies` - List available strategies
+- [x] Backend: Vote history endpoints (in contacts.py)
+  - [x] GET `/contacts/{id}/vote-history` - Paginated history
+  - [x] GET `/contacts/{id}/vote-history/summary` - Aggregated stats
+- [x] Frontend: Voter Import wizard page
+  - [x] `voterImportService.ts` - API client with React Query hooks
+  - [x] `FileUploadStep.tsx` - Drag-drop CSV upload
+  - [x] `FieldMappingStep.tsx` - AI-suggested mappings with override
+  - [x] `MatchingStrategyStep.tsx` - Strategy selection with recommendations
+  - [x] `ImportProgressStep.tsx` - Real-time progress with stats
+  - [x] `VoterImport.tsx` - 4-step wizard using Ant Design Steps
+  - [x] Route and navigation menu entry
+- [x] Frontend: Vote history display
+  - [x] `voteHistoryService.ts` - API client with React Query hooks
+  - [x] ContactDetail.tsx Voting History tab with summary card and table
 
 ### 2.3 Category Management (Ant Design)
 - [ ] Build category tree UI with `Tree` component
@@ -820,7 +857,7 @@ Use this section to track overall progress:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Foundation | In Progress | ~90% |
-| Phase 2: Core Features | In Progress | ~50% |
+| Phase 2: Core Features | In Progress | ~60% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
 
@@ -843,11 +880,12 @@ Use this section to track overall progress:
 | 2.1 Form Builder | Complete (CRUD, drag-drop, preview, embed) |
 | 2.1.1 Pre-Identified Form Links | Complete |
 | 2.1.2 Email System & Auto-Responses | Complete (backend + frontend UI) |
-| 2.2 Contact Management | Complete (list + detail with timeline/messages) |
+| 2.2 Contact Management | Complete (list + detail with timeline/messages/voting) |
 | 2.3 Category Management | Not Started |
 | 2.4 Campaign Detection | Not Started |
 | 2.5 Workflow Engine | Not Started |
 | 2.6 Analytics Dashboard | Not Started |
+| 2.7 Voter File Import | Complete (wizard, AI mapping, background processing) |
 
 ### API Endpoints Summary
 | Router | Endpoints | Status |
@@ -857,7 +895,7 @@ Use this section to track overall progress:
 | /tenants | 3 | Scaffolded |
 | /messages | 4 | Working (full CRUD with filtering) |
 | /categories | 7 | Working (full CRUD with hierarchy) |
-| /contacts | 9 | Working (full CRUD with custom fields) |
+| /contacts | 11 | Working (full CRUD + vote history) |
 | /custom-fields | 5 | Working (full CRUD) |
 | /campaigns | 8 | Working (full CRUD with merge/respond) |
 | /workflows | 9 | Working (full CRUD with trigger eval) |
@@ -867,7 +905,8 @@ Use this section to track overall progress:
 | /users | 7 | Working |
 | /api-keys | 7 | Working |
 | /email | 15 | Working (templates, config, sent log) |
+| /voter-import | 9 | Working (upload, analyze, import, progress) |
 
 ---
 
-*Last updated: December 4, 2024*
+*Last updated: December 5, 2024*
