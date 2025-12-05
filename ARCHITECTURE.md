@@ -75,8 +75,8 @@ Dewey is a multi-tenant SaaS platform that processes incoming communications (em
 | **Frontend**   | TypeScript + React                 | Industry standard, rich component ecosystem                  |
 | **UI Library** | Ant Design                         | Dashboard-focused, excellent tables/forms/trees, MIT license |
 | **Database**   | PostgreSQL                         | Robust, JSON support, row-level security                     |
-| **Cache**      | Redis                              | Session storage, real-time pub/sub                           |
-| **Queue**      | AWS SQS                            | Managed, auto-scaling, dead letter queues                    |
+| **Cache**      | Redis                              | Session storage, real-time pub/sub, job progress             |
+| **Queue**      | ARQ (Redis-based)                  | Async task queue, job persistence, automatic retries         |
 | **AI**         | Pluggable (Claude, OpenAI, Ollama) | Customer choice, vendor flexibility                          |
 | **Deployment** | ECS Fargate                        | Serverless containers, simpler operations                    |
 | **Testing**    | pytest, Playwright, Locust         | Comprehensive coverage across all layers                     |
@@ -132,6 +132,8 @@ Ant Design provides dashboard-optimized components that map directly to Dewey's 
 | Contact list        | `Table`, `Statistic` cards, `Tag` for tags/sentiment       |
 | Contact detail      | `Descriptions`, `Tabs`, `@ant-design/charts` Line, `Card`  |
 | Settings/Admin      | `Tabs`, `Menu`, `Layout`, `Form` with provider configs     |
+| Worker Settings     | `Form`, `InputNumber`, `Select` for job queue config       |
+| Jobs Page           | `Table`, status badges, progress display, action buttons   |
 | User management     | `Table`, `Modal`, `Select` for roles, `Switch` for status  |
 | API key management  | `Table`, `Modal`, `Checkbox.Group` for scopes              |
 
@@ -376,6 +378,55 @@ Each tenant can configure their preferred email provider:
 
 ### 2. Processing Pipeline
 
+#### ARQ Task Queue
+
+Dewey uses ARQ (Async Redis Queue) for reliable background job processing:
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  FastAPI    │────▶│   Redis     │◀────│  ARQ Worker │
+│  (enqueue)  │     │  (queue)    │     │  (execute)  │
+└─────────────┘     └─────────────┘     └─────────────┘
+                           │
+                    ┌──────┴──────┐
+                    │  PostgreSQL │
+                    │  (Job table)│
+                    └─────────────┘
+```
+
+**Key Features:**
+- **Job persistence**: Jobs survive server restarts via Redis
+- **Automatic retries**: Failed jobs retry with exponential backoff
+- **Separate worker process**: Background jobs don't block API requests
+- **Real-time progress**: Progress updates via Redis cache
+- **Configurable settings**: Per-tenant timeout, retry, and concurrency settings
+
+**Job Status Flow:**
+```
+pending → queued → processing → completed
+                 ↘            ↗
+                   → failed →
+                   (retries)
+```
+
+**Worker Configuration** (`backend/app/workers/worker.py`):
+- Task functions: `process_voter_import`, `export_contacts`, `send_bulk_email`
+- Default timeout: 1 hour (configurable per tenant)
+- Max retries: 3 (configurable)
+- Health check interval: 30 seconds
+
+**Task Definitions** (`backend/app/workers/tasks.py`):
+```python
+async def process_voter_import(ctx: dict, job_id: str, tenant_id: str) -> dict:
+    """ARQ task for processing voter file import."""
+    async with async_session_maker() as session:
+        service = VoterImportService(session, UUID(tenant_id))
+        await service.process_import(UUID(job_id))
+    return {"status": "completed", "job_id": job_id}
+```
+
+#### Processing Steps
+
 Async worker-based processing:
 
 1. **Content Extraction** - Text normalization, OCR for attachments
@@ -488,8 +539,16 @@ Contacts track senders/constituents with aggregated metrics and custom fields:
 
 ```python
 class Contact(TenantBaseModel, table=True):
-    email: str                          # Primary identifier (unique per tenant)
-    name: str | None
+    # Email is nullable to support voter file imports (voters may not have email)
+    # Unique constraint uses partial index: unique only when email IS NOT NULL
+    email: str | None
+
+    # Name auto-computed from first/middle/last via __init__ override
+    name: str | None                    # Full name (auto-computed, can be overridden)
+    first_name: str | None
+    middle_name: str | None
+    last_name: str | None
+
     phone: str | None
     address: dict | None                # JSON: {street, city, state, zip, country}
 
@@ -508,6 +567,18 @@ class Contact(TenantBaseModel, table=True):
 
     tags: list[str]                     # Quick categorization tags
     notes: str | None                   # Staff notes
+
+    def __init__(self, **data):
+        """Initialize Contact and compute full name from name parts."""
+        super().__init__(**data)
+        self._compute_full_name()
+
+    def _compute_full_name(self) -> None:
+        """Compute full name from first/middle/last name parts if not already set."""
+        if not self.name:
+            name_parts = [p for p in [self.first_name, self.middle_name, self.last_name] if p]
+            if name_parts:
+                self.name = " ".join(name_parts)
 ```
 
 **Contact API Endpoints:**
@@ -549,7 +620,7 @@ Imports CSV voter files, matches records to contacts, and stores voting history.
 class Job(TenantBaseModel, table=True):
     """Generic background job tracking"""
     job_type: str                 # "voter_import", etc.
-    status: str                   # pending, analyzing, processing, completed, failed
+    status: str                   # pending, analyzing, queued, processing, completed, failed
     original_filename: str | None
     file_path: str | None
     total_rows: int | None
@@ -563,6 +634,11 @@ class Job(TenantBaseModel, table=True):
     rows_skipped: int
     rows_errored: int
     error_details: list[dict]     # JSONB - Per-row errors
+
+    # ARQ tracking
+    arq_job_id: str | None        # ARQ job ID for status lookup
+    queued_at: datetime | None    # When job was enqueued to ARQ
+    error_message: str | None     # Error message if failed
 
 class VoteHistory(TenantBaseModel, table=True):
     """Per-contact election participation"""

@@ -456,7 +456,7 @@
   - [x] GET `/{job_id}` - Get job status
   - [x] GET `/{job_id}/progress` - Real-time progress from Redis
   - [x] PATCH `/{job_id}/confirm` - Confirm mappings & strategy
-  - [x] POST `/{job_id}/start` - Start background processing
+  - [x] POST `/{job_id}/start` - Start background processing (enqueues to ARQ)
   - [x] DELETE `/{job_id}` - Cancel/delete job
   - [x] GET `/` - List import jobs
   - [x] GET `/matching-strategies` - List available strategies
@@ -468,12 +468,44 @@
   - [x] `FileUploadStep.tsx` - Drag-drop CSV upload
   - [x] `FieldMappingStep.tsx` - AI-suggested mappings with override
   - [x] `MatchingStrategyStep.tsx` - Strategy selection with recommendations
-  - [x] `ImportProgressStep.tsx` - Real-time progress with stats
+  - [x] `ImportProgressStep.tsx` - Real-time progress with stats, "Import Submitted" confirmation
   - [x] `VoterImport.tsx` - 4-step wizard using Ant Design Steps
   - [x] Route and navigation menu entry
 - [x] Frontend: Vote history display
   - [x] `voteHistoryService.ts` - API client with React Query hooks
   - [x] ContactDetail.tsx Voting History tab with summary card and table
+
+### 2.8 ARQ Task Queue System
+- [x] Backend: ARQ integration
+  - [x] Add `arq` dependency to pyproject.toml
+  - [x] `app/core/queue.py` - ARQ pool helpers
+  - [x] `app/workers/tasks.py` - Task definitions (process_voter_import, etc.)
+  - [x] `app/workers/worker.py` - Worker configuration and entry point
+  - [x] Error handling with `_mark_job_failed()` for failed jobs
+- [x] Backend: Job model updates
+  - [x] Add `arq_job_id`, `queued_at`, `error_message` fields
+  - [x] Add `queued` status to job status flow
+  - [x] Migration for ARQ tracking fields
+- [x] Backend: Contact model updates
+  - [x] Make email nullable for voter imports
+  - [x] Partial unique index on (tenant_id, email) WHERE email IS NOT NULL
+  - [x] Auto-compute name from first/middle/last via `__init__` override
+  - [x] Migration for nullable email
+- [x] Backend: Worker settings endpoints
+  - [x] GET `/tenants/settings/worker` - Get worker settings
+  - [x] PATCH `/tenants/settings/worker` - Update worker settings
+- [x] Frontend: Jobs page
+  - [x] Job list with status filtering
+  - [x] Status badges (queued, processing, completed, failed)
+  - [x] Progress display for active jobs
+  - [x] Delete/cancel actions
+- [x] Frontend: Worker settings tab
+  - [x] `WorkerTab.tsx` - Settings form for job queue configuration
+  - [x] Max concurrent jobs setting
+  - [x] Job timeout setting (15m, 30m, 1h, 2h, 4h)
+  - [x] Max retries setting
+- [x] Docker: Worker service
+  - [x] Update docker-compose.yml worker command to use ARQ
 
 ### 2.3 Category Management (Ant Design)
 - [ ] Build category tree UI with `Tree` component
@@ -857,7 +889,7 @@ Use this section to track overall progress:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Foundation | In Progress | ~90% |
-| Phase 2: Core Features | In Progress | ~60% |
+| Phase 2: Core Features | In Progress | ~65% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
 
@@ -885,14 +917,15 @@ Use this section to track overall progress:
 | 2.4 Campaign Detection | Not Started |
 | 2.5 Workflow Engine | Not Started |
 | 2.6 Analytics Dashboard | Not Started |
-| 2.7 Voter File Import | Complete (wizard, AI mapping, background processing) |
+| 2.7 Voter File Import | Complete (wizard, AI mapping, ARQ background processing) |
+| 2.8 ARQ Task Queue | Complete (ARQ integration, worker settings, jobs page) |
 
 ### API Endpoints Summary
 | Router | Endpoints | Status |
 |--------|-----------|--------|
 | /health | 1 | Working |
 | /auth | 6 | Working |
-| /tenants | 3 | Scaffolded |
+| /tenants | 5 | Working (includes worker settings) |
 | /messages | 4 | Working (full CRUD with filtering) |
 | /categories | 7 | Working (full CRUD with hierarchy) |
 | /contacts | 11 | Working (full CRUD + vote history) |
@@ -905,7 +938,8 @@ Use this section to track overall progress:
 | /users | 7 | Working |
 | /api-keys | 7 | Working |
 | /email | 15 | Working (templates, config, sent log) |
-| /voter-import | 9 | Working (upload, analyze, import, progress) |
+| /voter-import | 9 | Working (upload, analyze, ARQ import, progress) |
+| /jobs | 4 | Working (list, get, delete, cancel) |
 
 ---
 

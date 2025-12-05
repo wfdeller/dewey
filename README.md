@@ -9,10 +9,13 @@ Dewey is a SaaS platform for processing incoming communications (emails, forms, 
 -   **Multi-Channel Intake** - Email, web forms, API, webhooks
 -   **AI Analysis** - Sentiment scoring, entity extraction, classification suggestions
 -   **Campaign Detection** - Identify coordinated/templated message campaigns
--   **Contact Management** - Track sender history with custom fields
+-   **Contact Management** - Track sender history with custom fields and voting records
+-   **Voter File Import** - AI-powered field mapping for CSV voter files with background processing
 -   **Workflow Automation** - Rule-based triggers and automated actions
 -   **Analytics Dashboard** - Real-time insights, trends, and reports
--   **Form Builder** - Create embeddable forms and surveys
+-   **Form Builder** - Create embeddable forms with pre-identified user links
+-   **Email Templates** - Jinja2-based templates with form link integration
+-   **Background Jobs** - ARQ-based task queue with real-time progress tracking
 -   **Multi-Tenant** - Isolated data with per-tenant configuration
 
 ## Target Users
@@ -37,7 +40,7 @@ Dewey is a SaaS platform for processing incoming communications (emails, forms, 
 | UI Library | Ant Design 5.x                     |
 | Database   | PostgreSQL 15+                     |
 | Cache      | Redis 7+                           |
-| Queue      | AWS SQS / Redis Streams            |
+| Queue      | ARQ (Redis-based async task queue) |
 | AI         | Claude, OpenAI, Ollama (pluggable) |
 | Testing    | pytest, Playwright, Locust         |
 
@@ -129,7 +132,19 @@ This starts:
 -   Redis (port 6379)
 -   Backend API (port 8000)
 -   Frontend (port 5173)
--   Worker (background processing)
+-   ARQ Worker (background job processing)
+
+### Running the Worker Manually
+
+If running services individually (not via docker-compose), start the ARQ worker separately:
+
+```bash
+cd backend
+source venv/bin/activate
+python -m app.workers.worker
+```
+
+The worker processes background jobs like voter file imports. Configure worker settings (concurrency, timeout, retries) in the Settings > Worker tab of the UI.
 
 ## Configuration
 
@@ -304,18 +319,25 @@ API documentation is auto-generated from OpenAPI spec:
 
 ### Key Endpoints
 
-| Endpoint                         | Description                   |
-| -------------------------------- | ----------------------------- |
-| `POST /api/v1/auth/register`     | Register new user and tenant  |
-| `POST /api/v1/auth/login`        | Login with email/password     |
-| `POST /api/v1/auth/refresh`      | Refresh access token          |
-| `GET /api/v1/auth/me`            | Get current user info         |
-| `GET /api/v1/auth/azure/login`   | Get Azure AD authorization URL|
-| `GET /api/v1/auth/azure/callback`| Azure AD OAuth callback       |
-| `POST /api/v1/messages`          | Submit message via API        |
-| `GET /api/v1/messages`           | List messages with filters    |
-| `GET /api/v1/analytics/*`        | Analytics data                |
-| `POST /api/v1/forms/{id}/submit` | Form submission               |
+| Endpoint                              | Description                      |
+| ------------------------------------- | -------------------------------- |
+| `POST /api/v1/auth/register`          | Register new user and tenant     |
+| `POST /api/v1/auth/login`             | Login with email/password        |
+| `POST /api/v1/auth/refresh`           | Refresh access token             |
+| `GET /api/v1/auth/me`                 | Get current user info            |
+| `GET /api/v1/auth/azure/login`        | Get Azure AD authorization URL   |
+| `GET /api/v1/auth/azure/callback`     | Azure AD OAuth callback          |
+| `POST /api/v1/messages`               | Submit message via API           |
+| `GET /api/v1/messages`                | List messages with filters       |
+| `GET /api/v1/contacts`                | List contacts with search/filter |
+| `GET /api/v1/contacts/{id}`           | Contact detail with vote history |
+| `POST /api/v1/voter-import/upload`    | Upload CSV voter file            |
+| `POST /api/v1/voter-import/{id}/start`| Start background import          |
+| `GET /api/v1/voter-import/{id}/progress`| Real-time import progress      |
+| `GET /api/v1/jobs`                    | List background jobs             |
+| `GET /api/v1/analytics/*`             | Analytics data                   |
+| `POST /api/v1/forms/{id}/submit`      | Form submission                  |
+| `GET /api/v1/tenants/settings/worker` | Get worker queue settings        |
 
 ## Cloud Marketplace
 
