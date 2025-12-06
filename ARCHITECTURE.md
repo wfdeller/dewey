@@ -410,7 +410,8 @@ pending → queued → processing → completed
 ```
 
 **Worker Configuration** (`backend/app/workers/worker.py`):
-- Task functions: `process_voter_import`, `export_contacts`, `send_bulk_email`
+- Task functions: `process_voter_import`, `export_contacts`, `send_campaign_emails`, `generate_campaign_recommendations`, `check_scheduled_campaigns`
+- Cron jobs: `check_scheduled_campaigns` (every 15 minutes)
 - Default timeout: 1 hour (configurable per tenant)
 - Max retries: 3 (configurable)
 - Health check interval: 30 seconds
@@ -524,8 +525,11 @@ Key entities:
 
 -   **Message** - Email, form submission, or API-submitted content
 -   **Contact** - Sender/constituent with custom field values, tags, and sentiment tracking
--   **Campaign** - Detected coordinated messaging campaigns
--   **Analysis** - AI-generated sentiment, entities, suggestions
+-   **Campaign** - Outbound email marketing campaigns with recipient targeting
+-   **CampaignRecipient** - Per-contact delivery tracking for campaigns
+-   **CampaignRecommendation** - AI-driven campaign suggestions based on trends
+-   **EmailSuppression** - Unsubscribes, bounces, and manual suppressions
+-   **Analysis** - AI-generated sentiment, entities, coordinated message detection
 -   **Workflow** - Automated actions triggered by conditions
 -   **Form** - Embeddable forms with drag-drop builder
 -   **FormLink** - Pre-identified form links for known contacts
@@ -672,6 +676,109 @@ class VoteHistory(TenantBaseModel, table=True):
 | `/voter-import/{job_id}` | DELETE | Cancel/delete job |
 | `/voter-import` | GET | List all import jobs |
 | `/voter-import/matching-strategies` | GET | List available strategies |
+
+### Outbound Email Campaign System
+
+Dewey provides a full email marketing campaign system for targeted outreach to contacts.
+
+**Architecture:**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Campaign System                               │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   Campaign       │   Recipients     │   Engagement Tracking     │
+│ - Templates      │ - Filter-based   │ - Open tracking (pixel)   │
+│ - A/B testing    │ - Manual select  │ - Click tracking          │
+│ - Scheduling     │ - Suppression    │ - Bounce handling         │
+└──────────────────┴──────────────────┴───────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  ARQ Background Workers                          │
+├─────────────────────────────────────────────────────────────────┤
+│ send_campaign_emails │ process_engagement │ generate_recommendations │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Campaign Model:**
+```python
+class Campaign(TenantBaseModel, table=True):
+    name: str
+    template_id: UUID                    # FK to EmailTemplate
+    variant_b_template_id: UUID | None   # For A/B testing
+    status: str                          # draft, scheduled, active, paused, completed
+    scheduled_at: datetime | None
+    recipient_filter: dict               # JSONB filter criteria
+
+    # Denormalized stats
+    total_recipients: int
+    total_sent: int
+    total_opened: int
+    total_clicked: int
+    total_bounced: int
+    total_unsubscribed: int
+```
+
+**Recipient Filter Structure:**
+```json
+{
+  "mode": "filter",
+  "tags": ["vip", "donor"],
+  "tag_match": "any",
+  "categories": [{"id": "uuid", "stance": "supports"}],
+  "custom_fields": [{"field_id": "uuid", "operator": "eq", "value": "..."}],
+  "states": ["CA", "NY"],
+  "exclude_suppressed": true
+}
+```
+
+**Campaign Status Flow:**
+```
+draft → scheduled → active → completed
+                  ↘        ↗
+                    paused
+                      ↓
+                   cancelled
+```
+
+**AI-Driven Campaign Recommendations:**
+
+The system analyzes incoming message trends to suggest campaigns:
+- Identifies trending topics/categories (>25% increase)
+- Calculates affected audience size
+- Generates suggested subject lines and talking points
+- Provides one-click conversion to campaign draft
+
+**Campaign API Endpoints:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/campaigns` | GET | List campaigns with status filter |
+| `/campaigns` | POST | Create campaign draft |
+| `/campaigns/{id}` | GET/PATCH/DELETE | Campaign CRUD |
+| `/campaigns/{id}/schedule` | POST | Schedule for future send |
+| `/campaigns/{id}/start` | POST | Start sending immediately |
+| `/campaigns/{id}/pause` | POST | Pause active campaign |
+| `/campaigns/{id}/resume` | POST | Resume paused campaign |
+| `/campaigns/{id}/recipients/preview` | POST | Preview filter results |
+| `/campaigns/{id}/recipients/populate` | POST | Create recipient records |
+| `/campaigns/{id}/analytics` | GET | Campaign performance data |
+| `/campaign-recommendations` | GET | AI-suggested campaigns |
+
+**Suppression & Unsubscribe Management:**
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/suppressions` | GET | List suppressed emails |
+| `/suppressions` | POST | Add manual suppression |
+| `/suppressions/{id}` | DELETE | Remove suppression |
+| `/unsubscribe/{token}` | GET/POST | Public unsubscribe page |
+
+**Coordinated Message Detection:**
+
+Note: Inbound "coordinated campaign" detection (identifying templated incoming messages) has moved to AI message analysis. Messages are now flagged during processing with:
+- `is_coordinated: bool` - Whether message appears coordinated
+- `coordinated_group_id: str` - Hash to group similar messages
+- `coordinated_confidence: float` - Detection confidence score
+- `coordinated_source_org: str` - Detected source organization
 
 ## Deployment Architecture
 

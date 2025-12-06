@@ -7,16 +7,19 @@ from app.api.v1 import (
     api_keys,
     audit,
     auth,
+    campaign_recommendations,
     campaigns,
     categories,
     contacts,
     custom_fields,
     email_templates,
+    email_webhooks,
     forms,
     health,
     lov,
     messages,
     roles,
+    suppressions,
     tenants,
     users,
     voter_import,
@@ -44,3 +47,10 @@ router.include_router(email_templates.router, prefix="/email", tags=["Email Temp
 router.include_router(lov.router, prefix="/lov", tags=["List of Values"])
 router.include_router(voter_import.router, prefix="/voter-import", tags=["Voter Import"])
 router.include_router(audit.router)
+router.include_router(suppressions.router, prefix="/suppressions", tags=["Email Suppressions"])
+router.include_router(
+    campaign_recommendations.router,
+    prefix="/campaign-recommendations",
+    tags=["Campaign Recommendations"],
+)
+router.include_router(email_webhooks.router, tags=["Email Webhooks"])

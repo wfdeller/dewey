@@ -7,14 +7,16 @@ Dewey is a SaaS platform for processing incoming communications (emails, forms, 
 ## Features
 
 -   **Multi-Channel Intake** - Email, web forms, API, webhooks
--   **AI Analysis** - Sentiment scoring, entity extraction, classification suggestions
--   **Campaign Detection** - Identify coordinated/templated message campaigns
+-   **AI Analysis** - Sentiment scoring, entity extraction, classification suggestions, coordinated message detection
+-   **Outbound Campaigns** - Email marketing with A/B testing, recipient targeting, and engagement tracking
+-   **AI-Driven Recommendations** - Automatic campaign suggestions based on trending topics
 -   **Contact Management** - Track sender history with custom fields and voting records
 -   **Voter File Import** - AI-powered field mapping for CSV voter files with background processing
 -   **Workflow Automation** - Rule-based triggers and automated actions
 -   **Analytics Dashboard** - Real-time insights, trends, and reports
 -   **Form Builder** - Create embeddable forms with pre-identified user links
 -   **Email Templates** - Jinja2-based templates with form link integration
+-   **Email Suppression** - Unsubscribe, bounce, and complaint management
 -   **Background Jobs** - ARQ-based task queue with real-time progress tracking
 -   **Multi-Tenant** - Isolated data with per-tenant configuration
 
@@ -334,6 +336,11 @@ API documentation is auto-generated from OpenAPI spec:
 | `POST /api/v1/voter-import/upload`    | Upload CSV voter file            |
 | `POST /api/v1/voter-import/{id}/start`| Start background import          |
 | `GET /api/v1/voter-import/{id}/progress`| Real-time import progress      |
+| `GET /api/v1/campaigns`               | List email campaigns             |
+| `POST /api/v1/campaigns`              | Create campaign draft            |
+| `POST /api/v1/campaigns/{id}/start`   | Start sending campaign           |
+| `GET /api/v1/campaign-recommendations`| AI-driven campaign suggestions   |
+| `GET /api/v1/suppressions`            | List suppressed emails           |
 | `GET /api/v1/jobs`                    | List background jobs             |
 | `GET /api/v1/analytics/*`             | Analytics data                   |
 | `POST /api/v1/forms/{id}/submit`      | Form submission                  |

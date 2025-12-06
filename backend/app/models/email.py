@@ -343,3 +343,78 @@ TEMPLATE_VARIABLES = {
         "_description": "Custom contact fields by field name",
     },
 }
+
+
+# ============================================================================
+# Email Suppression - unsubscribes, bounces, complaints
+# ============================================================================
+
+
+SuppressionType = Literal["unsubscribe", "hard_bounce", "soft_bounce", "complaint", "manual"]
+
+
+class EmailSuppression(TenantBaseModel, table=True):
+    """Email suppression list for bounces and unsubscribes.
+
+    Prevents sending to emails that have bounced, unsubscribed, or complained.
+    """
+
+    __tablename__ = "email_suppression"
+
+    # The suppressed email address
+    email: str = Field(index=True)
+
+    # Link to contact if known
+    contact_id: UUID | None = Field(default=None, foreign_key="contact.id", index=True)
+
+    # Type of suppression
+    suppression_type: str = Field(index=True)  # unsubscribe, hard_bounce, soft_bounce, complaint, manual
+
+    # Scope: global (all campaigns) or campaign-specific
+    is_global: bool = Field(default=True)
+    campaign_id: UUID | None = Field(default=None, foreign_key="campaign.id", index=True)
+
+    # Source tracking
+    source_campaign_id: UUID | None = Field(default=None, foreign_key="campaign.id")
+    source_sent_email_id: UUID | None = Field(default=None, foreign_key="sent_email.id")
+
+    # When suppressed
+    suppressed_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Provider-specific info
+    provider_info: dict | None = Field(default=None, sa_column=Column(JSONB))
+    # For bounces: {"bounce_type": "hard", "bounce_reason": "mailbox_not_found"}
+    # For complaints: {"complaint_type": "abuse", "feedback_id": "..."}
+
+    # Manual removal tracking
+    is_active: bool = Field(default=True, index=True)
+    removed_at: datetime | None = Field(default=None)
+    removed_by_id: UUID | None = Field(default=None, foreign_key="user.id")
+    removal_reason: str | None = Field(default=None, sa_column=Column(Text))
+
+    # Relationships
+    tenant: "Tenant" = Relationship()
+
+
+class EmailSuppressionCreate(SQLModel):
+    """Schema for creating a suppression entry."""
+
+    email: str
+    suppression_type: str = "manual"
+    is_global: bool = True
+    campaign_id: UUID | None = None
+
+
+class EmailSuppressionRead(SQLModel):
+    """Schema for reading a suppression entry."""
+
+    id: UUID
+    tenant_id: UUID
+    email: str
+    contact_id: UUID | None
+    suppression_type: str
+    is_global: bool
+    campaign_id: UUID | None
+    suppressed_at: datetime
+    is_active: bool
+    created_at: datetime

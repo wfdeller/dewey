@@ -13,7 +13,6 @@ from app.models.base import TenantBaseModel
 if TYPE_CHECKING:
     from app.models.tenant import Tenant
     from app.models.contact import Contact
-    from app.models.campaign import Campaign
     from app.models.analysis import Analysis
     from app.models.category import MessageCategory
     from app.models.workflow import WorkflowExecution
@@ -41,7 +40,6 @@ class Message(MessageBase, TenantBaseModel, table=True):
 
     # Foreign keys
     contact_id: UUID | None = Field(default=None, foreign_key="contact.id", index=True)
-    campaign_id: UUID | None = Field(default=None, foreign_key="campaign.id", index=True)
 
     # External reference
     external_id: str | None = Field(default=None, index=True)  # Original message ID
@@ -51,9 +49,12 @@ class Message(MessageBase, TenantBaseModel, table=True):
     received_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     processed_at: datetime | None = Field(default=None)
 
-    # Campaign/template detection
-    is_template_match: bool = Field(default=False, index=True)
-    template_similarity_score: float | None = Field(default=None)
+    # Coordinated message detection (AI analysis flags)
+    # Replaces the old campaign-based template detection
+    is_coordinated: bool = Field(default=False, index=True)
+    coordinated_group_id: str | None = Field(default=None, index=True)  # Hash to group similar messages
+    coordinated_confidence: float | None = Field(default=None)  # 0.0 - 1.0
+    coordinated_source_org: str | None = Field(default=None)  # e.g., "Sierra Club", "NRA"
 
     # Attachments stored as JSON array
     attachments: list[dict] = Field(default_factory=list, sa_column=Column(JSONB))
@@ -69,7 +70,6 @@ class Message(MessageBase, TenantBaseModel, table=True):
     # Relationships
     tenant: "Tenant" = Relationship(back_populates="messages")
     contact: "Contact" = Relationship(back_populates="messages")
-    campaign: "Campaign" = Relationship(back_populates="messages")
     analysis: "Analysis" = Relationship(back_populates="message")
     message_categories: list["MessageCategory"] = Relationship(back_populates="message")
     workflow_executions: list["WorkflowExecution"] = Relationship(back_populates="message")
@@ -88,10 +88,11 @@ class MessageRead(MessageBase):
     id: UUID
     tenant_id: UUID
     contact_id: UUID | None
-    campaign_id: UUID | None
     processing_status: ProcessingStatus
-    is_template_match: bool
-    template_similarity_score: float | None
+    is_coordinated: bool
+    coordinated_group_id: str | None
+    coordinated_confidence: float | None
+    coordinated_source_org: str | None
     received_at: datetime
     processed_at: datetime | None
 

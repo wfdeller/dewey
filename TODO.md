@@ -515,23 +515,62 @@
 - [ ] Keyword configuration with `Select mode="tags"`
 - [ ] Bulk message categorization via `Table` row selection
 
-### 2.4 Campaign Detection
-- [ ] Implement content fingerprinting (SimHash/MinHash)
-- [ ] Create campaign detection worker
-- [ ] Build campaign similarity comparison
-- [ ] Set configurable similarity threshold
-- [ ] Implement spike detection
-- [ ] Auto-create Campaign records
-- [ ] Build campaign dashboard
-  - [ ] Active campaigns list
-  - [ ] Message count per campaign
-  - [ ] Timeline visualization
-  - [ ] Geographic distribution
-- [ ] Campaign management actions
-  - [ ] Confirm/dismiss campaigns
-  - [ ] Merge campaigns
-  - [ ] Bulk respond
-- [ ] Analytics filters for campaign vs organic
+### 2.4 Outbound Email Campaign System
+**Note:** Campaign repurposed from inbound detection to outbound email marketing. Inbound coordinated message detection moved to AI analysis.
+
+- [x] Backend: Database models
+  - [x] Rewrite Campaign model for outbound marketing (template, recipients, scheduling)
+  - [x] Create CampaignRecipient model (per-contact delivery tracking)
+  - [x] Create EmailSuppression model (unsubscribes, bounces)
+  - [x] Create CampaignRecommendation model (AI-driven suggestions)
+  - [x] Add coordinated detection fields to Message model (is_coordinated, coordinated_group_id)
+  - [x] Database migration with legacy table preservation
+- [x] Backend: Campaign API endpoints
+  - [x] Campaign CRUD (create draft, update, delete)
+  - [x] Campaign lifecycle (schedule, start, pause, resume, cancel)
+  - [x] Recipient management (filter preview, populate, manual add)
+  - [x] Campaign analytics endpoints
+  - [x] Test send functionality
+- [x] Backend: Suppression API endpoints
+  - [x] List suppressions with filtering
+  - [x] Add/remove suppressions
+  - [x] Check suppression status
+- [x] Backend: Recommendation API endpoints
+  - [x] List active recommendations
+  - [x] Dismiss/convert recommendations
+- [x] Backend: Webhook endpoints for engagement tracking
+  - [x] SendGrid webhook handler
+  - [x] AWS SES SNS handler
+  - [x] Open tracking (1x1 pixel)
+  - [x] Click tracking (redirect)
+  - [x] Unsubscribe page
+- [x] Backend: ARQ worker tasks
+  - [x] `send_campaign_emails` - batch sending with rate limiting
+  - [x] `process_engagement_event` - handle opens/clicks/bounces
+  - [x] `generate_campaign_recommendations` - AI trend analysis (cron)
+  - [x] `check_scheduled_campaigns` - start scheduled campaigns (cron)
+- [x] Backend: Campaign sending service
+  - [x] Recipient filtering logic
+  - [x] Suppression checking
+  - [x] Batch processing with progress updates
+- [ ] Frontend: Campaign list page
+  - [ ] Status tabs (Draft, Scheduled, Active, Completed)
+  - [ ] Stats preview (sent, opens, clicks)
+  - [ ] Actions (Edit, Start, Pause, Delete)
+- [ ] Frontend: Campaign wizard
+  - [ ] Step 1: Name, template selection, A/B toggle
+  - [ ] Step 2: Recipient filter OR manual selection
+  - [ ] Step 3: Schedule options
+  - [ ] Step 4: Review and launch
+- [ ] Frontend: Campaign detail/analytics
+  - [ ] Stats cards (Sent, Delivered, Opens, Clicks, Bounces)
+  - [ ] Timeline chart
+  - [ ] Recipient table with status
+  - [ ] A/B comparison (if applicable)
+- [ ] Frontend: Recommendations panel
+  - [ ] Trending topics display
+  - [ ] Create campaign action
+  - [ ] Dismiss action
 
 ### 2.5 Workflow Engine
 - [ ] Define workflow trigger schema
@@ -889,7 +928,7 @@ Use this section to track overall progress:
 | Phase | Status | Progress |
 |-------|--------|----------|
 | Phase 1: Foundation | In Progress | ~90% |
-| Phase 2: Core Features | In Progress | ~65% |
+| Phase 2: Core Features | In Progress | ~75% |
 | Phase 3: Marketplace | Not Started | 0% |
 | Phase 4: Enterprise | Not Started | 0% |
 
@@ -914,7 +953,7 @@ Use this section to track overall progress:
 | 2.1.2 Email System & Auto-Responses | Complete (backend + frontend UI) |
 | 2.2 Contact Management | Complete (list + detail with timeline/messages/voting) |
 | 2.3 Category Management | Not Started |
-| 2.4 Campaign Detection | Not Started |
+| 2.4 Outbound Campaign System | Backend Complete (frontend pending) |
 | 2.5 Workflow Engine | Not Started |
 | 2.6 Analytics Dashboard | Not Started |
 | 2.7 Voter File Import | Complete (wizard, AI mapping, ARQ background processing) |
@@ -930,7 +969,10 @@ Use this section to track overall progress:
 | /categories | 7 | Working (full CRUD with hierarchy) |
 | /contacts | 11 | Working (full CRUD + vote history) |
 | /custom-fields | 5 | Working (full CRUD) |
-| /campaigns | 8 | Working (full CRUD with merge/respond) |
+| /campaigns | 14 | Working (outbound marketing with lifecycle, recipients, analytics) |
+| /suppressions | 7 | Working (list, add, remove, check, bulk, stats) |
+| /campaign-recommendations | 5 | Working (list, get, dismiss, convert, stats) |
+| /webhooks | 4 | Working (SendGrid, SES, open tracking, click tracking) |
 | /workflows | 9 | Working (full CRUD with trigger eval) |
 | /forms | 16 | Working (full CRUD with submissions + form links) |
 | /analytics | 12 | Working (dashboard, trends, datasets) |

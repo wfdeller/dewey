@@ -11,7 +11,13 @@ from arq import cron
 from arq.connections import RedisSettings
 
 from app.core.config import get_settings
-from app.workers.tasks import process_voter_import, export_contacts, send_bulk_email
+from app.workers.tasks import (
+    process_voter_import,
+    export_contacts,
+    send_campaign_emails,
+    generate_campaign_recommendations,
+    check_scheduled_campaigns,
+)
 
 
 logger = structlog.get_logger()
@@ -56,7 +62,9 @@ class WorkerSettings:
     functions = [
         process_voter_import,
         export_contacts,
-        send_bulk_email,
+        send_campaign_emails,
+        generate_campaign_recommendations,
+        check_scheduled_campaigns,
     ]
 
     # Redis connection settings - loaded at import time from environment
@@ -85,10 +93,11 @@ class WorkerSettings:
     on_job_start = on_job_start
     on_job_end = on_job_end
 
-    # Scheduled tasks (cron jobs) - uncomment to enable
-    # cron_jobs = [
-    #     cron(cleanup_stale_jobs, hour=3, minute=0),  # Run daily at 3am
-    # ]
+    # Scheduled tasks (cron jobs)
+    cron_jobs = [
+        # Check for scheduled campaigns every 15 minutes
+        cron(check_scheduled_campaigns, minute={0, 15, 30, 45}),
+    ]
 
 
 def run_worker() -> None:
