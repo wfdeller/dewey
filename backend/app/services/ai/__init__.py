@@ -8,7 +8,6 @@ from app.services.ai.providers import (
     AzureOpenAIProvider,
     OllamaProvider,
     get_provider,
-    get_platform_provider,
 )
 from app.services.ai.providers.base import (
     AIProviderError,
@@ -29,7 +28,6 @@ __all__ = [
     "OllamaProvider",
     # Factory
     "get_provider",
-    "get_platform_provider",
     # Exceptions
     "AIProviderError",
     "AIRateLimitError",

@@ -17,7 +17,7 @@ from app.models.tenant import Tenant
 from app.models.ai_usage_log import AIUsageLog
 from app.models.prompt_template import PromptTemplate as PromptTemplateModel
 from app.services.ai.providers import get_provider, AIResponse
-from app.services.ai.providers.base import AIProviderError, AIBudgetExceededError
+from app.services.ai.providers.base import AIProviderError
 from app.services.ai.prompts.defaults import get_default_prompt, PromptTemplate
 
 
@@ -59,15 +59,8 @@ class MessageAnalyzer:
             Analysis record with results.
 
         Raises:
-            AIBudgetExceededError: If tenant has exceeded token budget.
-            AIProviderError: If AI provider fails.
+            AIProviderError: If AI provider fails or is not configured.
         """
-        # Check token budget for platform key users
-        if not self.tenant.has_ai_budget_remaining():
-            raise AIBudgetExceededError(
-                f"Tenant {self.tenant.id} has exceeded AI token budget"
-            )
-
         # Get prompt template (custom or default)
         template = await self._get_template("message_analysis")
 
@@ -127,9 +120,6 @@ class MessageAnalyzer:
             processing_time_ms=processing_time,
             status="success",
         )
-
-        # Update tenant token usage
-        await self._update_token_usage(response.total_tokens)
 
         # Add analysis to session
         self.session.add(analysis)
@@ -264,12 +254,6 @@ class MessageAnalyzer:
             user_id=self.user_id,
         )
         self.session.add(log)
-
-    async def _update_token_usage(self, tokens_used: int) -> None:
-        """Update tenant's monthly token usage."""
-        if self.tenant.uses_platform_key():
-            self.tenant.ai_tokens_used_this_month += tokens_used
-            self.session.add(self.tenant)
 
     def _normalize_entities(self, entities: dict[str, Any] | list) -> list[dict]:
         """

@@ -1,14 +1,13 @@
 /**
  * AI Configuration Service
  *
- * Handles API calls for AI provider configuration, testing, and usage statistics.
+ * Handles API calls for AI provider configuration and testing.
  */
 
 import { api } from './api';
 
 // Types
 export type AIProvider = 'claude' | 'openai' | 'azure_openai' | 'ollama';
-export type AIKeySource = 'platform' | 'tenant';
 
 export interface AIProviderConfig {
     provider: string;
@@ -25,16 +24,11 @@ export interface AIProviderConfig {
 
 export interface AIConfig {
     ai_provider: AIProvider;
-    ai_key_source: AIKeySource;
-    ai_monthly_token_limit: number | null;
-    ai_tokens_used_this_month: number;
-    subscription_tier: string;
     providers: Record<string, AIProviderConfig>;
 }
 
 export interface AIConfigUpdate {
     ai_provider?: AIProvider;
-    ai_key_source?: AIKeySource;
 }
 
 export interface AIProviderConfigUpdate {
@@ -58,13 +52,6 @@ export interface AITestResponse {
     model: string | null;
     message: string;
     latency_ms: number | null;
-}
-
-export interface AIUsageResponse {
-    tokens_used_this_month: number;
-    monthly_limit: number | null;
-    percentage_used: number | null;
-    uses_platform_key: boolean;
 }
 
 // Provider display information
@@ -134,7 +121,7 @@ export const getAIConfig = async (): Promise<AIConfig> => {
 };
 
 /**
- * Update AI configuration (provider or key source).
+ * Update AI configuration (active provider).
  */
 export const updateAIConfig = async (update: AIConfigUpdate): Promise<AIConfig> => {
     const response = await api.patch<AIConfig>('/tenants/settings/ai', update);
@@ -158,25 +145,4 @@ export const updateProviderConfig = async (
 export const testAIConnection = async (request: AITestRequest = {}): Promise<AITestResponse> => {
     const response = await api.post<AITestResponse>('/tenants/settings/ai/test', request);
     return response.data;
-};
-
-/**
- * Get AI token usage statistics.
- */
-export const getAIUsage = async (): Promise<AIUsageResponse> => {
-    const response = await api.get<AIUsageResponse>('/tenants/settings/ai/usage');
-    return response.data;
-};
-
-/**
- * Format token count for display.
- */
-export const formatTokenCount = (tokens: number): string => {
-    if (tokens >= 1_000_000) {
-        return `${(tokens / 1_000_000).toFixed(2)}M`;
-    }
-    if (tokens >= 1_000) {
-        return `${(tokens / 1_000).toFixed(1)}K`;
-    }
-    return tokens.toString();
 };

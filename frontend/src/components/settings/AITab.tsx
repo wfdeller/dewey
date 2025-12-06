@@ -13,38 +13,28 @@ import {
     Input,
     Alert,
     Spin,
-    Progress,
     Descriptions,
     Radio,
     Tag,
     Result,
-    Statistic,
-    Row,
-    Col,
 } from 'antd';
 import { App } from 'antd';
 import {
     RobotOutlined,
     SaveOutlined,
-    ApiOutlined,
     ThunderboltOutlined,
-    LockOutlined,
-    CloudOutlined,
 } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '../../services/api';
 import { useAuthStore } from '../../stores/authStore';
 import {
     AIProvider,
-    AIKeySource,
     getAIConfig,
     updateAIConfig,
     updateProviderConfig,
     testAIConnection,
-    getAIUsage,
     PROVIDER_INFO,
     MODEL_OPTIONS,
-    formatTokenCount,
     AITestResponse,
 } from '../../services/aiService';
 
@@ -73,13 +63,6 @@ export default function AITab() {
     const { data: config, isLoading } = useQuery({
         queryKey: ['ai-config'],
         queryFn: getAIConfig,
-        enabled: isAuthenticated,
-    });
-
-    // Fetch usage stats
-    const { data: usage } = useQuery({
-        queryKey: ['ai-usage'],
-        queryFn: getAIUsage,
         enabled: isAuthenticated,
     });
 
@@ -128,7 +111,6 @@ export default function AITab() {
             setActiveProvider(config.ai_provider);
             form.setFieldsValue({
                 ai_provider: config.ai_provider,
-                ai_key_source: config.ai_key_source,
             });
         }
     }, [config, form]);
@@ -136,10 +118,6 @@ export default function AITab() {
     const handleProviderChange = async (provider: AIProvider) => {
         setActiveProvider(provider);
         await updateConfigMutation.mutateAsync({ ai_provider: provider });
-    };
-
-    const handleKeySourceChange = async (source: AIKeySource) => {
-        await updateConfigMutation.mutateAsync({ ai_key_source: source });
     };
 
     const handleSaveProviderConfig = async (provider: AIProvider, values: Record<string, string>) => {
@@ -170,7 +148,7 @@ export default function AITab() {
     }
 
     const currentProviderConfig = config?.providers[activeProvider];
-    const isPlatformKey = config?.ai_key_source === 'platform';
+    const hasApiKey = currentProviderConfig?.api_key_set;
 
     return (
         <div>
@@ -180,88 +158,11 @@ export default function AITab() {
             </Title>
             <Paragraph type='secondary'>
                 Configure the AI provider used for message analysis, contact engagement scoring, and other AI-powered
-                features.
+                features. You must provide your own API key for the selected provider.
             </Paragraph>
 
-            {/* Usage Stats */}
-            {usage && (
-                <Card style={{ marginBottom: 24 }}>
-                    <Row gutter={24}>
-                        <Col span={8}>
-                            <Statistic
-                                title='Tokens Used This Month'
-                                value={formatTokenCount(usage.tokens_used_this_month)}
-                                prefix={<ThunderboltOutlined />}
-                            />
-                        </Col>
-                        <Col span={8}>
-                            <Statistic
-                                title='Monthly Limit'
-                                value={usage.monthly_limit ? formatTokenCount(usage.monthly_limit) : 'Unlimited'}
-                                prefix={<ApiOutlined />}
-                            />
-                        </Col>
-                        <Col span={8}>
-                            {usage.monthly_limit && usage.percentage_used !== null && (
-                                <div>
-                                    <Text type='secondary'>Usage</Text>
-                                    <Progress
-                                        percent={usage.percentage_used}
-                                        status={usage.percentage_used > 90 ? 'exception' : 'active'}
-                                        style={{ marginTop: 8 }}
-                                    />
-                                </div>
-                            )}
-                            {!usage.monthly_limit && (
-                                <Tag color='green' style={{ marginTop: 24 }}>
-                                    <LockOutlined /> Using Own API Key
-                                </Tag>
-                            )}
-                        </Col>
-                    </Row>
-                </Card>
-            )}
-
-            {/* Key Source Selection */}
-            <Card title='API Key Source' style={{ marginBottom: 24 }}>
-                <Form.Item
-                    label='How should AI API keys be managed?'
-                    help={
-                        isPlatformKey
-                            ? 'Using shared platform keys. Usage is metered against your subscription.'
-                            : 'Using your own API keys. No usage limits from Dewey.'
-                    }
-                >
-                    <Radio.Group
-                        value={config?.ai_key_source}
-                        onChange={(e) => handleKeySourceChange(e.target.value)}
-                        disabled={updateConfigMutation.isPending}
-                    >
-                        <Radio.Button value='platform'>
-                            <CloudOutlined /> Platform Keys
-                        </Radio.Button>
-                        <Radio.Button value='tenant'>
-                            <LockOutlined /> My Own Keys
-                        </Radio.Button>
-                    </Radio.Group>
-                </Form.Item>
-
-                {isPlatformKey && (
-                    <Alert
-                        message='Platform Keys'
-                        description={`Your ${config?.subscription_tier} tier includes ${
-                            config?.ai_monthly_token_limit
-                                ? formatTokenCount(config.ai_monthly_token_limit) + ' tokens/month'
-                                : 'unlimited tokens'
-                        }. Upgrade your plan for higher limits.`}
-                        type='info'
-                        showIcon
-                    />
-                )}
-            </Card>
-
             {/* Provider Selection */}
-            <Card title='Active AI Provider' style={{ marginBottom: 24 }}>
+            <Card title='Select AI Provider' style={{ marginBottom: 24 }}>
                 <Radio.Group
                     value={activeProvider}
                     onChange={(e) => handleProviderChange(e.target.value)}
@@ -292,10 +193,16 @@ export default function AITab() {
                                                     Active
                                                 </Tag>
                                             )}
-                                            {config?.providers[provider]?.api_key_set && (
-                                                <Tag color='green' style={{ marginLeft: 4 }}>
-                                                    Key Set
-                                                </Tag>
+                                            {PROVIDER_INFO[provider].requiresKey && (
+                                                config?.providers[provider]?.api_key_set ? (
+                                                    <Tag color='green' style={{ marginLeft: 4 }}>
+                                                        Key Set
+                                                    </Tag>
+                                                ) : (
+                                                    <Tag color='orange' style={{ marginLeft: 4 }}>
+                                                        No Key
+                                                    </Tag>
+                                                )
                                             )}
                                         </div>
                                         <Text type='secondary' style={{ fontSize: 12 }}>
@@ -310,24 +217,31 @@ export default function AITab() {
             </Card>
 
             {/* Provider-specific Configuration */}
-            {!isPlatformKey && (
-                <Card
-                    title={
-                        <Space>
-                            <span>{PROVIDER_ICONS[activeProvider]}</span>
-                            <span>{PROVIDER_INFO[activeProvider].name} Configuration</span>
-                        </Space>
-                    }
-                    style={{ marginBottom: 24 }}
-                >
-                    <ProviderConfigForm
-                        provider={activeProvider}
-                        config={currentProviderConfig}
-                        onSave={(values) => handleSaveProviderConfig(activeProvider, values)}
-                        saving={updateProviderMutation.isPending}
+            <Card
+                title={
+                    <Space>
+                        <span>{PROVIDER_ICONS[activeProvider]}</span>
+                        <span>{PROVIDER_INFO[activeProvider].name} Configuration</span>
+                    </Space>
+                }
+                style={{ marginBottom: 24 }}
+            >
+                {!hasApiKey && PROVIDER_INFO[activeProvider].requiresKey && (
+                    <Alert
+                        message='API Key Required'
+                        description={`Enter your ${PROVIDER_INFO[activeProvider].name} API key to enable AI features.`}
+                        type='warning'
+                        showIcon
+                        style={{ marginBottom: 16 }}
                     />
-                </Card>
-            )}
+                )}
+                <ProviderConfigForm
+                    provider={activeProvider}
+                    config={currentProviderConfig}
+                    onSave={(values) => handleSaveProviderConfig(activeProvider, values)}
+                    saving={updateProviderMutation.isPending}
+                />
+            </Card>
 
             {/* Test Connection */}
             <Card title='Test Connection' style={{ marginBottom: 24 }}>
@@ -342,6 +256,7 @@ export default function AITab() {
                         icon={<ThunderboltOutlined />}
                         onClick={handleTestConnection}
                         loading={testMutation.isPending}
+                        disabled={!hasApiKey && PROVIDER_INFO[activeProvider].requiresKey}
                     >
                         Test Connection
                     </Button>
@@ -373,19 +288,16 @@ export default function AITab() {
                             {PROVIDER_ICONS[config?.ai_provider as AIProvider]} {PROVIDER_INFO[config?.ai_provider as AIProvider]?.name}
                         </Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label='Key Source'>
-                        <Tag color={isPlatformKey ? 'orange' : 'green'}>
-                            {isPlatformKey ? 'Platform Key' : 'Tenant Key'}
-                        </Tag>
-                    </Descriptions.Item>
                     <Descriptions.Item label='Model'>
                         {currentProviderConfig?.model || 'Default'}
                     </Descriptions.Item>
-                    {currentProviderConfig?.api_key_masked && (
-                        <Descriptions.Item label='API Key'>
+                    <Descriptions.Item label='API Key'>
+                        {currentProviderConfig?.api_key_set ? (
                             <Text code>{currentProviderConfig.api_key_masked}</Text>
-                        </Descriptions.Item>
-                    )}
+                        ) : (
+                            <Text type='danger'>Not configured</Text>
+                        )}
+                    </Descriptions.Item>
                 </Descriptions>
             </Card>
         </div>

@@ -224,7 +224,6 @@ async def update_worker_settings(
 # =============================================================================
 
 AIProviderType = Literal["claude", "openai", "azure_openai", "ollama"]
-AIKeySourceType = Literal["platform", "tenant"]
 
 
 class AIProviderConfigResponse(BaseModel):
@@ -246,10 +245,6 @@ class AIConfigResponse(BaseModel):
     """Full AI configuration response."""
 
     ai_provider: str
-    ai_key_source: str
-    ai_monthly_token_limit: int | None = None
-    ai_tokens_used_this_month: int = 0
-    subscription_tier: str
     providers: dict[str, AIProviderConfigResponse] = {}
 
 
@@ -270,7 +265,6 @@ class AIConfigUpdate(BaseModel):
     """Update AI configuration."""
 
     ai_provider: AIProviderType | None = None
-    ai_key_source: AIKeySourceType | None = None
 
 
 class AITestRequest(BaseModel):
@@ -287,15 +281,6 @@ class AITestResponse(BaseModel):
     model: str | None = None
     message: str
     latency_ms: int | None = None
-
-
-class AIUsageResponse(BaseModel):
-    """AI token usage statistics."""
-
-    tokens_used_this_month: int
-    monthly_limit: int | None = None
-    percentage_used: float | None = None
-    uses_platform_key: bool
 
 
 # Default models for each provider
@@ -359,10 +344,6 @@ async def get_ai_config(
 
     return AIConfigResponse(
         ai_provider=tenant.ai_provider,
-        ai_key_source=tenant.ai_key_source,
-        ai_monthly_token_limit=tenant.ai_monthly_token_limit,
-        ai_tokens_used_this_month=tenant.ai_tokens_used_this_month,
-        subscription_tier=tenant.subscription_tier,
         providers=providers,
     )
 
@@ -376,7 +357,7 @@ async def update_ai_config(
     """
     Update AI configuration for the current tenant.
 
-    Changes the active provider or key source. Requires SETTINGS_WRITE permission.
+    Changes the active provider. Requires SETTINGS_WRITE permission.
     """
     result = await session.execute(
         select(Tenant).where(Tenant.id == current_user.tenant_id)
@@ -389,11 +370,9 @@ async def update_ai_config(
             detail="Tenant not found",
         )
 
-    # Update fields
+    # Update provider
     if config_update.ai_provider is not None:
         tenant.ai_provider = config_update.ai_provider
-    if config_update.ai_key_source is not None:
-        tenant.ai_key_source = config_update.ai_key_source
 
     await session.commit()
     await session.refresh(tenant)
@@ -529,37 +508,3 @@ async def test_ai_connection(
             message=f"Connection failed: {str(e)}",
             latency_ms=None,
         )
-
-
-@router.get("/settings/ai/usage", response_model=AIUsageResponse)
-async def get_ai_usage(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
-) -> AIUsageResponse:
-    """
-    Get AI token usage statistics for the current tenant.
-    """
-    result = await session.execute(
-        select(Tenant).where(Tenant.id == current_user.tenant_id)
-    )
-    tenant = result.scalars().first()
-
-    if not tenant:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Tenant not found",
-        )
-
-    # Calculate percentage if limit exists
-    percentage = None
-    if tenant.ai_monthly_token_limit:
-        percentage = round(
-            (tenant.ai_tokens_used_this_month / tenant.ai_monthly_token_limit) * 100, 2
-        )
-
-    return AIUsageResponse(
-        tokens_used_this_month=tenant.ai_tokens_used_this_month,
-        monthly_limit=tenant.ai_monthly_token_limit,
-        percentage_used=percentage,
-        uses_platform_key=tenant.uses_platform_key(),
-    )
