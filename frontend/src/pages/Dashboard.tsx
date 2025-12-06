@@ -1,8 +1,10 @@
 import { Row, Col, Card, Statistic, Spin, Alert } from 'antd';
 import { MailOutlined, RiseOutlined, FallOutlined, FlagOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useDashboardStats } from '../hooks/useAnalytics';
 
 export default function Dashboard() {
+    const navigate = useNavigate();
     const { data: stats, isLoading, error } = useDashboardStats();
 
     if (isLoading) {
@@ -51,7 +53,7 @@ export default function Dashboard() {
 
             <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} lg={6}>
-                    <Card>
+                    <Card hoverable onClick={() => navigate('/messages')} style={{ cursor: 'pointer' }}>
                         <Statistic title='Total Messages' value={mockStats.total_messages} prefix={<MailOutlined />} />
                     </Card>
                 </Col>
@@ -79,7 +81,7 @@ export default function Dashboard() {
                 </Col>
 
                 <Col xs={24} sm={12} lg={6}>
-                    <Card>
+                    <Card hoverable onClick={() => navigate('/campaigns')} style={{ cursor: 'pointer' }}>
                         <Statistic
                             title='Active Campaigns'
                             value={mockStats.active_campaigns}
@@ -110,7 +112,7 @@ export default function Dashboard() {
                     <Card title='Pending Messages' extra={<ClockCircleOutlined />}>
                         <Statistic value={mockStats.pending_messages} suffix='awaiting review' />
                         <div style={{ marginTop: 16 }}>
-                            <a href='/messages?status=pending'>View all pending →</a>
+                            <a onClick={() => navigate('/messages?status=pending')} style={{ cursor: 'pointer' }}>View all pending →</a>
                         </div>
                     </Card>
                 </Col>

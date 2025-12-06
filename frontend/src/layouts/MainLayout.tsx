@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Space, Button, Badge, theme } from 'antd';
 import {
@@ -93,10 +93,21 @@ export default function MainLayout() {
     const { user, logout } = useAuthStore();
     const { data: activeJobsData } = useActiveJobsQuery();
 
-    const [selectedKeys, setSelectedKeys] = useState([location.pathname]);
+    // Derive selectedKeys from current location pathname
+    const selectedKeys = useMemo(() => {
+        // Find the matching menu item based on pathname
+        const pathname = location.pathname;
+        // Check for exact match first
+        const exactMatch = menuItems.find(item => item.key === pathname);
+        if (exactMatch) return [exactMatch.key];
+        // Check for prefix match (e.g., /messages/123 should highlight /messages)
+        const prefixMatch = menuItems.find(item => pathname.startsWith(item.key + '/'));
+        if (prefixMatch) return [prefixMatch.key];
+        // Default to dashboard
+        return ['/dashboard'];
+    }, [location.pathname]);
 
     const handleMenuClick = ({ key }: { key: string }) => {
-        setSelectedKeys([key]);
         navigate(key);
     };
 
