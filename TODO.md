@@ -767,6 +767,330 @@
 
 ---
 
+## Phase 5: Government Essentials
+
+> Critical features for government market entry. Based on competitive analysis against Leidos IQ CRM.
+
+### 5.1 Casework/Services Module (CRITICAL)
+
+Required for constituent services offices. IQ's "Services" module is a key selling point.
+
+-   [ ] Backend: Casework models
+    -   [ ] Case model (type, status, priority, assigned_to, contact_id, due_date)
+    -   [ ] CaseType model (name, template, default_workflow, sla_days)
+    -   [ ] CaseNote model (case_id, author_id, content, is_internal)
+    -   [ ] CaseDocument model (case_id, file_path, uploaded_by)
+    -   [ ] AgencyContact model (agency_name, contact_name, email, phone, department)
+-   [ ] Backend: Predefined case types
+    -   [ ] Flag requests (with flag type, recipient, address)
+    -   [ ] Capitol tour requests (date preference, group size, accessibility)
+    -   [ ] Agency referrals (agency, issue summary, constituent release)
+    -   [ ] Grant assistance
+    -   [ ] Military academy nominations
+    -   [ ] Immigration casework
+-   [ ] Backend: Case API endpoints
+    -   [ ] CRUD for cases with filtering (status, type, assigned_to, contact)
+    -   [ ] Case status transitions with validation
+    -   [ ] Case notes and documents management
+    -   [ ] Case assignment and reassignment
+    -   [ ] Case templates for common types
+    -   [ ] Agency contact directory management
+    -   [ ] Case SLA tracking and alerts
+-   [ ] Frontend: Case list page
+    -   [ ] Kanban view by status (Open, In Progress, Pending Agency, Resolved)
+    -   [ ] Table view with filtering
+    -   [ ] Case type filtering
+    -   [ ] Assigned user filtering
+    -   [ ] SLA indicators (overdue, due soon)
+-   [ ] Frontend: Case detail page
+    -   [ ] Case timeline with notes and status changes
+    -   [ ] Linked contact information
+    -   [ ] Document attachments
+    -   [ ] Agency referral tracking
+    -   [ ] Related messages
+-   [ ] Frontend: Case creation wizard
+    -   [ ] Type-specific forms
+    -   [ ] Contact lookup/creation
+    -   [ ] Template auto-fill
+
+### 5.2 Legislative Module (CRITICAL)
+
+IQ's LegiStats module is essential for Congressional offices.
+
+-   [ ] Backend: Legislative models
+    -   [ ] Bill model (congress, bill_type, number, title, summary, status, sponsor_id)
+    -   [ ] BillAction model (bill_id, action_date, description, action_type)
+    -   [ ] Vote model (bill_id, vote_date, result, yeas, nays, present, not_voting)
+    -   [ ] MemberPosition model (member_id, bill_id, position, statement, date)
+    -   [ ] MessageBillLink model (message_id, bill_id, stance: support/oppose/inquiry)
+-   [ ] Backend: Congress.gov API integration
+    -   [ ] Bill search and sync
+    -   [ ] Bill status tracking
+    -   [ ] Vote record fetching
+    -   [ ] Sponsor/cosponsor data
+    -   [ ] Bill text retrieval
+-   [ ] Backend: Legislative API endpoints
+    -   [ ] Bill search and filtering
+    -   [ ] Bill detail with actions and votes
+    -   [ ] Member position tracking
+    -   [ ] Message-to-bill linking
+    -   [ ] Legislative analytics (messages per bill, constituent sentiment)
+-   [ ] Frontend: Bill tracking page
+    -   [ ] Bill search with Congress.gov integration
+    -   [ ] Bill detail view with status timeline
+    -   [ ] Linked constituent messages with sentiment
+    -   [ ] Position tracking interface
+-   [ ] Frontend: Legislative dashboard
+    -   [ ] Hot bills (most constituent interest)
+    -   [ ] Sentiment breakdown by bill
+    -   [ ] Position summary
+
+### 5.3 Physical Mail & Fax Support
+
+Government offices still receive significant physical mail and faxes.
+
+-   [ ] Backend: Physical mail logging
+    -   [ ] Message source types: email, form, api, physical_mail, fax
+    -   [ ] Scan/OCR integration (optional)
+    -   [ ] Manual entry interface
+-   [ ] Backend: Fax-to-email integration
+    -   [ ] Webhook receiver for fax services (eFax, RingCentral)
+    -   [ ] Automatic message creation from fax
+    -   [ ] Fax image attachment handling
+-   [ ] Frontend: Physical mail entry form
+    -   [ ] Date received
+    -   [ ] Contact lookup/creation
+    -   [ ] Category assignment
+    -   [ ] Scan upload
+    -   [ ] OCR text extraction (if available)
+
+### 5.4 District/Geographic Data Integration
+
+Critical for constituent verification and geographic analysis.
+
+-   [ ] Backend: Geocoding service
+    -   [ ] Census Geocoder API integration (free)
+    -   [ ] Address validation and standardization
+    -   [ ] Geocode storage on Contact model
+-   [ ] Backend: District lookup
+    -   [ ] Congressional district lookup (Census/Geocodio API)
+    -   [ ] State legislative district lookup
+    -   [ ] County and municipality lookup
+    -   [ ] School district lookup
+-   [ ] Backend: Contact enrichment
+    -   [ ] Auto-populate districts on contact creation/update
+    -   [ ] District verification for constituent status
+-   [ ] Frontend: District display
+    -   [ ] Show districts on contact detail
+    -   [ ] District filter on contacts list
+    -   [ ] "In District" verification badge
+
+### 5.5 Document Library
+
+Centralized document storage for form letters, templates, and reference materials.
+
+-   [ ] Backend: Document models
+    -   [ ] Document model (name, category, file_path, mime_type, version)
+    -   [ ] DocumentCategory model (name, parent_id)
+    -   [ ] DocumentVersion model (document_id, version_number, file_path, created_by)
+-   [ ] Backend: Document API endpoints
+    -   [ ] Upload/download documents
+    -   [ ] Version management
+    -   [ ] Category organization
+    -   [ ] Search by name/content
+-   [ ] Frontend: Document library page
+    -   [ ] Folder/category navigation
+    -   [ ] Document preview
+    -   [ ] Version history
+    -   [ ] Upload interface
+
+### 5.6 Staff Productivity Reporting
+
+Metrics for office management and performance tracking.
+
+-   [ ] Backend: Productivity metrics
+    -   [ ] Messages handled per user (daily/weekly/monthly)
+    -   [ ] Average response time per user
+    -   [ ] Case resolution times
+    -   [ ] Workload distribution
+-   [ ] Backend: Productivity API endpoints
+    -   [ ] GET /analytics/productivity/users - per-user metrics
+    -   [ ] GET /analytics/productivity/summary - office summary
+    -   [ ] GET /analytics/productivity/trends - over time
+-   [ ] Frontend: Productivity dashboard
+    -   [ ] User leaderboard
+    -   [ ] Response time charts
+    -   [ ] Workload distribution
+    -   [ ] Trend analysis
+
+---
+
+## Phase 6: Communication Channels & Geographic Intelligence
+
+### 6.1 Social Media Integration
+
+IQ integrates Facebook, Twitter/X, Instagram, YouTube. Essential for modern constituent engagement.
+
+-   [ ] Backend: Social media models
+    -   [ ] SocialAccount model (platform, account_id, account_name, access_token_encrypted)
+    -   [ ] SocialMessage model (platform, platform_message_id, content, author, created_at)
+    -   [ ] Extend Message model to support social source
+-   [ ] Backend: Platform integrations
+    -   [ ] Twitter/X API integration
+        -   [ ] OAuth connection flow
+        -   [ ] Mentions and DM ingestion
+        -   [ ] Reply/post capability
+    -   [ ] Facebook Pages API integration
+        -   [ ] Page connection
+        -   [ ] Comment and message ingestion
+        -   [ ] Reply capability
+    -   [ ] Instagram Business API
+        -   [ ] Account connection
+        -   [ ] Comment ingestion
+        -   [ ] Reply capability
+-   [ ] Backend: Social API endpoints
+    -   [ ] Account connection management
+    -   [ ] Unified social inbox
+    -   [ ] Reply from platform
+    -   [ ] Social analytics
+-   [ ] Frontend: Social media connection setup
+    -   [ ] OAuth flow for each platform
+    -   [ ] Account selection
+    -   [ ] Sync settings
+-   [ ] Frontend: Unified social inbox
+    -   [ ] Platform filter
+    -   [ ] In-line reply
+    -   [ ] Sentiment tagging
+    -   [ ] Link to contact
+
+### 6.2 SMS/Texting Capability
+
+Two-way texting for constituent communication.
+
+-   [ ] Backend: SMS models
+    -   [ ] SMSMessage model (direction, phone_number, content, status, provider_id)
+    -   [ ] SMSCampaign model (name, template, recipient_filter, status)
+    -   [ ] Extend Contact model with sms_opt_in, sms_opt_in_date
+-   [ ] Backend: Twilio integration
+    -   [ ] Account configuration
+    -   [ ] Send SMS
+    -   [ ] Receive SMS (webhook)
+    -   [ ] Delivery status tracking
+    -   [ ] Opt-in/opt-out handling
+-   [ ] Backend: SMS API endpoints
+    -   [ ] Send individual SMS
+    -   [ ] Bulk SMS campaigns
+    -   [ ] SMS inbox
+    -   [ ] Opt-in management
+-   [ ] Frontend: SMS configuration
+    -   [ ] Twilio account setup
+    -   [ ] Phone number management
+-   [ ] Frontend: SMS inbox
+    -   [ ] Conversation view
+    -   [ ] Quick reply
+    -   [ ] Link to contact
+-   [ ] Frontend: SMS campaigns
+    -   [ ] Recipient selection
+    -   [ ] Template with merge fields
+    -   [ ] Send scheduling
+    -   [ ] Delivery tracking
+
+### 6.3 Events & Calendar Module
+
+Event management for town halls, office hours, and constituent meetings.
+
+-   [ ] Backend: Events models
+    -   [ ] Event model (name, type, start_time, end_time, location, description, capacity)
+    -   [ ] EventRegistration model (event_id, contact_id, status, registered_at)
+    -   [ ] EventType model (name, default_duration, default_capacity)
+-   [ ] Backend: Calendar integration
+    -   [ ] Microsoft Outlook sync (Graph API)
+    -   [ ] Google Calendar sync
+    -   [ ] iCal export
+-   [ ] Backend: Events API endpoints
+    -   [ ] CRUD for events
+    -   [ ] Registration management
+    -   [ ] RSVP tracking
+    -   [ ] Waitlist handling
+    -   [ ] Calendar sync endpoints
+-   [ ] Frontend: Events list page
+    -   [ ] Calendar view
+    -   [ ] List view
+    -   [ ] Event type filtering
+-   [ ] Frontend: Event detail page
+    -   [ ] Registration list
+    -   [ ] Check-in interface
+    -   [ ] Attendee communication
+-   [ ] Frontend: Event creation
+    -   [ ] Event details form
+    -   [ ] Capacity and registration settings
+    -   [ ] Invitation email template
+    -   [ ] Calendar sync toggle
+
+### 6.4 Geographic Intelligence Dashboard
+
+-   [ ] Backend: Geographic data infrastructure
+    -   [ ] PostGIS extension for spatial queries
+    -   [ ] Census TIGER/Line shapefiles import
+    -   [ ] Precinct boundary data (state/county sources)
+    -   [ ] District boundary data
+-   [ ] Backend: Geographic analytics
+    -   [ ] Sentiment aggregation by geography (precinct, county, district)
+    -   [ ] Issue heat mapping
+    -   [ ] Voter propensity scoring by area
+    -   [ ] Engagement level mapping
+-   [ ] Backend: Geographic API endpoints
+    -   [ ] GET /geo/boundaries - GeoJSON boundaries
+    -   [ ] GET /geo/heatmap - aggregated metrics by area
+    -   [ ] GET /geo/drilldown/{area_id} - area detail
+    -   [ ] GET /geo/contacts - contacts in area
+-   [ ] Frontend: Geographic heat map
+    -   [ ] Mapbox GL JS or Leaflet integration
+    -   [ ] Layer toggles (sentiment, voter propensity, issues, party)
+    -   [ ] Drill-down (district → county → precinct → address)
+    -   [ ] Click-to-view constituent list
+-   [ ] Frontend: Map layer configuration
+    -   [ ] Sentiment heat map
+    -   [ ] Voter propensity gradient
+    -   [ ] Issue intensity
+    -   [ ] Party registration
+    -   [ ] Engagement level
+    -   [ ] Unreached voters
+
+### 6.5 AI-Powered Targeting Engine (DIFFERENTIATOR)
+
+-   [ ] Backend: Targeting recommendation engine
+    -   [ ] Trend detection (category volume changes)
+    -   [ ] Sentiment anomaly detection (areas with declining sentiment)
+    -   [ ] Voter propensity analysis
+    -   [ ] Engagement gap identification
+-   [ ] Backend: Targeting criteria system
+    -   [ ] Multi-dimension filter builder (voter history + sentiment + geography + issues)
+    -   [ ] Dynamic segment calculation
+    -   [ ] Smart list auto-update
+-   [ ] Backend: Targeting API endpoints
+    -   [ ] GET /targeting/recommendations - AI-generated suggestions
+    -   [ ] POST /targeting/segments - create segment from criteria
+    -   [ ] GET /targeting/segments/{id}/contacts - evaluate segment
+    -   [ ] POST /targeting/segments/{id}/export - export for mail/phone
+-   [ ] Frontend: AI recommendations panel
+    -   [ ] Recommendation cards with rationale
+    -   [ ] One-click audience preview
+    -   [ ] Convert to campaign/segment
+-   [ ] Frontend: Targeting criteria builder
+    -   [ ] Visual query builder
+    -   [ ] Dimension selectors (vote history, geography, sentiment, issues)
+    -   [ ] Real-time count preview
+    -   [ ] Save as smart list
+-   [ ] Frontend: Campaign actions from segments
+    -   [ ] Generate mail merge (PDF export)
+    -   [ ] Create email campaign
+    -   [ ] Create SMS blast
+    -   [ ] Generate form links
+    -   [ ] Export to CSV
+
+---
+
 ## Infrastructure & DevOps
 
 ### CI/CD Pipeline
@@ -968,12 +1292,14 @@
 
 Use this section to track overall progress:
 
-| Phase                  | Status      | Progress |
-| ---------------------- | ----------- | -------- |
-| Phase 1: Foundation    | In Progress | ~90%     |
-| Phase 2: Core Features | In Progress | ~75%     |
-| Phase 3: Marketplace   | Not Started | 0%       |
-| Phase 4: Enterprise    | Not Started | 0%       |
+| Phase                                      | Status      | Progress |
+| ------------------------------------------ | ----------- | -------- |
+| Phase 1: Foundation                        | In Progress | ~90%     |
+| Phase 2: Core Features                     | In Progress | ~80%     |
+| Phase 3: Marketplace & Scale               | Not Started | 0%       |
+| Phase 4: Enterprise                        | Not Started | 0%       |
+| Phase 5: Government Essentials (IQ Parity) | Not Started | 0%       |
+| Phase 6: Communication & Geo Intelligence  | Not Started | 0%       |
 
 ### Phase 1 Breakdown
 
@@ -1003,6 +1329,27 @@ Use this section to track overall progress:
 | 2.6 Analytics Dashboard             | Not Started                                              |
 | 2.7 Voter File Import               | Complete (wizard, AI mapping, ARQ background processing) |
 | 2.8 ARQ Task Queue                  | Complete (ARQ integration, worker settings, jobs page)   |
+
+### Phase 5 Breakdown (Government Essentials)
+
+| Section                            | Status      | Priority |
+| ---------------------------------- | ----------- | -------- |
+| 5.1 Casework/Services Module       | Not Started | CRITICAL |
+| 5.2 Legislative Module (LegiStats) | Not Started | CRITICAL |
+| 5.3 Physical Mail & Fax Support    | Not Started | Medium   |
+| 5.4 District/Geographic Data       | Not Started | High     |
+| 5.5 Document Library               | Not Started | Medium   |
+| 5.6 Staff Productivity Reporting   | Not Started | Medium   |
+
+### Phase 6 Breakdown (Communication & Intelligence)
+
+| Section                               | Status      | Priority       |
+| ------------------------------------- | ----------- | -------------- |
+| 6.1 Social Media Integration          | Not Started | MAJOR GAP      |
+| 6.2 SMS/Texting Capability            | Not Started | High           |
+| 6.3 Events & Calendar Module          | Not Started | MAJOR GAP      |
+| 6.4 Geographic Intelligence Dashboard | Not Started | DIFFERENTIATOR |
+| 6.5 AI-Powered Targeting Engine       | Not Started | DIFFERENTIATOR |
 
 ### API Endpoints Summary
 

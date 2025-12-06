@@ -1392,8 +1392,153 @@ jobs:
               run: locust -f tests/load/locustfile.py --headless -u 10 -r 2 -t 30s
 ```
 
+## Planned Modules (Competitive Parity)
+
+Based on competitive analysis against Leidos IQ CRM (65% Congressional market share), the following modules are planned for government market entry.
+
+### Casework/Services Module (Planned)
+
+Constituent services case management for flag requests, tours, agency referrals, etc.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Casework System                               │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   Case Types     │   Case Tracking  │   Agency Directory        │
+│ - Flag requests  │ - Status workflow│ - Federal agencies        │
+│ - Capitol tours  │ - SLA tracking   │ - Contact management      │
+│ - Agency referrals│- Document attach│ - Referral tracking       │
+│ - Grants         │ - Notes/timeline │                           │
+└──────────────────┴──────────────────┴───────────────────────────┘
+```
+
+**Key Entities:**
+- **Case** - Service request from constituent (type, status, priority, assigned_to)
+- **CaseType** - Predefined templates (flag, tour, referral, etc.) with SLA
+- **CaseNote** - Timeline entries and internal notes
+- **AgencyContact** - Federal agency contact directory
+
+### Legislative Module (Planned)
+
+Bill tracking and constituent message correlation (equivalent to IQ's "LegiStats").
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Legislative System                            │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   Bill Tracking  │   Vote Records   │   Position Tracking       │
+│ - Congress.gov   │ - Roll call votes│ - Support/oppose          │
+│ - Status updates │ - Vote breakdown │ - Public statements       │
+│ - Sponsors       │ - Member votes   │ - Constituent sentiment   │
+└──────────────────┴──────────────────┴───────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Message-Bill Correlation                            │
+│  "1,247 constituents wrote about HR-123 (67% support)"          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Key Entities:**
+- **Bill** - Legislation from Congress.gov API
+- **Vote** - Roll call vote records
+- **MemberPosition** - Official positions on legislation
+- **MessageBillLink** - Constituent message to bill correlation with stance
+
+### Social Media Integration (Planned)
+
+Unified inbox for Facebook, Twitter/X, Instagram messages.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                 Social Media Integration                         │
+├─────────────┬─────────────┬─────────────┬───────────────────────┤
+│  Twitter/X  │  Facebook   │  Instagram  │   Unified Inbox       │
+│  - Mentions │  - Comments │  - Comments │   - All platforms     │
+│  - DMs      │  - Messages │  - DMs      │   - Reply from Dewey  │
+│  - Posts    │  - Reviews  │             │   - AI sentiment      │
+└─────────────┴─────────────┴─────────────┴───────────────────────┘
+```
+
+### Events & Calendar Module (Planned)
+
+Event management with calendar sync for town halls, office hours, and meetings.
+
+**Key Entities:**
+- **Event** - Town halls, office hours, constituent meetings
+- **EventRegistration** - RSVP and attendance tracking
+- **EventType** - Templates with default settings
+
+### Geographic Intelligence Dashboard (Differentiator)
+
+**This capability does not exist in IQ** - potential killer feature.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  Geographic Heat Map                          [Zoom] [Filter]    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│     ┌──────────┐                                                 │
+│     │ Precinct │  ◄── Color = sentiment/engagement               │
+│     │   A-12   │      Click to drill down                        │
+│     │  🔴 -0.3 │                                                 │
+│     └──────────┘                                                 │
+│                                                                  │
+│  Layers: [Sentiment ▼] [Voter Propensity] [Issues] [Party]      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  AI Targeting Recommendations                                    │
+├─────────────────────────────────────────────────────────────────┤
+│  🎯 "2,847 constituents voted in 2020 but skipped 2022.         │
+│      67% care about healthcare. Recommend: GOTV mailer."        │
+│      [Preview Audience] [Create Campaign]                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Technical Stack:**
+- PostGIS for spatial queries
+- Mapbox GL JS or Leaflet for visualization
+- Census TIGER/Line shapefiles for boundaries
+- AI-generated targeting recommendations
+
+## Competitive Positioning
+
+### Dewey Advantages vs Leidos IQ CRM
+
+| Capability | IQ | Dewey |
+|------------|-----|-------|
+| AI sentiment analysis | ❌ | ✅ Multi-tone detection |
+| AI auto-categorization | ❌ | ✅ With confidence scores |
+| AI response suggestions | ❌ | ✅ Claude/OpenAI |
+| Coordinated campaign detection | ❌ | ✅ Template matching |
+| Modern REST API | ⚠️ Limited | ✅ Full API-first |
+| Geographic heat maps | ❌ | ✅ Planned |
+| AI targeting recommendations | ❌ | ✅ Planned |
+
+### IQ Features Dewey Must Match
+
+| Feature | Priority | Status |
+|---------|----------|--------|
+| Casework/Services | CRITICAL | Planned (Phase 5) |
+| Legislative (LegiStats) | CRITICAL | Planned (Phase 5) |
+| Social media integration | MAJOR GAP | Planned (Phase 6) |
+| Events/Calendar | MAJOR GAP | Planned (Phase 6) |
+| SMS/Texting | High | Planned (Phase 6) |
+| Physical mail logging | Medium | Planned (Phase 5) |
+
+### Target Market Strategy
+
+1. **Initial targets** (lower barrier): State/local government, private sector
+2. **Medium-term** (with Phase 5): State legislatures, government agencies
+3. **Long-term** (with FedRAMP): Congressional offices, federal agencies
+
+See [COMPETITIVE_ANALYSIS_IQ_CRM.md](./docs/COMPETITIVE_ANALYSIS_IQ_CRM.md) for detailed analysis.
+
 ## Related Documentation
 
 -   [TODO.md](./TODO.md) - Implementation checklist
 -   [README.md](./README.md) - Installation and setup
+-   [COMPETITIVE_ANALYSIS_IQ_CRM.md](./docs/COMPETITIVE_ANALYSIS_IQ_CRM.md) - Competitive analysis
 -   [Full Design Document](./.claude/plans/sorted-riding-allen.md) - Detailed specifications
