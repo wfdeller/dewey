@@ -10,6 +10,7 @@ import {
   CreditCardOutlined,
   UnorderedListOutlined,
   ThunderboltOutlined,
+  RobotOutlined,
 } from '@ant-design/icons';
 import UsersTab from '../components/settings/UsersTab';
 import RolesTab from '../components/settings/RolesTab';
@@ -17,6 +18,7 @@ import ApiKeysTab from '../components/settings/ApiKeysTab';
 import EmailTab from '../components/settings/EmailTab';
 import LOVTab from '../components/settings/LOVTab';
 import WorkerTab from '../components/settings/WorkerTab';
+import AITab from '../components/settings/AITab';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -73,6 +75,16 @@ export default function Settings() {
       children: <ApiKeysTab />,
     },
     {
+      key: 'ai',
+      label: (
+        <span>
+          <RobotOutlined style={{ marginRight: 8 }} />
+          AI Providers
+        </span>
+      ),
+      children: <AITab />,
+    },
+    {
       key: 'integrations',
       label: (
         <span>
@@ -85,7 +97,6 @@ export default function Settings() {
           title="Integration"
           items={[
             'Microsoft 365 / Azure AD configuration',
-            'AI provider settings (Claude, OpenAI)',
             'Webhook configurations',
             'Third-party app connections',
           ]}
