@@ -13,6 +13,7 @@ const Contacts = lazy(() => import('./pages/Contacts'));
 const ContactDetail = lazy(() => import('./pages/ContactDetail'));
 const Categories = lazy(() => import('./pages/Categories'));
 const Campaigns = lazy(() => import('./pages/Campaigns'));
+const CampaignDetail = lazy(() => import('./pages/CampaignDetail'));
 const Workflows = lazy(() => import('./pages/Workflows'));
 const Forms = lazy(() => import('./pages/Forms'));
 const FormBuilder = lazy(() => import('./pages/FormBuilder'));
@@ -96,6 +97,7 @@ function App() {
           <Route path="/contacts/:contactId" element={<ContactDetail />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/:campaignId" element={<CampaignDetail />} />
           <Route path="/workflows" element={<Workflows />} />
           <Route path="/forms" element={<Forms />} />
           <Route path="/forms/:formId/builder" element={<FormBuilder />} />
