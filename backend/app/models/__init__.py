@@ -16,6 +16,8 @@ from app.models.vote_history import VoteHistory
 from app.models.job import Job
 from app.models.audit_log import AuditLog
 from app.models.email import EmailTemplate, TenantEmailConfig, SentEmail, EmailSuppression
+from app.models.prompt_template import PromptTemplate
+from app.models.ai_usage_log import AIUsageLog
 
 __all__ = [
     "Tenant",
@@ -46,4 +48,6 @@ __all__ = [
     "TenantEmailConfig",
     "SentEmail",
     "EmailSuppression",
+    "PromptTemplate",
+    "AIUsageLog",
 ]

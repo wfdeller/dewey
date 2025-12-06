@@ -8,7 +8,10 @@ from sqlmodel import select
 
 from app.core.database import async_session_maker
 from app.models.job import Job
+from app.models.message import Message
+from app.models.tenant import Tenant
 from app.services.voter_import import VoterImportService
+from app.services.ai import MessageAnalyzer, AIProviderError, AIBudgetExceededError
 
 
 logger = structlog.get_logger()
@@ -620,3 +623,124 @@ async def check_scheduled_campaigns(ctx: dict) -> dict:
     except Exception as e:
         logger.error("Scheduled campaign check failed", error=str(e))
         return {"status": "failed", "error": str(e)}
+
+
+async def analyze_message(ctx: dict, message_id: str, tenant_id: str) -> dict:
+    """ARQ task to analyze a single message using AI.
+
+    This task runs AI analysis on a message to extract tones, summary,
+    urgency, entities, and suggested categories.
+
+    Args:
+        ctx: ARQ context (contains job info, redis connection)
+        message_id: The Message UUID as string
+        tenant_id: The tenant UUID as string
+
+    Returns:
+        Result dictionary with status, analysis_id, and tokens_used
+    """
+    logger.info(
+        "Starting message analysis task",
+        message_id=message_id,
+        tenant_id=tenant_id,
+        arq_job_id=ctx.get("job_id"),
+    )
+
+    try:
+        async with async_session_maker() as session:
+            # Load message
+            result = await session.execute(
+                select(Message).where(
+                    Message.id == UUID(message_id),
+                    Message.tenant_id == UUID(tenant_id),
+                )
+            )
+            message = result.scalars().first()
+
+            if not message:
+                logger.warning("Message not found", message_id=message_id)
+                return {"status": "error", "reason": "message_not_found"}
+
+            # Check if already processed
+            if message.processing_status == "completed":
+                logger.info("Message already analyzed", message_id=message_id)
+                return {"status": "skipped", "reason": "already_processed"}
+
+            # Load tenant
+            tenant_result = await session.execute(
+                select(Tenant).where(Tenant.id == UUID(tenant_id))
+            )
+            tenant = tenant_result.scalars().first()
+
+            if not tenant:
+                logger.error("Tenant not found", tenant_id=tenant_id)
+                return {"status": "error", "reason": "tenant_not_found"}
+
+            # Update message status to processing
+            message.processing_status = "processing"
+            await session.commit()
+
+            try:
+                # Run analysis
+                analyzer = MessageAnalyzer(session, tenant)
+                analysis = await analyzer.analyze(message)
+
+                # Update message status
+                message.processing_status = "completed"
+                message.processed_at = datetime.utcnow()
+                await session.commit()
+
+                logger.info(
+                    "Message analysis complete",
+                    message_id=message_id,
+                    analysis_id=str(analysis.id),
+                    tokens_used=analysis.tokens_used,
+                )
+
+                return {
+                    "status": "completed",
+                    "analysis_id": str(analysis.id),
+                    "tokens_used": analysis.tokens_used,
+                }
+
+            except AIBudgetExceededError as e:
+                message.processing_status = "failed"
+                await session.commit()
+                logger.warning(
+                    "AI budget exceeded for message analysis",
+                    message_id=message_id,
+                    tenant_id=tenant_id,
+                )
+                return {"status": "error", "reason": "budget_exceeded", "error": str(e)}
+
+            except AIProviderError as e:
+                message.processing_status = "failed"
+                await session.commit()
+                logger.error(
+                    "AI provider error during message analysis",
+                    message_id=message_id,
+                    error=str(e),
+                )
+                # Raise to let ARQ handle retry
+                raise
+
+    except Exception as e:
+        logger.error(
+            "Message analysis task failed",
+            message_id=message_id,
+            tenant_id=tenant_id,
+            error=str(e),
+        )
+        # Try to mark message as failed
+        try:
+            async with async_session_maker() as session:
+                result = await session.execute(
+                    select(Message).where(Message.id == UUID(message_id))
+                )
+                message = result.scalars().first()
+                if message:
+                    message.processing_status = "failed"
+                    await session.commit()
+        except Exception:
+            pass
+        raise

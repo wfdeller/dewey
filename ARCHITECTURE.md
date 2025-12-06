@@ -410,7 +410,7 @@ pending → queued → processing → completed
 ```
 
 **Worker Configuration** (`backend/app/workers/worker.py`):
-- Task functions: `process_voter_import`, `export_contacts`, `send_campaign_emails`, `generate_campaign_recommendations`, `check_scheduled_campaigns`
+- Task functions: `process_voter_import`, `export_contacts`, `send_campaign_emails`, `generate_campaign_recommendations`, `check_scheduled_campaigns`, `analyze_message`
 - Cron jobs: `check_scheduled_campaigns` (every 15 minutes)
 - Default timeout: 1 hour (configurable per tenant)
 - Max retries: 3 (configurable)
@@ -435,24 +435,95 @@ Async worker-based processing:
 3. **AI Analysis** - Sentiment, entities, classification suggestions
 4. **Workflow Execution** - Trigger automated actions
 
-### 3. AI Provider Architecture
+### 3. AI Provider Architecture (Implemented)
 
-Pluggable interface supporting multiple providers:
+Pluggable interface supporting multiple providers with unified abstraction:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    AI Analysis Pipeline                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Message Created ──► ARQ Queue ──► analyze_message Task          │
+│                                          │                       │
+│                          ┌───────────────┼───────────────┐       │
+│                          ▼               ▼               ▼       │
+│                   ClaudeProvider  OpenAIProvider  OllamaProvider │
+│                          │               │               │       │
+│                          └───────────────┼───────────────┘       │
+│                                          ▼                       │
+│                              PromptTemplate (DB)                 │
+│                              (Per-tenant customizable)           │
+│                                          │                       │
+│                                          ▼                       │
+│                              Analysis Record Created             │
+│                              AIUsageLog Entry Created            │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ```python
-class AIProvider(Protocol):
-    async def analyze(
+# Abstract base class for all providers
+class AIProvider(ABC):
+    @abstractmethod
+    async def complete(
         self,
-        content: str,
-        categories: list[Category],
-        config: AnalysisConfig
-    ) -> AnalysisResult:
-        ...
+        prompt: str,
+        system_prompt: str | None = None,
+        max_tokens: int = 2000,
+        temperature: float = 0.3,
+    ) -> AIResponse:
+        """Send prompt and get completion."""
+        pass
 
-# Implementations
-class ClaudeProvider(AIProvider): ...
-class OpenAIProvider(AIProvider): ...
-class OllamaProvider(AIProvider): ...
+    @abstractmethod
+    def count_tokens(self, text: str) -> int:
+        """Estimate token count for text."""
+        pass
+
+# Provider implementations
+class ClaudeProvider(AIProvider): ...    # Anthropic Claude
+class OpenAIProvider(AIProvider): ...    # OpenAI GPT-4
+class AzureOpenAIProvider(AIProvider): ... # Azure OpenAI
+class OllamaProvider(AIProvider): ...    # Self-hosted Ollama
+```
+
+#### AI Analysis Use Cases
+
+| Service | Purpose | Key Features | Status |
+|---------|---------|--------------|--------|
+| **MessageAnalyzer** | Analyze incoming messages | Tone detection, summarization, urgency scoring, entity extraction, category suggestions | Implemented |
+| **VoterImportAnalyzer** | AI-assisted voter file import | Field mapping, schema recommendations, data type inference | Planned |
+| **ContactAnalyzer** | Engagement analysis | Vote propensity, engagement scoring, action recommendations, segment analysis | Planned |
+
+#### Prompt Template System
+
+Per-tenant customizable prompts stored in database:
+
+```python
+class PromptTemplate(TenantBaseModel):
+    name: str           # "message_analysis", "contact_engagement", etc.
+    system_prompt: str  # AI system instructions
+    user_prompt_template: str  # Jinja2 template for user prompt
+    temperature: float = 0.3
+    max_tokens: int = 2000
+    version: int = 1
+```
+
+#### Token Usage Tracking
+
+All AI API calls are logged for analytics and billing:
+
+```python
+class AIUsageLog(TenantBaseModel):
+    operation_type: str   # "message_analysis", "voter_import", "contact_analysis"
+    ai_provider: str      # "claude", "openai", etc.
+    ai_model: str
+    input_tokens: int
+    output_tokens: int
+    estimated_cost_usd: float | None
+    processing_time_ms: int
+    status: str           # "success", "error", "timeout"
 ```
 
 #### Tenant AI Key Security Model

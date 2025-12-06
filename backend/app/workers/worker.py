@@ -17,6 +17,7 @@ from app.workers.tasks import (
     send_campaign_emails,
     generate_campaign_recommendations,
     check_scheduled_campaigns,
+    analyze_message,
 )
 
 
@@ -65,6 +66,7 @@ class WorkerSettings:
         send_campaign_emails,
         generate_campaign_recommendations,
         check_scheduled_campaigns,
+        analyze_message,
     ]
 
     # Redis connection settings - loaded at import time from environment

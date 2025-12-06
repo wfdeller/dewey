@@ -7,7 +7,13 @@ Dewey is a SaaS platform for processing incoming communications (emails, forms, 
 ## Features
 
 -   **Multi-Channel Intake** - Email, web forms, API, webhooks
--   **AI Analysis** - Sentiment scoring, entity extraction, classification suggestions, coordinated message detection
+-   **AI Analysis Pipeline** - Multi-provider support (Claude, OpenAI, Azure OpenAI, Ollama) for:
+    -   Sentiment/tone detection (multi-label)
+    -   Entity extraction (people, orgs, locations, topics)
+    -   Urgency scoring and summarization
+    -   Category suggestions with confidence scores
+    -   Coordinated message detection
+-   **Per-Tenant AI Configuration** - Customizable prompts stored in database, token usage tracking
 -   **Outbound Campaigns** - Email marketing with A/B testing, recipient targeting, and engagement tracking
 -   **AI-Driven Recommendations** - Automatic campaign suggestions based on trending topics
 -   **Contact Management** - Track sender history with custom fields and voting records

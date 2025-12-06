@@ -264,18 +264,151 @@
 
 ### 1.8 AI Analysis Pipeline
 
--   [ ] Define AIProvider protocol/interface
--   [ ] Implement ClaudeProvider
-    -   [ ] API client setup
-    -   [ ] Prompt engineering for analysis
-    -   [ ] Response parsing to AnalysisResult
--   [ ] Create analysis worker
--   [ ] Implement sentiment scoring (-1 to 1)
--   [ ] Implement entity extraction
--   [ ] Implement category suggestions
--   [ ] Implement urgency scoring
--   [ ] Store analysis results
--   [ ] Update Contact aggregates (avg_sentiment)
+#### 1.8.1 Provider Abstraction Layer
+
+-   [x] Create `AIProvider` abstract base class (`backend/app/services/ai/providers/base.py`)
+    -   [x] `complete()` async method for API calls
+    -   [x] `count_tokens()` for token estimation
+    -   [x] `AIResponse` dataclass (content, tokens_used, model, raw_response)
+-   [x] Implement `ClaudeProvider` (`backend/app/services/ai/providers/claude.py`)
+    -   [x] Anthropic API client setup
+    -   [x] Token counting via character estimation
+    -   [x] Error handling with provider-specific exceptions
+-   [x] Implement `OpenAIProvider` (`backend/app/services/ai/providers/openai.py`)
+    -   [x] OpenAI API client
+    -   [x] Support for GPT-4o-mini and other models
+-   [x] Implement `AzureOpenAIProvider` (`backend/app/services/ai/providers/azure_openai.py`)
+    -   [x] Azure-specific endpoint configuration
+    -   [x] Deployment name support
+-   [x] Implement `OllamaProvider` (`backend/app/services/ai/providers/ollama.py`)
+    -   [x] Local HTTP API integration
+    -   [x] Model selection (llama3.2, etc.)
+-   [x] Create provider factory (`backend/app/services/ai/providers/factory.py`)
+    -   [x] `get_provider(tenant)` - route to correct provider
+    -   [x] `get_platform_provider()` - for platform key usage
+    -   [x] API key decryption for tenant keys (TODO: implement Fernet encryption)
+    -   [x] Platform key fallback for free tier
+
+#### 1.8.2 Prompt Template System
+
+-   [x] Create `PromptTemplate` model (`backend/app/models/prompt_template.py`)
+    -   [x] name, system_prompt, user_prompt_template fields
+    -   [x] temperature, max_tokens configuration
+    -   [x] version tracking for A/B testing
+-   [x] Create `AIUsageLog` model (`backend/app/models/ai_usage_log.py`)
+    -   [x] operation_type, ai_provider, ai_model
+    -   [x] input_tokens, output_tokens, total_tokens
+    -   [x] estimated_cost_usd, processing_time_ms
+    -   [x] status, error_message tracking
+-   [x] Create database migration for PromptTemplate and AIUsageLog
+-   [x] Create default prompts (`backend/app/services/ai/prompts/defaults.py`)
+    -   [x] Message analysis system/user prompts
+    -   [x] Category classification prompts
+    -   [x] Contact engagement prompts
+-   [ ] Create prompt template API endpoints (`backend/app/api/v1/prompt_templates.py`)
+    -   [ ] CRUD endpoints
+    -   [ ] Test endpoint with sample message
+    -   [ ] Reset to defaults endpoint
+
+#### 1.8.3 Message Analysis Service
+
+-   [x] Create `MessageAnalyzer` service (`backend/app/services/ai/message_analyzer.py`)
+    -   [x] `analyze(message)` main method
+    -   [x] Token budget checking for platform keys
+    -   [x] Prompt template rendering with Jinja2
+    -   [x] Response parsing and validation
+-   [x] Implement response parsing (in message_analyzer.py)
+    -   [x] JSON extraction from markdown code blocks
+    -   [x] Graceful degradation for partial responses
+    -   [x] Entity and category normalization
+-   [x] Implement analysis features:
+    -   [x] Tone detection (multi-label with confidence)
+    -   [x] Summary generation (2-3 sentences)
+    -   [x] Urgency scoring (0-1 scale)
+    -   [x] Entity extraction (people, orgs, locations, topics)
+    -   [x] Category suggestions with confidence
+    -   [x] Optional response suggestions
+
+#### 1.8.4 ARQ Task Integration
+
+-   [x] Create `analyze_message` ARQ task (`backend/app/workers/tasks.py`)
+    -   [x] Load message and tenant
+    -   [x] Update processing_status to "processing"
+    -   [x] Call MessageAnalyzer
+    -   [x] Handle AIBudgetExceededError
+    -   [x] Log to AIUsageLog
+-   [x] Register task in worker settings
+-   [ ] Wire up message creation to queue analysis:
+    -   [ ] POST /messages → queue analyze_message
+    -   [ ] POST /messages/email → queue analyze_message
+    -   [ ] POST /messages/{id}/reprocess → queue re-analysis
+
+#### 1.8.5 AI Analytics & Usage
+
+-   [ ] Create AI analytics API endpoints (`backend/app/api/v1/ai_analytics.py`)
+    -   [ ] GET /ai-analytics/usage - token usage over time
+    -   [ ] GET /ai-analytics/by-operation - breakdown by type
+    -   [ ] GET /ai-analytics/by-model - breakdown by model
+    -   [ ] GET /ai-analytics/top-consumers - most expensive operations
+    -   [ ] GET /ai-analytics/cost-estimate - monthly cost projection
+-   [ ] Create AI config endpoints (`backend/app/api/v1/tenants.py`)
+    -   [ ] GET /tenants/me/ai-config
+    -   [ ] PATCH /tenants/me/ai-config (update provider/key)
+    -   [ ] POST /tenants/me/ai-config/test (test connection)
+    -   [ ] GET /tenants/me/ai-usage (token stats)
+
+#### 1.8.6 Voter Import Enhancement
+
+-   [ ] Refactor `field_mapper.py` to use provider abstraction
+-   [ ] Add schema recommendation logic
+    -   [ ] Analyze unmapped columns
+    -   [ ] Recommend custom field creation
+    -   [ ] Suggest data types
+-   [ ] Create schema recommendation endpoints
+    -   [ ] GET /voter-import/{job_id}/schema-recommendations
+    -   [ ] POST /voter-import/{job_id}/apply-schema-changes
+
+#### 1.8.7 Contact Engagement Analysis
+
+-   [ ] Create `ContactAnalyzer` service (`backend/app/services/ai/contact_analyzer.py`)
+    -   [ ] `analyze_contact()` - single contact analysis
+    -   [ ] `analyze_segment()` - bulk segment analysis
+    -   [ ] Build contact context (vote history, messages, custom fields)
+-   [ ] Create contact engagement prompts (`backend/app/services/ai/prompts/contact_engagement.py`)
+-   [ ] Create contact analysis API endpoints (`backend/app/api/v1/contact_analysis.py`)
+    -   [ ] GET /contacts/{id}/ai-analysis
+    -   [ ] POST /contacts/{id}/ai-analysis/refresh
+    -   [ ] POST /contacts/segment-analysis
+    -   [ ] GET /contacts/segment-analysis/{id}
+
+#### 1.8.8 AI Frontend Components
+
+-   [ ] Add AI settings tab to Settings page
+    -   [ ] Provider selection dropdown
+    -   [ ] API key input (masked)
+    -   [ ] Model selection per provider
+    -   [ ] Test connection button
+    -   [ ] Token usage display
+-   [ ] Create Prompt Templates page (`frontend/src/pages/PromptTemplates.tsx`)
+    -   [ ] List templates with edit actions
+    -   [ ] Template editor with syntax highlighting
+    -   [ ] Test with sample message
+    -   [ ] Reset to default
+-   [ ] Create AI Analytics dashboard (`frontend/src/pages/AIAnalytics.tsx`)
+    -   [ ] Usage over time chart
+    -   [ ] Breakdown by operation type pie chart
+    -   [ ] Top token consumers table
+    -   [ ] Cost projection
+-   [ ] Add EngagementAnalysisPanel to ContactDetail
+    -   [ ] Engagement score gauge
+    -   [ ] Vote propensity indicator
+    -   [ ] Recommended actions list
+    -   [ ] Talking points
+-   [ ] Create SegmentAnalysis page
+    -   [ ] Filter builder
+    -   [ ] Goal selection (GOTV, Fundraising, etc.)
+    -   [ ] Results display with charts
+-   [ ] Update VoterImport wizard with schema recommendations step
 
 ### 1.9 Basic Frontend (Ant Design)
 
@@ -1312,7 +1445,7 @@ Use this section to track overall progress:
 | 1.5 API Keys           | Complete (middleware, rate limiting, endpoints, UI)  |
 | 1.6 Core API Endpoints | Complete (all endpoints with full DB operations)     |
 | 1.7 Message Intake     | Partial (Azure AD SSO done, Graph API pending)       |
-| 1.8 AI Pipeline        | Not Started                                          |
+| 1.8 AI Pipeline        | In Progress (~70% - providers, models, task done)    |
 | 1.9 Basic Frontend     | Complete (auth, messages, contacts, forms, settings) |
 
 ### Phase 2 Breakdown
@@ -1378,4 +1511,4 @@ Use this section to track overall progress:
 
 ---
 
-_Last updated: December 5, 2024_
+_Last updated: December 6, 2024_

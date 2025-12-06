@@ -33,7 +33,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # =========================================================================
-    # Step 1: Rename existing campaign table to preserve legacy data
+    # Step 1: Drop indexes on existing campaign table before rename
+    # (these indexes will conflict with new campaign table indexes)
+    # =========================================================================
+    # Use if_exists to handle partial migrations
+    op.execute("DROP INDEX IF EXISTS ix_campaign_tenant_id")
+    op.execute("DROP INDEX IF EXISTS ix_campaign_name")
+    op.execute("DROP INDEX IF EXISTS ix_campaign_template_hash")
+
+    # =========================================================================
+    # Step 2: Rename existing campaign table to preserve legacy data
     # =========================================================================
     op.rename_table("campaign", "legacy_campaign_detection")
 
